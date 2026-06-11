@@ -71,7 +71,21 @@ router.get('/', async (req, res) => {
                 .select()
                 .single();
 
-            if (insertError) throw insertError;
+            // Handle race condition: if another request created the profile
+            // between our select and insert, catch the unique violation and re-fetch
+            if (insertError) {
+                if (insertError.code === '23505') {
+                    const { data: existingProfile, error: selectError } = await supabase
+                        .from('user_profiles')
+                        .select('*')
+                        .eq('user_id', req.auth.internalUserId)
+                        .single();
+
+                    if (selectError) throw selectError;
+                    return res.json(existingProfile);
+                }
+                throw insertError;
+            }
 
             logAudit('GET_PROFILE', req.auth.internalUserId, 'created', {
                 profileId: newProfile.id

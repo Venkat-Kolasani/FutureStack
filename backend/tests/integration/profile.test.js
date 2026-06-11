@@ -94,6 +94,46 @@ describe('Profile API', () => {
         expect(res.body.id).toBe('profile-new');
     });
 
+    it('GET /api/profile handles race condition with 23505 unique violation', async () => {
+        const existingProfile = {
+            id: 'profile-existing',
+            user_id: TEST_AUTH.internalUserId,
+            bio: 'Already exists',
+            college: 'Race Condition University',
+            degree: null,
+            graduation_year: null,
+            skills: null,
+            github_url: null,
+            linkedin_url: null,
+            portfolio_url: null,
+            avatar_url: null,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+        };
+
+        // First call: maybeSingle returns null (no profile)
+        // Second call: insert fails with 23505 (another request created it)
+        // Third call: re-select returns the existing profile
+        mockFrom
+            .mockReturnValueOnce(
+                createChain({ data: null, error: null }) // maybeSingle returns null
+            )
+            .mockReturnValueOnce(
+                createChain({ data: null, error: { code: '23505', message: 'unique constraint' } }) // insert fails
+            )
+            .mockReturnValueOnce(
+                createChain({ data: existingProfile, error: null }) // re-select succeeds
+            );
+
+        const res = await request(app)
+            .get('/api/profile')
+            .set(authHeader);
+
+        expect(res.status).toBe(200);
+        expect(res.body.id).toBe('profile-existing');
+        expect(res.body.bio).toBe('Already exists');
+    });
+
     it('PATCH /api/profile updates profile successfully', async () => {
         const updatedProfile = {
             id: 'profile-1',
