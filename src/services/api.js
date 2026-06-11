@@ -313,4 +313,20 @@ export const hackathonService = {
     }
 };
 
+// =============================================================================
+// USER PROFILE SERVICE
+// =============================================================================
+
+export const profileService = {
+    getProfile: async () => {
+        const response = await api.get('/profile');
+        return response.data;
+    },
+
+    updateProfile: async (data) => {
+        const response = await api.patch('/profile', data);
+        return response.data;
+    }
+};
+
 export default api;

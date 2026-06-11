@@ -12,6 +12,7 @@ const opportunitiesRoutes = require('./routes/opportunities');
 const analyticsRoutes = require('./routes/analytics');
 const documentsRoutes = require('./routes/documents');
 const hackathonsRoutes = require('./routes/hackathons');
+const profileRoutes = require('./routes/profile');
 
 const app = express();
 
@@ -200,6 +201,7 @@ app.use('/api/opportunities', requireAuth, writeOperationsLimiter, opportunities
 app.use('/api/analytics', requireAuth, analyticsRoutes);
 app.use('/api/documents', requireAuth, writeOperationsLimiter, documentsRoutes);
 app.use('/api/hackathons', requireAuth, writeOperationsLimiter, hackathonsRoutes);
+app.use('/api/profile', requireAuth, profileRoutes);
 
 app.get('/api/me', requireAuth, (req, res) => {
     res.json({

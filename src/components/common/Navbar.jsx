@@ -14,6 +14,7 @@ const Navbar = () => {
     { path: '/status-board', label: 'Status Board' },
     { path: '/calendar', label: 'Calendar' },
     { path: '/documents', label: 'Documents' },
+    { path: '/profile', label: 'Profile' },
     { path: '/reports', label: 'Reports' },
     { path: '/analytics', label: 'Analytics' },
   ];
