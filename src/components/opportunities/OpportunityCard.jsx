@@ -41,6 +41,19 @@ const OpportunityCard = ({ opportunity, onView, onEdit, onDelete }) => {
     }
   };
 
+  // Calculate time context for urgency badge
+  const urgency = getDeadlineUrgency(opportunity.deadline);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const due = new Date(opportunity.deadline);
+  due.setHours(0, 0, 0, 0);
+  const days = Math.ceil((due - today) / (1000 * 60 * 60 * 24));
+
+  let timeText = '';
+  if (urgency.level === 'expired') timeText = ` (Overdue by ${Math.abs(days)} days)`;
+  else if (urgency.level === 'today') timeText = ' (Today)';
+  else if (urgency.level === 'soon') timeText = ` (${days} days left)`;
+
   return (
     <Card hover className="p-5">
       <div className="flex flex-col h-full">
@@ -85,8 +98,8 @@ const OpportunityCard = ({ opportunity, onView, onEdit, onDelete }) => {
             
             {/* Show urgency badge only if not rejected/selected */}
             {opportunity.status !== 'rejected' && opportunity.status !== 'selected' && (
-              <p className={`text-sm font-medium mt-1 ${getDeadlineUrgency(opportunity.deadline).className}`}>
-                {getDeadlineUrgency(opportunity.deadline).label}
+              <p className={`text-sm font-medium mt-1 ${urgency.className}`}>
+                {urgency.label}{timeText}
               </p>
             )}
           </div>

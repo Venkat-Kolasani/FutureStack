@@ -13,14 +13,29 @@ import { getDeadlineUrgency } from '../../utils/dateHelpers';
 /**
  * @param {Object} props
  * @param {Object} props.opportunity - The full opportunity object to display
+ * @param {boolean} props.isOpen - Controls modal visibility (required by parent components)
  * @param {Function} props.onClose - Callback when modal is closed
  * @param {Function} props.onEdit - Callback when Edit button is clicked
+ * @param {Function} [props.onDelete] - Kept for API compatibility with parent components
+ * @param {Function} [props.onManage] - Kept for API compatibility with HackathonList
  */
-const OpportunityDetailModal = ({ opportunity, onClose, onEdit }) => {
-  if (!opportunity) return null;
+const OpportunityDetailModal = ({ opportunity, isOpen, onClose, onEdit, onDelete, onManage }) => {
+  if (!isOpen || !opportunity) return null;
 
   const urgency = getDeadlineUrgency(opportunity.deadline);
   const showUrgency = opportunity.status !== 'rejected' && opportunity.status !== 'selected';
+
+  // Calculate time context for the badge
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const due = new Date(opportunity.deadline);
+  due.setHours(0, 0, 0, 0);
+  const days = Math.ceil((due - today) / (1000 * 60 * 60 * 24));
+
+  let timeText = '';
+  if (urgency.level === 'expired') timeText = ` (Overdue by ${Math.abs(days)} days)`;
+  else if (urgency.level === 'today') timeText = ' (Today)';
+  else if (urgency.level === 'soon') timeText = ` (${days} days left)`;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
@@ -63,7 +78,7 @@ const OpportunityDetailModal = ({ opportunity, onClose, onEdit }) => {
               <p className="text-white text-lg font-medium">{formatDate(opportunity.deadline)}</p>
               {showUrgency && (
                 <p className={`text-sm font-semibold mt-1 ${urgency.className}`}>
-                  {urgency.label}
+                  {urgency.label}{timeText}
                 </p>
               )}
             </div>
