@@ -9,7 +9,8 @@ import React from 'react';
 import { FaEdit, FaTrash, FaExternalLinkAlt } from 'react-icons/fa';
 import Card from '../common/Card';
 import Button from '../common/Button';
-import { getDaysRemaining, isOverdue, formatDate } from '../../utils/dateHelpers';
+import { formatDate } from '../../utils/dateHelpers';
+import { getDeadlineUrgency } from '../../utils/dateHelpers'; 
 
 // Status badge color mappings
 const statusColors = {
@@ -34,9 +35,6 @@ const categoryColors = {
  * @param {Function} props.onDelete - Callback when Delete is clicked (receives opportunity.id)
  */
 const OpportunityCard = ({ opportunity, onView, onEdit, onDelete }) => {
-  const daysRemaining = getDaysRemaining(opportunity.deadline);
-  const overdue = isOverdue(opportunity.deadline);
-
   const handleCardClick = () => {
     if (onView) {
       onView(opportunity);
@@ -46,7 +44,6 @@ const OpportunityCard = ({ opportunity, onView, onEdit, onDelete }) => {
   return (
     <Card hover className="p-5">
       <div className="flex flex-col h-full">
-        {/* Clickable area for viewing details */}
         {/* Clickable area for viewing details */}
         <div
           className="cursor-pointer flex-1 outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900 rounded-lg"
@@ -80,17 +77,18 @@ const OpportunityCard = ({ opportunity, onView, onEdit, onDelete }) => {
             </p>
           )}
 
-          {/* Deadline */}
+          {/* Deadline & Urgency Badge */}
           <div className="mb-3">
             <p className="text-sm text-gray-400">
               Deadline: <span className="font-medium text-gray-300">{formatDate(opportunity.deadline)}</span>
             </p>
-            <p className={`text-sm font-medium ${overdue ? 'text-red-400' : 'text-gray-300'}`}>
-              {overdue
-                ? `Overdue by ${Math.abs(daysRemaining)} days`
-                : `${daysRemaining} days remaining`
-              }
-            </p>
+            
+            {/* Show urgency badge only if not rejected/selected */}
+            {opportunity.status !== 'rejected' && opportunity.status !== 'selected' && (
+              <p className={`text-sm font-medium mt-1 ${getDeadlineUrgency(opportunity.deadline).className}`}>
+                {getDeadlineUrgency(opportunity.deadline).label}
+              </p>
+            )}
           </div>
 
           {/* Status Badge */}
