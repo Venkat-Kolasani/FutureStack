@@ -201,7 +201,7 @@ app.use('/api/opportunities', requireAuth, writeOperationsLimiter, opportunities
 app.use('/api/analytics', requireAuth, analyticsRoutes);
 app.use('/api/documents', requireAuth, writeOperationsLimiter, documentsRoutes);
 app.use('/api/hackathons', requireAuth, writeOperationsLimiter, hackathonsRoutes);
-app.use('/api/profile', requireAuth, profileRoutes);
+app.use('/api/profile', requireAuth, writeOperationsLimiter, profileRoutes);
 
 app.get('/api/me', requireAuth, (req, res) => {
     res.json({

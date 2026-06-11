@@ -13,7 +13,6 @@ const Profile = () => {
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [hasChanges, setHasChanges] = useState(false);
 
     // Form state
     const [formData, setFormData] = useState({
@@ -28,24 +27,35 @@ const Profile = () => {
         portfolio_url: ''
     });
 
+    // Snapshot of formData for change detection
+    const [initialFormData, setInitialFormData] = useState(null);
+
+    // Derive hasChanges by comparing current formData to initial snapshot
+    const hasChanges = initialFormData !== null && 
+        JSON.stringify(formData) !== JSON.stringify(initialFormData);
+
+    // Normalize profile data to empty string for form fields
+    const normalizeFormData = (data) => ({
+        bio: data.bio || '',
+        avatar_url: data.avatar_url || '',
+        college: data.college || '',
+        degree: data.degree || '',
+        graduation_year: data.graduation_year || '',
+        skills: data.skills || '',
+        github_url: data.github_url || '',
+        linkedin_url: data.linkedin_url || '',
+        portfolio_url: data.portfolio_url || ''
+    });
+
     // Fetch profile data
     const fetchProfile = useCallback(async () => {
         try {
             setLoading(true);
             const data = await profileService.getProfile();
             setProfile(data);
-            // Populate form with existing profile data
-            setFormData({
-                bio: data.bio || '',
-                avatar_url: data.avatar_url || '',
-                college: data.college || '',
-                degree: data.degree || '',
-                graduation_year: data.graduation_year || '',
-                skills: data.skills || '',
-                github_url: data.github_url || '',
-                linkedin_url: data.linkedin_url || '',
-                portfolio_url: data.portfolio_url || ''
-            });
+            const normalized = normalizeFormData(data);
+            setFormData(normalized);
+            setInitialFormData(normalized);
         } catch (error) {
             console.error('Error fetching profile:', error);
             toast.error('Failed to load profile');
@@ -64,7 +74,6 @@ const Profile = () => {
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
-        setHasChanges(true);
     };
 
     // Handle form submission
@@ -83,7 +92,10 @@ const Profile = () => {
             setSaving(true);
             const updated = await profileService.updateProfile(submissionData);
             setProfile(updated);
-            setHasChanges(false);
+            // Sync formData and initial snapshot from server response
+            const serverFormData = normalizeFormData(updated);
+            setFormData(serverFormData);
+            setInitialFormData(serverFormData);
             toast.success('Profile updated successfully!');
         } catch (error) {
             console.error('Error updating profile:', error);
@@ -99,18 +111,9 @@ const Profile = () => {
     // Handle cancel
     const handleCancel = () => {
         if (profile) {
-            setFormData({
-                bio: profile.bio || '',
-                avatar_url: profile.avatar_url || '',
-                college: profile.college || '',
-                degree: profile.degree || '',
-                graduation_year: profile.graduation_year || '',
-                skills: profile.skills || '',
-                github_url: profile.github_url || '',
-                linkedin_url: profile.linkedin_url || '',
-                portfolio_url: profile.portfolio_url || ''
-            });
-            setHasChanges(false);
+            const normalized = normalizeFormData(profile);
+            setFormData(normalized);
+            setInitialFormData(normalized);
         }
     };
 

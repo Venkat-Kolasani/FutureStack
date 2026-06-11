@@ -3,6 +3,9 @@
 -- Issue #35: Add User Profile Management Section
 -- =============================================================================
 
+-- Ensure pgcrypto extension is available for gen_random_uuid()
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 -- =============================================================================
 -- User Profiles Table
 -- Stores application-specific profile data (academic and professional info)
