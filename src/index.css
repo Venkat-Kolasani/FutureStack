@@ -38,3 +38,82 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* ==========================================
+   Responsive Enhancements
+   ========================================== */
+
+/* Small Laptops */
+@media screen and (max-width: 992px) {
+  body {
+    padding: 0 1rem;
+  }
+
+  html {
+    font-size: 95%;
+  }
+}
+
+/* Tablets */
+@media screen and (max-width: 768px) {
+  body {
+    padding: 0 0.75rem;
+  }
+
+  html {
+    font-size: 90%;
+  }
+
+  img,
+  video,
+  iframe,
+  canvas,
+  svg {
+    max-width: 100%;
+    height: auto;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    max-width: 100%;
+  }
+}
+
+/* Mobile Devices */
+@media screen and (max-width: 480px) {
+  body {
+    padding: 0 0.5rem;
+  }
+
+  html {
+    font-size: 87.5%;
+  }
+
+  h1 {
+    font-size: 2rem;
+    line-height: 1.2;
+  }
+
+  h2 {
+    font-size: 1.6rem;
+    line-height: 1.25;
+  }
+
+  h3 {
+    font-size: 1.3rem;
+  }
+
+  img,
+  video,
+  iframe {
+    max-width: 100%;
+    height: auto;
+  }
+
+  button {
+    width: 100%;
+  }
+}
+
