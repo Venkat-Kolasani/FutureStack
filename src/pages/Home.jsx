@@ -13,14 +13,14 @@ const Home = () => {
  
   const location = useLocation();
 
-  useEffect(() => {
+ useEffect(() => {
   if (!location.hash) return;
 
   const timer = setTimeout(() => {
     const element = document.getElementById(location.hash.substring(1));
 
     if (element) {
-      const headerOffset = 80; // Matches the fixed navbar height (h-20)
+      const headerOffset = 80; // Fixed navbar height (h-20)
       const top =
         element.getBoundingClientRect().top +
         window.scrollY -
@@ -28,7 +28,7 @@ const Home = () => {
 
       window.scrollTo({
         top,
-        behavior: 'smooth',
+        behavior: "smooth",
       });
     }
   }, 100);
