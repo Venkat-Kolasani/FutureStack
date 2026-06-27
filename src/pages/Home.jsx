@@ -14,20 +14,28 @@ const Home = () => {
   const location = useLocation();
 
   useEffect(() => {
-    if (location.hash) {
-      const element = document.getElementById(location.hash.substring(1));
+  if (!location.hash) return;
 
-      if (element) {
-        setTimeout(() => {
-          element.scrollIntoView({
-            behavior: "smooth",
-            block: "start",
-          });
-        }, 100);
-      }
+  const timer = setTimeout(() => {
+    const element = document.getElementById(location.hash.substring(1));
+
+    if (element) {
+      const headerOffset = 80; // Matches the fixed navbar height (h-20)
+      const top =
+        element.getBoundingClientRect().top +
+        window.scrollY -
+        headerOffset;
+
+      window.scrollTo({
+        top,
+        behavior: 'smooth',
+      });
     }
-  }, [location]);
+  }, 100);
 
+  return () => clearTimeout(timer);
+}, [location]);
+  
   return (
     <div className="min-h-screen bg-black text-white font-sans selection:bg-blue-500 selection:text-white overflow-x-hidden">
       <SEO
