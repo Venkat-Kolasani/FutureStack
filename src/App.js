@@ -11,6 +11,7 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import LoadingSpinner from './components/common/LoadingSpinner';
 import Home from './pages/Home'; // Landing page - load immediately for best UX
+import Footer from './components/common/Footer';
 
 // Hooks
 import { useAuthToken } from './hooks/useAuthToken';
@@ -72,7 +73,7 @@ function AppContent() {
   }, [isSignedIn, user]);
 
   return (
-    <div className="min-h-screen bg-black text-white font-sans">
+    <div className="min-h-screen flex flex-col bg-black text-white font-sans">
       {/* Skip to main content link for accessibility */}
       <a
         href="#main-content"
@@ -83,7 +84,7 @@ function AppContent() {
 
       {!isHomePage && !isPublicSharePage && <Navbar />}
 
-      <main id="main-content" role="main">
+      <main id="main-content" role="main" className="flex-1">
         <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route path="/" element={<Home />} />
@@ -152,6 +153,8 @@ function AppContent() {
         </Suspense>
       </main>
 
+      {!isHomePage && !isPublicSharePage && <Footer />}
+      
       <ToastContainer
         position="top-right"
         autoClose={3000}
