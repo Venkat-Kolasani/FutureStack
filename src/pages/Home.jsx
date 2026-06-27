@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FiBriefcase, FiCode, FiArrowRight, FiFileText, FiCalendar, FiLayers, FiDownload } from 'react-icons/fi';
 import { SignInButton, SignUpButton, SignedIn, SignedOut, UserButton } from '@clerk/clerk-react';
@@ -10,9 +10,23 @@ import StatusIndicator from '../components/common/StatusIndicator';
 
 const Home = () => {
   const navigate = useNavigate();
+ 
+  const location = useLocation();
 
   useEffect(() => {
-  }, []);
+    if (location.hash) {
+      const element = document.getElementById(location.hash.substring(1));
+
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        }, 100);
+      }
+    }
+  }, [location]);
 
   return (
     <div className="min-h-screen bg-black text-white font-sans selection:bg-blue-500 selection:text-white overflow-x-hidden">
