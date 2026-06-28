@@ -194,8 +194,8 @@ const StatusBoard = () => {
       </div>
 
       {/* Status Board - Horizontal scrollable on mobile, side-by-side on desktop */}
-      <div className="overflow-x-auto pb-4 -mx-4 px-4 sm:mx-0 sm:px-0">
-        <div className="flex gap-3 sm:gap-4 min-w-max lg:justify-start">
+      <div className="pb-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 items-start">
           <StatusColumn
             status="applied"
             opportunities={groupedOpportunities.applied}
