@@ -7,6 +7,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 // Components - Keep these non-lazy as they're needed immediately
 import Navbar from './components/common/Navbar';
+import ScrollToTopButton from "./components/ScrollToTopButton/ScrollToTopButton";
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import LoadingSpinner from './components/common/LoadingSpinner';
@@ -152,6 +153,7 @@ function AppContent() {
         </Suspense>
       </main>
 
+      <ScrollToTopButton />
       <ToastContainer
         position="top-right"
         autoClose={3000}
