@@ -6,7 +6,9 @@ const clerkClient = createClerkClient({
   syncHost: SYNC_HOST,
 });
 
-chrome.runtime.onInstalled.addListener(async () => {
+async function initClerk() {
   await clerkClient.load();
-  console.log('FutureTracker extension installed, Clerk loaded');
-});
+  console.log('FutureTracker: Clerk loaded');
+}
+
+initClerk();

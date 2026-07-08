@@ -49,7 +49,7 @@ Rebuild after changing `.env`: `npm run build`
 ## Manual Test Plan
 
 1. Sign in at futuretracker.online
-2. Visit any job listing page
+2. Visit any job listing page (e.g. LinkedIn, Internshala, Wellfound)
 3. Click the FutureTracker extension icon
 4. Review and edit the pre-filled title and description
 5. Click **Save Opportunity**

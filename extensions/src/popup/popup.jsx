@@ -3,17 +3,27 @@ import { useAuth } from '@clerk/chrome-extension';
 import { saveOpportunity } from '../lib/api.js';
 
 export default function Popup() {
-  const { isSignedIn, getToken } = useAuth();
-  const [data, setData] = useState({ title: '', description: '', link: '' });
+  const { isSignedIn, isLoaded, getToken } = useAuth();
+  const [data, setData] = useState({ title: '', description: '', link: '', category: 'internship', status: 'applied' });
   const [status, setStatus] = useState('idle');
 
   useEffect(() => {
     chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
+      if (!tab?.id) return;
       chrome.tabs.sendMessage(tab.id, { type: 'GET_PAGE_METADATA' }, (resp) => {
-        if (resp) setData(resp);
+        if (chrome.runtime.lastError) return;
+        if (resp) setData(prev => ({ ...prev, ...resp }));
       });
     });
   }, []);
+
+  if (!isLoaded) {
+    return (
+      <div style={{ padding: '20px', textAlign: 'center', color: '#f1f5f9' }}>
+        <p>Loading...</p>
+      </div>
+    );
+  }
 
   if (!isSignedIn) {
     return (
@@ -33,15 +43,17 @@ export default function Popup() {
   }
 
   async function handleSave() {
+    if (!data.title) return alert('Please enter a title!');
+    const token = await getToken();
+    if (!token) return alert('Not signed in!');
     setStatus('saving');
     try {
-      const token = await getToken();
       await saveOpportunity(token, {
         title: data.title,
         description: data.description,
         link: data.link,
-        category: 'internship',
-        status: 'applied',
+        category: data.category,
+        status: data.status,
       });
       setStatus('saved');
     } catch (e) {
@@ -68,8 +80,30 @@ export default function Popup() {
       <input
         value={data.link}
         readOnly
-        style={{ width: '100%', marginBottom: '16px', padding: '6px', borderRadius: '4px', border: 'none', background: '#1e293b', color: '#94a3b8' }}
+        style={{ width: '100%', marginBottom: '10px', padding: '6px', borderRadius: '4px', border: 'none', background: '#1e293b', color: '#94a3b8' }}
       />
+      <label>Category</label>
+      <select
+        value={data.category}
+        onChange={(e) => setData({ ...data, category: e.target.value })}
+        style={{ width: '100%', marginBottom: '10px', padding: '6px', borderRadius: '4px', border: 'none', background: '#1e293b', color: '#f1f5f9' }}
+      >
+        <option value="internship">Internship</option>
+        <option value="hackathon">Hackathon</option>
+      </select>
+      <label>Status</label>
+      <select
+        value={data.status}
+        onChange={(e) => setData({ ...data, status: e.target.value })}
+        style={{ width: '100%', marginBottom: '16px', padding: '6px', borderRadius: '4px', border: 'none', background: '#1e293b', color: '#f1f5f9' }}
+      >
+        <option value="applied">Applied</option>
+        <option value="shortlisted">Shortlisted</option>
+        <option value="interviewed">Interviewed</option>
+        <option value="selected">Selected</option>
+        <option value="rejected">Rejected</option>
+        <option value="ghosted">Ghosted</option>
+      </select>
       <button
         onClick={handleSave}
         disabled={status === 'saving'}
