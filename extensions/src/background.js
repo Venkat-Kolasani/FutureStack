@@ -7,8 +7,12 @@ const clerkClient = createClerkClient({
 });
 
 async function initClerk() {
-  await clerkClient.load();
-  console.log('FutureTracker: Clerk loaded');
+  try {
+    await clerkClient.load();
+    console.log('FutureTracker: Clerk loaded');
+  } catch (err) {
+    console.error('FutureTracker: Clerk failed to load', err);
+  }
 }
 
 initClerk();

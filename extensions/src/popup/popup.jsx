@@ -30,12 +30,7 @@ export default function Popup() {
       <div style={{ padding: '20px', textAlign: 'center' }}>
         <h2 style={{ color: '#6366f1' }}>FutureTracker</h2>
         <p>Please sign in first at</p>
-        
-          href="https://futuretracker.online/sign-in"
-          target="_blank"
-          rel="noreferrer"
-          style={{ color: '#6366f1' }}
-        >
+        <a href="https://futuretracker.online/sign-in" target="_blank" rel="noreferrer" style={{ color: '#6366f1' }}>
           futuretracker.online
         </a>
       </div>
@@ -44,10 +39,13 @@ export default function Popup() {
 
   async function handleSave() {
     if (!data.title) return alert('Please enter a title!');
-    const token = await getToken();
-    if (!token) return alert('Not signed in!');
     setStatus('saving');
     try {
+      const token = await getToken();
+      if (!token) {
+        setStatus('idle');
+        return alert('Not signed in!');
+      }
       await saveOpportunity(token, {
         title: data.title,
         description: data.description,
@@ -57,6 +55,7 @@ export default function Popup() {
       });
       setStatus('saved');
     } catch (e) {
+      console.error('FutureTracker: save failed', e);
       setStatus('error');
     }
   }
