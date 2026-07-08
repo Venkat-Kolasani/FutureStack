@@ -10,7 +10,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     sendResponse({
       title: getMeta('og:title') || document.title,
       description: getMeta('og:description') || '',
-      url: window.location.href,
+      link: window.location.href,
     });
   }
   return true;

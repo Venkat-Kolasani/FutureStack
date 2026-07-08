@@ -4,7 +4,7 @@ import { saveOpportunity } from '../lib/api.js';
 
 export default function Popup() {
   const { isSignedIn, getToken } = useAuth();
-  const [data, setData] = useState({ title: '', description: '', url: '' });
+  const [data, setData] = useState({ title: '', description: '', link: '' });
   const [status, setStatus] = useState('idle');
 
   useEffect(() => {
@@ -20,9 +20,9 @@ export default function Popup() {
       <div style={{ padding: '20px', textAlign: 'center' }}>
         <h2 style={{ color: '#6366f1' }}>FutureTracker</h2>
         <p>Please sign in first at</p>
-        <a 
-          href="https://futuretracker.online/sign-in" 
-          target="_blank" 
+        
+          href="https://futuretracker.online/sign-in"
+          target="_blank"
           rel="noreferrer"
           style={{ color: '#6366f1' }}
         >
@@ -37,10 +37,11 @@ export default function Popup() {
     try {
       const token = await getToken();
       await saveOpportunity(token, {
-        ...data,
+        title: data.title,
+        description: data.description,
+        link: data.link,
         category: 'internship',
         status: 'applied',
-        deadline: null,
       });
       setStatus('saved');
     } catch (e) {
@@ -65,7 +66,7 @@ export default function Popup() {
       />
       <label>URL</label>
       <input
-        value={data.url}
+        value={data.link}
         readOnly
         style={{ width: '100%', marginBottom: '16px', padding: '6px', borderRadius: '4px', border: 'none', background: '#1e293b', color: '#94a3b8' }}
       />
