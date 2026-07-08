@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "FutureTracker Saver",
+  "version": "1.0.0",
+  "description": "Save job/internship listings to FutureTracker",
+  "action": {
+    "default_popup": "src/popup/index.html",
+    "default_icon": { "16": "icons/16.png", "48": "icons/48.png", "128": "icons/128.png" }
+  },
+  "icons": { "16": "icons/16.png", "48": "icons/48.png", "128": "icons/128.png" },
+  "permissions": ["activeTab", "storage", "scripting","cookies"],
+  "host_permissions": [
+    "https://futuretracker.online/*",
+      "http://localhost:3000/*",
+    "http://localhost:3001/*",
+    "https://*.clerk.accounts.dev/*"
+  ],
+  "background": { "service_worker": "src/background.js", "type": "module" },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
