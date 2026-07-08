@@ -38,13 +38,16 @@ export default function Popup() {
   }
 
   async function handleSave() {
-    if (!data.title) return alert('Please enter a title!');
+    if (!data.title) {
+      setStatus('missing-title');
+      return;
+    }
     setStatus('saving');
     try {
       const token = await getToken();
       if (!token) {
-        setStatus('idle');
-        return alert('Not signed in!');
+        setStatus('auth-error');
+        return;
       }
       await saveOpportunity(token, {
         title: data.title,
@@ -63,26 +66,34 @@ export default function Popup() {
   return (
     <div style={{ padding: '20px' }}>
       <h2 style={{ color: '#6366f1', marginTop: 0 }}>FutureTracker</h2>
-      <label>Title</label>
+      
+      <label htmlFor="ft-title">Title</label>
       <input
+        id="ft-title"
         value={data.title}
         onChange={(e) => setData({ ...data, title: e.target.value })}
         style={{ width: '100%', marginBottom: '10px', padding: '6px', borderRadius: '4px', border: 'none', background: '#1e293b', color: '#f1f5f9' }}
       />
-      <label>Description</label>
+      
+      <label htmlFor="ft-description">Description</label>
       <textarea
+        id="ft-description"
         value={data.description}
         onChange={(e) => setData({ ...data, description: e.target.value })}
         style={{ width: '100%', marginBottom: '10px', padding: '6px', borderRadius: '4px', border: 'none', background: '#1e293b', color: '#f1f5f9', height: '80px' }}
       />
-      <label>URL</label>
+      
+      <label htmlFor="ft-url">URL</label>
       <input
+        id="ft-url"
         value={data.link}
         readOnly
         style={{ width: '100%', marginBottom: '10px', padding: '6px', borderRadius: '4px', border: 'none', background: '#1e293b', color: '#94a3b8' }}
       />
-      <label>Category</label>
+      
+      <label htmlFor="ft-category">Category</label>
       <select
+        id="ft-category"
         value={data.category}
         onChange={(e) => setData({ ...data, category: e.target.value })}
         style={{ width: '100%', marginBottom: '10px', padding: '6px', borderRadius: '4px', border: 'none', background: '#1e293b', color: '#f1f5f9' }}
@@ -90,8 +101,10 @@ export default function Popup() {
         <option value="internship">Internship</option>
         <option value="hackathon">Hackathon</option>
       </select>
-      <label>Status</label>
+      
+      <label htmlFor="ft-status">Status</label>
       <select
+        id="ft-status"
         value={data.status}
         onChange={(e) => setData({ ...data, status: e.target.value })}
         style={{ width: '100%', marginBottom: '16px', padding: '6px', borderRadius: '4px', border: 'none', background: '#1e293b', color: '#f1f5f9' }}
@@ -103,6 +116,7 @@ export default function Popup() {
         <option value="rejected">Rejected</option>
         <option value="ghosted">Ghosted</option>
       </select>
+      
       <button
         onClick={handleSave}
         disabled={status === 'saving'}
@@ -110,8 +124,12 @@ export default function Popup() {
       >
         {status === 'saving' ? 'Saving...' : 'Save Opportunity'}
       </button>
+
+      {/* Dynamic UI Status Feedback Panel */}
       {status === 'saved' && <p style={{ color: '#22c55e', textAlign: 'center' }}>Saved successfully ✓</p>}
       {status === 'error' && <p style={{ color: '#ef4444', textAlign: 'center' }}>Failed to save. Try again.</p>}
+      {status === 'missing-title' && <p style={{ color: '#ef4444', textAlign: 'center' }}>Please enter a title!</p>}
+      {status === 'auth-error' && <p style={{ color: '#ef4444', textAlign: 'center' }}>Not signed in!</p>}
     </div>
   );
 }
