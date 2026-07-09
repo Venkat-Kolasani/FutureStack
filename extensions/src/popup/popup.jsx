@@ -5,14 +5,16 @@ import { saveOpportunity } from '../lib/api.js';
 export default function Popup() {
   const { isSignedIn, isLoaded, getToken } = useAuth();
   const [data, setData] = useState({ title: '', description: '', link: '', category: 'internship', status: 'applied' });
-  const [status, setStatus] = useState('idle');
+  const [saveStatus, setSaveStatus] = useState('idle');
 
   useEffect(() => {
     chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
       if (!tab?.id) return;
+      const fallbackLink = tab.url || '';
+      setData(prev => ({ ...prev, link: fallbackLink }));
       chrome.tabs.sendMessage(tab.id, { type: 'GET_PAGE_METADATA' }, (resp) => {
         if (chrome.runtime.lastError) return;
-        if (resp) setData(prev => ({ ...prev, ...resp }));
+        if (resp) setData(prev => ({ ...prev, ...resp, link: resp.link || fallbackLink }));
       });
     });
   }, []);
@@ -39,14 +41,14 @@ export default function Popup() {
 
   async function handleSave() {
     if (!data.title) {
-      setStatus('missing-title');
+      setSaveStatus('missing-title');
       return;
     }
-    setStatus('saving');
+    setSaveStatus('saving');
     try {
       const token = await getToken();
       if (!token) {
-        setStatus('auth-error');
+        setSaveStatus('auth-error');
         return;
       }
       await saveOpportunity(token, {
@@ -56,44 +58,39 @@ export default function Popup() {
         category: data.category,
         status: data.status,
       });
-      setStatus('saved');
+      setSaveStatus('saved');
     } catch (e) {
       console.error('FutureTracker: save failed', e);
-      setStatus('error');
+      setSaveStatus('error');
     }
   }
 
   return (
     <div style={{ padding: '20px' }}>
       <h2 style={{ color: '#6366f1', marginTop: 0 }}>FutureTracker</h2>
-      
-      <label htmlFor="ft-title">Title</label>
+      <label>Title</label>
       <input
         id="ft-title"
         value={data.title}
         onChange={(e) => setData({ ...data, title: e.target.value })}
+        required
+        aria-required="true"
         style={{ width: '100%', marginBottom: '10px', padding: '6px', borderRadius: '4px', border: 'none', background: '#1e293b', color: '#f1f5f9' }}
       />
-      
-      <label htmlFor="ft-description">Description</label>
+      <label>Description</label>
       <textarea
-        id="ft-description"
         value={data.description}
         onChange={(e) => setData({ ...data, description: e.target.value })}
         style={{ width: '100%', marginBottom: '10px', padding: '6px', borderRadius: '4px', border: 'none', background: '#1e293b', color: '#f1f5f9', height: '80px' }}
       />
-      
-      <label htmlFor="ft-url">URL</label>
+      <label>URL</label>
       <input
-        id="ft-url"
         value={data.link}
         readOnly
         style={{ width: '100%', marginBottom: '10px', padding: '6px', borderRadius: '4px', border: 'none', background: '#1e293b', color: '#94a3b8' }}
       />
-      
-      <label htmlFor="ft-category">Category</label>
+      <label>Category</label>
       <select
-        id="ft-category"
         value={data.category}
         onChange={(e) => setData({ ...data, category: e.target.value })}
         style={{ width: '100%', marginBottom: '10px', padding: '6px', borderRadius: '4px', border: 'none', background: '#1e293b', color: '#f1f5f9' }}
@@ -101,10 +98,8 @@ export default function Popup() {
         <option value="internship">Internship</option>
         <option value="hackathon">Hackathon</option>
       </select>
-      
-      <label htmlFor="ft-status">Status</label>
+      <label>Status</label>
       <select
-        id="ft-status"
         value={data.status}
         onChange={(e) => setData({ ...data, status: e.target.value })}
         style={{ width: '100%', marginBottom: '16px', padding: '6px', borderRadius: '4px', border: 'none', background: '#1e293b', color: '#f1f5f9' }}
@@ -116,20 +111,19 @@ export default function Popup() {
         <option value="rejected">Rejected</option>
         <option value="ghosted">Ghosted</option>
       </select>
-      
       <button
         onClick={handleSave}
-        disabled={status === 'saving'}
+        disabled={saveStatus === 'saving'}
         style={{ width: '100%', padding: '10px', background: '#6366f1', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
       >
-        {status === 'saving' ? 'Saving...' : 'Save Opportunity'}
+        {saveStatus === 'saving' ? 'Saving...' : 'Save Opportunity'}
       </button>
-
-      {/* Dynamic UI Status Feedback Panel */}
-      {status === 'saved' && <p style={{ color: '#22c55e', textAlign: 'center' }}>Saved successfully ✓</p>}
-      {status === 'error' && <p style={{ color: '#ef4444', textAlign: 'center' }}>Failed to save. Try again.</p>}
-      {status === 'missing-title' && <p style={{ color: '#ef4444', textAlign: 'center' }}>Please enter a title!</p>}
-      {status === 'auth-error' && <p style={{ color: '#ef4444', textAlign: 'center' }}>Not signed in!</p>}
+      <div aria-live="polite">
+        {saveStatus === 'saved' && <p style={{ color: '#22c55e', textAlign: 'center' }}>Saved successfully ✓</p>}
+        {saveStatus === 'error' && <p style={{ color: '#ef4444', textAlign: 'center' }}>Failed to save. Try again.</p>}
+        {saveStatus === 'missing-title' && <p style={{ color: '#ef4444', textAlign: 'center' }}>Please enter a title!</p>}
+        {saveStatus === 'auth-error' && <p style={{ color: '#ef4444', textAlign: 'center' }}>Not signed in!</p>}
+      </div>
     </div>
   );
 }
