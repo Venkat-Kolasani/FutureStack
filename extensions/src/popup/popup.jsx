@@ -4,7 +4,15 @@ import { saveOpportunity } from '../lib/api.js';
 
 export default function Popup() {
   const { isSignedIn, isLoaded, getToken } = useAuth();
-  const [data, setData] = useState({ title: '', description: '', link: '', category: 'internship', status: 'applied' });
+  // Restored your exact original state layout + added deadline
+  const [data, setData] = useState({ 
+    title: '', 
+    description: '', 
+    link: '', 
+    category: 'internship', 
+    status: 'applied',
+    deadline: '' // Added deadline field cleanly
+  });
   const [saveStatus, setSaveStatus] = useState('idle');
 
   useEffect(() => {
@@ -12,6 +20,8 @@ export default function Popup() {
       if (!tab?.id) return;
       const fallbackLink = tab.url || '';
       setData(prev => ({ ...prev, link: fallbackLink }));
+      
+      // This is your original content script listener that was working perfectly!
       chrome.tabs.sendMessage(tab.id, { type: 'GET_PAGE_METADATA' }, (resp) => {
         if (chrome.runtime.lastError) return;
         if (resp) setData(prev => ({ ...prev, ...resp, link: resp.link || fallbackLink }));
@@ -57,6 +67,7 @@ export default function Popup() {
         link: data.link,
         category: data.category,
         status: data.status,
+        deadline: data.deadline || null, // Sends null to backend if left empty
       });
       setSaveStatus('saved');
     } catch (e) {
@@ -68,7 +79,8 @@ export default function Popup() {
   return (
     <div style={{ padding: '20px' }}>
       <h2 style={{ color: '#6366f1', marginTop: 0 }}>FutureTracker</h2>
-      <label>Title</label>
+      
+      <label htmlFor="ft-title">Title</label>
       <input
         id="ft-title"
         value={data.title}
@@ -77,18 +89,40 @@ export default function Popup() {
         aria-required="true"
         style={{ width: '100%', marginBottom: '10px', padding: '6px', borderRadius: '4px', border: 'none', background: '#1e293b', color: '#f1f5f9' }}
       />
+      
       <label>Description</label>
       <textarea
         value={data.description}
         onChange={(e) => setData({ ...data, description: e.target.value })}
         style={{ width: '100%', marginBottom: '10px', padding: '6px', borderRadius: '4px', border: 'none', background: '#1e293b', color: '#f1f5f9', height: '80px' }}
       />
+      
       <label>URL</label>
       <input
         value={data.link}
         readOnly
         style={{ width: '100%', marginBottom: '10px', padding: '6px', borderRadius: '4px', border: 'none', background: '#1e293b', color: '#94a3b8' }}
       />
+
+      {/* 🗓️ Clean addition of the deadline selector */}
+      <label htmlFor="ft-deadline">Application Deadline (Optional)</label>
+      <input
+        type="date"
+        id="ft-deadline"
+        value={data.deadline}
+        onChange={(e) => setData({ ...data, deadline: e.target.value })}
+        style={{ 
+          width: '100%', 
+          marginBottom: '10px', 
+          padding: '6px', 
+          borderRadius: '4px', 
+          border: 'none', 
+          background: '#1e293b', 
+          color: '#f1f5f9',
+          colorScheme: 'dark' // Keeps calendar UI dark-themed
+        }}
+      />
+      
       <label>Category</label>
       <select
         value={data.category}
@@ -98,6 +132,7 @@ export default function Popup() {
         <option value="internship">Internship</option>
         <option value="hackathon">Hackathon</option>
       </select>
+      
       <label>Status</label>
       <select
         value={data.status}
@@ -111,6 +146,7 @@ export default function Popup() {
         <option value="rejected">Rejected</option>
         <option value="ghosted">Ghosted</option>
       </select>
+      
       <button
         onClick={handleSave}
         disabled={saveStatus === 'saving'}
@@ -118,6 +154,7 @@ export default function Popup() {
       >
         {saveStatus === 'saving' ? 'Saving...' : 'Save Opportunity'}
       </button>
+      
       <div aria-live="polite">
         {saveStatus === 'saved' && <p style={{ color: '#22c55e', textAlign: 'center' }}>Saved successfully ✓</p>}
         {saveStatus === 'error' && <p style={{ color: '#ef4444', textAlign: 'center' }}>Failed to save. Try again.</p>}
