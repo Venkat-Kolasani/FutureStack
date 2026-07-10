@@ -8,19 +8,13 @@
     "default_icon": { "16": "icons/16.png", "48": "icons/48.png", "128": "icons/128.png" }
   },
   "icons": { "16": "icons/16.png", "48": "icons/48.png", "128": "icons/128.png" },
-  "permissions": ["activeTab", "storage", "scripting","cookies"],
+  "permissions": ["activeTab", "storage", "scripting"],
   "host_permissions": [
     "https://futuretracker.online/*",
-      "http://localhost:3000/*",
+    "https://*.onrender.com/*",
+    "http://localhost:3000/*",
     "http://localhost:3001/*",
     "https://*.clerk.accounts.dev/*"
   ],
-  "background": { "service_worker": "src/background.js", "type": "module" },
-  "content_scripts": [
-    {
-      "matches": ["<all_urls>"],
-      "js": ["src/content.js"],
-      "run_at": "document_idle"
-    }
-  ]
+  "background": { "service_worker": "src/background.js", "type": "module" }
 }

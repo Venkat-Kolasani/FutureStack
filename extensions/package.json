@@ -5,19 +5,20 @@
   "type": "module",
   "scripts": {
     "dev": "vite build --watch",
-    "build": "vite build"
+    "build": "vite build",
+    "test": "node --experimental-vm-modules ./node_modules/jest-cli/bin/jest.js tests/"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "dependencies": {
-    "@clerk/chrome-extension": "^3.1.47",
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7"
-  },
   "devDependencies": {
     "@crxjs/vite-plugin": "^2.7.1",
     "@vitejs/plugin-react": "^4.7.0",
+    "jest": "^30.4.2",
+    "jest-cli": "^30.4.2",
     "vite": "^5.4.21"
+  },
+  "dependencies": {
+    "@clerk/chrome-extension": "^3.1.51"
   }
 }

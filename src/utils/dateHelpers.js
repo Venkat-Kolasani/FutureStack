@@ -4,6 +4,7 @@
  * @returns {Date}
  */
 const parseLocalDate = (dateString) => {
+  if (!dateString) return null;
   const [year, month, day] = dateString.split('-').map(Number);
   return new Date(year, month - 1, day);
 };
@@ -14,16 +15,21 @@ const parseLocalDate = (dateString) => {
  * @returns {number} - Number of days remaining (negative if overdue)
  */
 export const getDaysRemaining = (deadline) => {
+  if (!deadline) return 0;
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
   const deadlineDate = parseLocalDate(deadline);
+  if (!deadlineDate) return 0;
   deadlineDate.setHours(0, 0, 0, 0);
 
-  const diffTime = deadlineDate - today;
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  const diffTime = deadlineDate.getTime() - today.getTime();
+  // Math.round safely handles daylight saving adjustments (+/- 1 hr shifts)
+  const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
 
-  return diffDays;
+  // Clean up JavaScript's native -0 edge case
+  return diffDays === 0 ? 0 : diffDays;
 };
 
 /**
@@ -32,6 +38,7 @@ export const getDaysRemaining = (deadline) => {
  * @returns {boolean} - True if overdue
  */
 export const isOverdue = (deadline) => {
+  if (!deadline) return false;
   return getDaysRemaining(deadline) < 0;
 };
 
@@ -44,7 +51,8 @@ export const formatDate = (date) => {
   if (!date) return '';
 
   const dateObj = parseLocalDate(date);
-  const options = { year: 'numeric', month: 'short', day: 'numeric' };
+  if (!dateObj || isNaN(dateObj.getTime())) return '';
 
+  const options = { year: 'numeric', month: 'short', day: 'numeric' };
   return dateObj.toLocaleDateString('en-US', options);
 };
