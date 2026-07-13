@@ -63,7 +63,7 @@ const nodeRingClass = (round, isActive) => {
   if (round.result === 'cleared') {
     return 'border-green-500/40 bg-green-500/10';
   }
-  return 'border-white/20 bg-white/5';
+  return 'border-white/20 bg-black/5 dark:bg-white/5';
 };
 
 const formatScheduledHint = (scheduledDate) => {
@@ -97,13 +97,13 @@ const PipelineSummary = ({ rounds, currentRoundNumber, rejectedRoundNumber }) =>
 
   return (
     <div className="mb-4 space-y-3">
-      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-gray-400">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-gray-600 dark:text-gray-400">
         <span>
           {stats.cleared} cleared
           {stats.pending > 0 && ` · ${stats.pending} pending`}
           {stats.skipped > 0 && ` · ${stats.skipped} skipped`}
         </span>
-        <span className="font-medium text-gray-300">{stats.progressPercent}% complete</span>
+        <span className="font-medium text-gray-700 dark:text-gray-300">{stats.progressPercent}% complete</span>
       </div>
       <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
         <div
@@ -154,8 +154,8 @@ const RoundTimeline = ({
         <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-purple-500/10 border border-purple-500/20">
           <FaLayerGroup className="text-purple-400" size={20} />
         </div>
-        <p className="text-sm font-medium text-white mb-1">No interview rounds yet</p>
-        <p className="text-xs text-gray-400 mb-4 max-w-[240px] mx-auto leading-relaxed">
+        <p className="text-sm font-medium text-gray-900 dark:text-white mb-1">No interview rounds yet</p>
+        <p className="text-xs text-gray-600 dark:text-gray-400 mb-4 max-w-[240px] mx-auto leading-relaxed">
           Track OA, technical, HR, and final rounds as you move through the hiring process.
         </p>
         {onAddRound && (
@@ -223,7 +223,7 @@ const RoundTimeline = ({
                       : round.result === 'rejected'
                         ? 'text-red-400'
                         : round.result === 'skipped'
-                          ? 'text-gray-400'
+                          ? 'text-gray-600 dark:text-gray-400'
                           : 'text-blue-400'
                   }
                   size={13}
@@ -237,21 +237,21 @@ const RoundTimeline = ({
                     ? 'border-blue-500/30 bg-blue-500/[0.07]'
                     : round.result === 'rejected'
                       ? 'border-red-500/20 bg-red-500/[0.04]'
-                      : 'border-white/10 bg-white/[0.04] hover:bg-white/[0.06]'
+                      : 'border-gray-200 dark:border-white/10 bg-white/[0.04] hover:bg-white/[0.06]'
                 }`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 mb-0.5">
                       <TypeIcon className="text-gray-500 shrink-0" size={12} aria-hidden="true" />
-                      <p className="text-sm font-semibold text-white truncate">
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
                         Round {round.round_number}
-                        <span className="font-normal text-gray-400"> · </span>
+                        <span className="font-normal text-gray-600 dark:text-gray-400"> · </span>
                         {getRoundTypeLabel(round.round_type)}
                       </p>
                     </div>
                     {round.scheduled_date && (
-                      <p className="text-xs text-gray-400 mt-1">
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                         {formatDate(round.scheduled_date)}
                         {scheduledHint && (
                           <span
@@ -270,7 +270,7 @@ const RoundTimeline = ({
                   <span
                     className={`shrink-0 rounded-full border px-2.5 py-0.5 text-xs font-medium ${
                       ROUND_RESULT_STYLES[round.result] ||
-                      'bg-gray-500/10 text-gray-400 border-gray-500/20'
+                      'bg-gray-500/10 text-gray-600 dark:text-gray-400 border-gray-500/20'
                     }`}
                   >
                     {getRoundResultLabel(round.result)}
@@ -278,7 +278,7 @@ const RoundTimeline = ({
                 </div>
 
                 {round.notes && (
-                  <p className="mt-3 text-sm text-gray-300 whitespace-pre-wrap leading-relaxed border-t border-white/5 pt-3">
+                  <p className="mt-3 text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed border-t border-white/5 pt-3">
                     {round.notes}
                   </p>
                 )}
@@ -302,7 +302,7 @@ const RoundTimeline = ({
                     {onDeleteRound && (
                       isConfirmingDelete ? (
                         <span className="inline-flex items-center gap-2 text-xs">
-                          <span className="text-gray-400">Delete round?</span>
+                          <span className="text-gray-600 dark:text-gray-400">Delete round?</span>
                           <button
                             type="button"
                             onClick={() => handleDeleteClick(round)}
@@ -314,7 +314,7 @@ const RoundTimeline = ({
                           <button
                             type="button"
                             onClick={() => setConfirmDeleteId(null)}
-                            className="text-gray-400 hover:text-gray-300"
+                            className="text-gray-600 dark:text-gray-400 hover:text-gray-300"
                           >
                             Cancel
                           </button>
@@ -324,7 +324,7 @@ const RoundTimeline = ({
                           type="button"
                           onClick={() => handleDeleteClick(round)}
                           disabled={isDeleting}
-                          className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium text-gray-400 hover:bg-red-500/10 hover:text-red-400 transition-colors disabled:opacity-50"
+                          className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 hover:bg-red-500/10 hover:text-red-400 transition-colors disabled:opacity-50"
                         >
                           <FaTrash size={11} />
                           Delete

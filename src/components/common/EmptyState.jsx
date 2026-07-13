@@ -51,8 +51,8 @@ const EmptyState = ({
             <div className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-500/20 to-purple-600/10 flex items-center justify-center mb-6">
                 <FinalIcon className="text-purple-400 text-3xl" />
             </div>
-            <h3 className="text-xl font-semibold text-white mb-2">{finalTitle}</h3>
-            <p className="text-gray-400 max-w-sm mb-6">{finalDescription}</p>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">{finalTitle}</h3>
+            <p className="text-gray-600 dark:text-gray-400 max-w-sm mb-6">{finalDescription}</p>
             {finalActionLabel && finalActionPath && (
                 <Button onClick={() => navigate(finalActionPath)} className="inline-flex items-center gap-2">
                     <FaPlus className="text-sm" />

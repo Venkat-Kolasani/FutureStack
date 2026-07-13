@@ -18,10 +18,21 @@ export function ThemeProvider({ children }) {
 
   useEffect(() => {
     const root = window.document.documentElement;
+    let metaThemeColor = document.querySelector('meta[name="theme-color"]');
+
+    // Create it if it doesn't exist
+    if (!metaThemeColor) {
+      metaThemeColor = document.createElement('meta');
+      metaThemeColor.name = 'theme-color';
+      document.head.appendChild(metaThemeColor);
+    }
+
     if (isDark) {
       root.classList.add('dark');
+      metaThemeColor.setAttribute('content', '#000000');
     } else {
       root.classList.remove('dark');
+      metaThemeColor.setAttribute('content', '#ffffff');
     }
   }, [isDark]);
 

@@ -1,15 +1,13 @@
-.custom-calendar {
+.custom-calendar, .react-calendar {
   width: 100%;
   max-width: 100%;
   background: transparent !important;
   border: none !important;
-  color: white !important;
+  color: #111827 !important; /* text-gray-900 */
   font-family: inherit;
 }
 
-.react-calendar {
-  background: transparent !important;
-  border: none !important;
+.dark .custom-calendar, .dark .react-calendar {
   color: white !important;
 }
 
@@ -20,9 +18,9 @@
 }
 
 .custom-calendar .react-calendar__navigation button {
-  color: white !important;
-  background: #1a1a1a !important;
-  border: 1px solid #333 !important;
+  color: #111827 !important;
+  background: #f9fafb !important; /* bg-gray-50 */
+  border: 1px solid #e5e7eb !important; /* border-gray-200 */
   border-radius: 0.5rem;
   padding: 0.5rem 1rem;
   font-size: 1rem;
@@ -30,7 +28,18 @@
   transition: all 0.2s;
 }
 
+.dark .custom-calendar .react-calendar__navigation button {
+  color: white !important;
+  background: #1a1a1a !important;
+  border-color: #333 !important;
+}
+
 .custom-calendar .react-calendar__navigation button:hover:not(:disabled) {
+  background: #f3f4f6 !important; /* bg-gray-100 */
+  border-color: #d1d5db !important; /* border-gray-300 */
+}
+
+.dark .custom-calendar .react-calendar__navigation button:hover:not(:disabled) {
   background: #262626 !important;
   border-color: #404040 !important;
 }
@@ -45,9 +54,13 @@
   text-align: center;
   font-weight: 600;
   font-size: 0.875rem;
-  color: #9ca3af;
+  color: #6b7280; /* text-gray-500 */
   margin-bottom: 0.5rem;
   text-decoration: none !important;
+}
+
+.dark .custom-calendar .react-calendar__month-view__weekdays {
+  color: #9ca3af; /* text-gray-400 */
 }
 
 .custom-calendar .react-calendar__month-view__weekdays__weekday abbr {
@@ -57,13 +70,12 @@
 
 /* Tiles (Days) */
 .custom-calendar .react-calendar__tile {
-  background: #0A0A0A !important;
-  border: 1px solid #262626 !important;
-  color: white !important;
+  background: #ffffff !important;
+  border: 1px solid #e5e7eb !important; /* border-gray-200 */
+  color: #111827 !important;
   padding: 0.75rem;
   font-size: 0.875rem;
   border-radius: 0.5rem;
-  /* margin: 2px; - Removed to prevent layout breaking (7 * (14.28% + 4px) > 100%) */
   transition: all 0.2s;
   cursor: pointer;
   min-height: 60px;
@@ -73,28 +85,58 @@
   justify-content: flex-start;
 }
 
+.dark .custom-calendar .react-calendar__tile {
+  background: #0A0A0A !important;
+  border-color: #262626 !important;
+  color: white !important;
+}
+
 .custom-calendar .react-calendar__tile:hover:not(:disabled) {
+  background: #f3f4f6 !important; /* bg-gray-100 */
+  border-color: #d1d5db !important;
+}
+
+.dark .custom-calendar .react-calendar__tile:hover:not(:disabled) {
   background: #1a1a1a !important;
   border-color: #404040 !important;
 }
 
-.custom-calendar .react-calendar__tile--active {
-  background: #3b82f6 !important;
-  border-color: #2563eb !important;
+.custom-calendar .react-calendar__tile--now {
+  background: #eff6ff !important; /* bg-blue-50 */
+  border-color: #3b82f6 !important;
 }
 
-.custom-calendar .react-calendar__tile--now {
+.dark .custom-calendar .react-calendar__tile--now {
   background: #1e3a5f !important;
   border-color: #3b82f6 !important;
 }
 
 .custom-calendar .react-calendar__tile--now:hover {
+  background: #dbeafe !important; /* bg-blue-100 */
+}
+
+.dark .custom-calendar .react-calendar__tile--now:hover {
   background: #2d4a6f !important;
 }
 
+.custom-calendar .react-calendar__tile--active {
+  background: #3b82f6 !important;
+  border-color: #2563eb !important;
+  color: white !important;
+}
+
+.dark .custom-calendar .react-calendar__tile--active {
+  background: #3b82f6 !important;
+  border-color: #2563eb !important;
+}
+
 .custom-calendar .react-calendar__month-view__days__day--neighboringMonth {
-  color: #6b7280 !important;
+  color: #9ca3af !important; /* text-gray-400 */
   opacity: 0.5;
+}
+
+.dark .custom-calendar .react-calendar__month-view__days__day--neighboringMonth {
+  color: #6b7280 !important; /* text-gray-500 */
 }
 
 .custom-calendar .react-calendar__tile:disabled {

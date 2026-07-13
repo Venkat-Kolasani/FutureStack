@@ -171,11 +171,11 @@ const Reports = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black p-4 sm:p-6">
+      <div className="min-h-screen bg-white dark:bg-black p-4 sm:p-6">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col items-center justify-center py-20">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mb-4" />
-            <p className="text-white text-lg">Loading report data…</p>
+            <p className="text-gray-900 dark:text-white text-lg">Loading report data…</p>
           </div>
         </div>
       </div>
@@ -183,7 +183,7 @@ const Reports = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black p-4 sm:p-6">
+    <div className="min-h-screen bg-white dark:bg-black p-4 sm:p-6">
       <SEO
         title="Reports"
         description="Generate and download PDF reports of your opportunities. Export your application data for record keeping."
@@ -194,8 +194,8 @@ const Reports = () => {
         {/* Header + primary action */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">Reports & Export</h1>
-            <p className="text-sm sm:text-base text-gray-400">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-1">Reports & Export</h1>
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
               Preview your data, see where rejections happened, and download a PDF
             </p>
           </div>
@@ -212,7 +212,7 @@ const Reports = () => {
         {/* Overview stats — full width */}
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
           {[
-            { key: 'total', label: 'Total', value: statistics.total, className: 'text-white' },
+            { key: 'total', label: 'Total', value: statistics.total, className: 'text-gray-900 dark:text-white' },
             { key: 'applied', label: 'Applied', value: statistics.applied, className: 'text-blue-300' },
             { key: 'shortlisted', label: 'Shortlisted', value: statistics.shortlisted, className: 'text-amber-300' },
             { key: 'interviewed', label: 'Interviewed', value: statistics.interviewed, className: 'text-purple-300' },
@@ -234,19 +234,19 @@ const Reports = () => {
         {showPipelineSection && (
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             <Card className="p-4 bg-red-500/5 border-red-500/15">
-              <p className="text-xs text-gray-400">Avg round at rejection</p>
+              <p className="text-xs text-gray-600 dark:text-gray-400">Avg round at rejection</p>
               <p className="text-2xl font-bold text-red-300 tabular-nums">
                 {displayPipeline.averageRoundsBeforeRejection ?? '—'}
               </p>
             </Card>
             <Card className="p-4 bg-purple-500/5 border-purple-500/15">
-              <p className="text-xs text-gray-400">Active in pipeline</p>
+              <p className="text-xs text-gray-600 dark:text-gray-400">Active in pipeline</p>
               <p className="text-2xl font-bold text-purple-200 tabular-nums">
                 {displayPipeline.activeInPipeline}
               </p>
             </Card>
             <Card className="p-4 bg-indigo-500/5 border-indigo-500/15 col-span-2 sm:col-span-1">
-              <p className="text-xs text-gray-400">With rounds logged</p>
+              <p className="text-xs text-gray-600 dark:text-gray-400">With rounds logged</p>
               <p className="text-2xl font-bold text-indigo-200 tabular-nums">
                 {displayPipeline.trackedWithRounds}
               </p>
@@ -259,7 +259,7 @@ const Reports = () => {
           {/* Sticky export sidebar */}
           <div className="lg:sticky lg:top-6 space-y-4">
             <Card className="p-5">
-              <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <FaFileAlt className="text-blue-400" />
                 Export scope
               </h2>
@@ -274,10 +274,10 @@ const Reports = () => {
                       className={`w-full text-left p-3 rounded-xl border transition-all ${
                         selected
                           ? 'border-blue-500/50 bg-blue-500/10 ring-1 ring-blue-500/30'
-                          : 'border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/[0.07]'
+                          : 'border-gray-200 dark:border-white/10 bg-black/5 dark:bg-white/5 hover:border-gray-400 dark:hover:border-white/20 hover:bg-black/10 dark:hover:bg-white/[0.07]'
                       }`}
                     >
-                      <p className={`text-sm font-medium ${selected ? 'text-white' : 'text-gray-200'}`}>
+                      <p className={`text-sm font-medium ${selected ? 'text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-200'}`}>
                         {option.label}
                       </p>
                       <p className="text-xs text-gray-500 mt-0.5 leading-snug">{option.description}</p>
@@ -311,12 +311,12 @@ const Reports = () => {
 
           {/* Preview panel */}
           <Card className="p-5 sm:p-6 min-h-[320px]">
-            <div className="flex flex-wrap items-center justify-between gap-3 mb-5 pb-4 border-b border-white/10">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-5 pb-4 border-b border-gray-200 dark:border-white/10">
               <div className="flex items-center gap-2">
-                <FaListUl className="text-gray-400" />
-                <h2 className="text-lg font-semibold text-white">Preview</h2>
+                <FaListUl className="text-gray-600 dark:text-gray-400" />
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Preview</h2>
                 {exportType !== 'summary' && (
-                  <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-white/10 text-gray-300">
+                  <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-white/10 text-gray-700 dark:text-gray-300">
                     {previewOpportunities.length}
                   </span>
                 )}
@@ -344,7 +344,7 @@ const Reports = () => {
 
             {exportType === 'summary' ? (
               <div className="space-y-6">
-                <p className="text-gray-400 text-sm">
+                <p className="text-gray-600 dark:text-gray-400 text-sm">
                   Your PDF will include the overview statistics above
                   {showPipelineSection && ' and the interview pipeline section below'}.
                 </p>
@@ -354,10 +354,10 @@ const Reports = () => {
                     .map(([key, value]) => (
                       <div
                         key={key}
-                        className="rounded-lg border border-white/10 bg-white/5 px-3 py-2"
+                        className="rounded-lg border border-gray-200 dark:border-white/10 bg-black/5 dark:bg-white/5 px-3 py-2"
                       >
                         <p className="text-xs text-gray-500 capitalize">{key}</p>
-                        <p className="text-lg font-semibold text-white tabular-nums">{value}</p>
+                        <p className="text-lg font-semibold text-gray-900 dark:text-white tabular-nums">{value}</p>
                       </div>
                     ))}
                 </div>
@@ -369,10 +369,10 @@ const Reports = () => {
                   ].map(({ key, label }) => (
                     <div
                       key={key}
-                      className="rounded-lg border border-white/10 bg-white/5 px-3 py-2"
+                      className="rounded-lg border border-gray-200 dark:border-white/10 bg-black/5 dark:bg-white/5 px-3 py-2"
                     >
                       <p className="text-xs text-gray-500">{label}</p>
-                      <p className="text-lg font-semibold text-white tabular-nums">
+                      <p className="text-lg font-semibold text-gray-900 dark:text-white tabular-nums">
                         {campusModeStats[key]}
                       </p>
                     </div>
@@ -380,7 +380,7 @@ const Reports = () => {
                 </div>
               </div>
             ) : previewOpportunities.length === 0 ? (
-              <p className="text-gray-400 text-center py-16">No opportunities to preview</p>
+              <p className="text-gray-600 dark:text-gray-400 text-center py-16">No opportunities to preview</p>
             ) : (
               <div className="space-y-3 max-h-[min(70vh,640px)] overflow-y-auto pr-1 -mr-1">
                 {previewOpportunities.map((opp) => {
@@ -390,7 +390,7 @@ const Reports = () => {
                     displayPipeline
                   );
                   const statusClass =
-                    STATUS_STYLES[opp.status] || 'bg-gray-500/15 text-gray-300 border-gray-500/25';
+                    STATUS_STYLES[opp.status] || 'bg-gray-500/15 text-gray-700 dark:text-gray-300 border-gray-500/25';
                   const campusLabel = getCampusModeLabel(opp.campus_mode);
 
                   return (
@@ -399,7 +399,7 @@ const Reports = () => {
                       className={`rounded-xl border p-4 transition-colors ${
                         exportType === 'selected' && isSelected
                           ? 'border-blue-500/40 bg-blue-500/10'
-                          : 'border-white/10 bg-white/[0.03] hover:bg-white/[0.05]'
+                          : 'border-gray-200 dark:border-white/10 bg-white/[0.03] hover:bg-white/[0.05]'
                       }`}
                     >
                       <div className="flex items-start gap-3">
@@ -415,7 +415,7 @@ const Reports = () => {
                         )}
                         <div className="flex-1 min-w-0">
                           <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
-                            <h3 className="font-semibold text-white leading-snug">{opp.title}</h3>
+                            <h3 className="font-semibold text-gray-900 dark:text-white leading-snug">{opp.title}</h3>
                             <div className="flex flex-wrap items-center gap-2 shrink-0">
                               {campusLabel && (
                                 <span
@@ -432,14 +432,14 @@ const Reports = () => {
                             </div>
                           </div>
 
-                          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-400 mb-2">
+                          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600 dark:text-gray-400 mb-2">
                             <span>
                               <span className="text-gray-500">Category · </span>
-                              <span className="text-gray-300 capitalize">{opp.category}</span>
+                              <span className="text-gray-700 dark:text-gray-300 capitalize">{opp.category}</span>
                             </span>
                             <span>
                               <span className="text-gray-500">Deadline · </span>
-                              <span className="text-gray-300">{formatDate(opp.deadline)}</span>
+                              <span className="text-gray-700 dark:text-gray-300">{formatDate(opp.deadline)}</span>
                             </span>
                           </div>
 
@@ -459,7 +459,7 @@ const Reports = () => {
                           )}
                           {opp.notes && (
                             <p className="text-sm text-gray-500 mt-1 line-clamp-2">
-                              <span className="text-gray-400">Notes · </span>
+                              <span className="text-gray-600 dark:text-gray-400">Notes · </span>
                               {opp.notes}
                             </p>
                           )}
@@ -476,11 +476,11 @@ const Reports = () => {
         {/* Pipeline insights — full width below workspace */}
         <section>
           <div className="mb-4">
-            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
               <FaLayerGroup className="text-red-400" />
               Where you were rejected
             </h2>
-            <p className="text-sm text-gray-400 mt-1">
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
               {exportType === 'selected' && previewOpportunities.length > 0
                 ? 'Filtered to your current export selection'
                 : 'Across all internships with interview rounds'}

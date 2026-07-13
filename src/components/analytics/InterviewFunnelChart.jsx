@@ -27,11 +27,11 @@ const InterviewFunnelChart = ({ pipeline, compact = false }) => {
   if (!funnel.length) {
     return (
       <Card className={compact ? 'p-4' : 'p-6'}>
-        <h3 className={`font-semibold text-white mb-2 flex items-center gap-2 ${compact ? 'text-base' : 'text-lg'}`}>
+        <h3 className={`font-semibold text-gray-900 dark:text-white mb-2 flex items-center gap-2 ${compact ? 'text-base' : 'text-lg'}`}>
           <FaFilter className="text-indigo-400" />
           Pipeline funnel by round type
         </h3>
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-gray-600 dark:text-gray-400">
           Log interview rounds on internships to see how far you progress through each stage type.
         </p>
       </Card>
@@ -51,11 +51,11 @@ const InterviewFunnelChart = ({ pipeline, compact = false }) => {
 
   return (
     <Card className={compact ? 'p-4' : 'p-6'}>
-      <h3 className={`font-semibold text-white mb-1 flex items-center gap-2 ${compact ? 'text-base' : 'text-lg'}`}>
+      <h3 className={`font-semibold text-gray-900 dark:text-white mb-1 flex items-center gap-2 ${compact ? 'text-base' : 'text-lg'}`}>
         <FaFilter className="text-indigo-400" />
         Pipeline funnel by round type
       </h3>
-      <p className="text-sm text-gray-400 mb-4">
+      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
         How many internships reached each stage, and how many cleared vs were rejected there.
       </p>
 
@@ -74,13 +74,13 @@ const InterviewFunnelChart = ({ pipeline, compact = false }) => {
                 const data = payload[0].payload;
 
                 return (
-                  <div className="rounded-lg border border-gray-700 bg-gray-900 p-3 text-sm text-gray-200">
-                    <p className="mb-2 font-medium text-white">{data.fullName}</p>
+                  <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white/95 dark:bg-gray-900/95 shadow-xl p-3 text-sm text-gray-700 dark:text-gray-200">
+                    <p className="mb-2 font-medium text-gray-900 dark:text-white">{data.fullName}</p>
                     <p>Reached: {data.reached}</p>
                     <p>Cleared: {data.cleared}</p>
                     <p>Rejected: {data.rejected}</p>
                     {data.clearanceRate != null && (
-                      <p className="mt-1 text-gray-400">Clearance rate: {data.clearanceRate}%</p>
+                      <p className="mt-1 text-gray-600 dark:text-gray-400">Clearance rate: {data.clearanceRate}%</p>
                     )}
                   </div>
                 );
@@ -95,13 +95,13 @@ const InterviewFunnelChart = ({ pipeline, compact = false }) => {
       </div>
 
       {!compact && pipeline.stageReachByRoundNumber?.length > 0 && (
-        <div className="mt-6 border-t border-white/10 pt-4">
+        <div className="mt-6 border-t border-gray-200 dark:border-white/10 pt-4">
           <p className="text-xs font-medium uppercase tracking-wide text-gray-500 mb-2">By round number</p>
           <div className="flex flex-wrap gap-2">
             {pipeline.stageReachByRoundNumber.map((stage) => (
               <span
                 key={stage.roundNumber}
-                className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-gray-300"
+                className="rounded-full border border-gray-200 dark:border-white/10 bg-black/5 dark:bg-white/5 px-3 py-1 text-xs text-gray-700 dark:text-gray-300"
               >
                 R{stage.roundNumber}: {stage.reached} reached
                 {stage.stillActive > 0 ? ` · ${stage.stillActive} pending` : ''}

@@ -117,11 +117,11 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black p-4 sm:p-6">
+      <div className="min-h-screen bg-white dark:bg-black p-4 sm:p-6">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col items-center justify-center py-20">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
-            <p className="text-white text-lg">Loading dashboard...</p>
+            <p className="text-gray-900 dark:text-white text-lg">Loading dashboard...</p>
           </div>
         </div>
       </div>
@@ -129,7 +129,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black p-4 sm:p-6">
+    <div className="min-h-screen bg-white dark:bg-black p-4 sm:p-6">
       <SEO 
         title="Dashboard"
         description="View your opportunity tracking dashboard. See statistics, upcoming deadlines, and manage your internship and hackathon applications."
@@ -139,8 +139,8 @@ const Dashboard = () => {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Dashboard</h1>
-          <p className="text-sm sm:text-base text-gray-400">Track your opportunities and upcoming deadlines</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">Dashboard</h1>
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">Track your opportunities and upcoming deadlines</p>
         </div>
 
         {/* Statistics Cards */}
@@ -230,7 +230,7 @@ const Dashboard = () => {
 
         {/* Quick Actions */}
         <Card className="p-4 sm:p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quick Actions</h3>
           <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4">
             <Button
               onClick={() => navigate('/add')}
@@ -272,7 +272,7 @@ const Dashboard = () => {
           title="Confirm Delete"
         >
           <div>
-            <p className="text-gray-300 mb-6">
+            <p className="text-gray-700 dark:text-gray-300 mb-6">
               Are you sure you want to delete this opportunity? This action cannot
               be undone.
             </p>

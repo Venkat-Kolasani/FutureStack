@@ -43,8 +43,8 @@ const SubmissionChecklist = ({
 
     if (!hasTeam) {
         return (
-            <div className="bg-[#0A0A0A] rounded-xl p-6 border border-white/10">
-                <div className="text-center py-8 text-gray-400">
+            <div className="bg-white dark:bg-[#0A0A0A] rounded-xl p-6 border border-gray-200 dark:border-white/10">
+                <div className="text-center py-8 text-gray-600 dark:text-gray-400">
                     <FaClipboardCheck className="text-4xl mx-auto mb-4 text-gray-600" />
                     <p>Create a team first to track submission requirements</p>
                 </div>
@@ -53,15 +53,15 @@ const SubmissionChecklist = ({
     }
 
     return (
-        <div className="bg-[#0A0A0A] rounded-xl p-6 border border-white/10">
+        <div className="bg-white dark:bg-[#0A0A0A] rounded-xl p-6 border border-gray-200 dark:border-white/10">
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                 <div>
-                    <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                         <FaClipboardCheck className="text-green-400" />
                         Submission Checklist
                     </h3>
-                    <p className="text-gray-400 text-sm mt-1">
+                    <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
                         Track what you need to submit
                     </p>
                 </div>
@@ -75,8 +75,8 @@ const SubmissionChecklist = ({
             {totalCount > 0 && (
                 <div className="mb-6">
                     <div className="flex justify-between text-sm mb-2">
-                        <span className="text-gray-400">Progress</span>
-                        <span className={`font-medium ${progressPercent === 100 ? 'text-green-400' : 'text-gray-300'}`}>
+                        <span className="text-gray-600 dark:text-gray-400">Progress</span>
+                        <span className={`font-medium ${progressPercent === 100 ? 'text-green-400' : 'text-gray-700 dark:text-gray-300'}`}>
                             {completedCount} / {totalCount} ({progressPercent}%)
                         </span>
                     </div>
@@ -94,7 +94,7 @@ const SubmissionChecklist = ({
 
             {/* Checklist Items */}
             {items.length === 0 ? (
-                <div className="text-center py-8 text-gray-400">
+                <div className="text-center py-8 text-gray-600 dark:text-gray-400">
                     <p>No checklist items yet. Add submission requirements!</p>
                 </div>
             ) : (
@@ -104,7 +104,7 @@ const SubmissionChecklist = ({
                             key={item.id}
                             className={`flex items-center justify-between p-4 rounded-lg border transition-all ${item.is_completed
                                     ? 'bg-green-500/5 border-green-500/20'
-                                    : 'bg-white/5 border-white/10 hover:border-white/20'
+                                    : 'bg-black/5 dark:bg-white/5 border-gray-200 dark:border-white/10 hover:border-white/20'
                                 }`}
                         >
                             <button
@@ -117,8 +117,8 @@ const SubmissionChecklist = ({
                                     <FaCircle className="text-gray-500 flex-shrink-0" size={20} />
                                 )}
                                 <span className={`font-medium ${item.is_completed
-                                        ? 'text-gray-400 line-through'
-                                        : 'text-white'
+                                        ? 'text-gray-600 dark:text-gray-400 line-through'
+                                        : 'text-gray-900 dark:text-white'
                                     }`}>
                                     {item.title}
                                 </span>
@@ -149,7 +149,7 @@ const SubmissionChecklist = ({
             >
                 <form onSubmit={handleSubmit}>
                     <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Item Title *
                         </label>
                         <input
@@ -157,7 +157,7 @@ const SubmissionChecklist = ({
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                             placeholder="e.g., Upload demo video"
-                            className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500"
+                            className="w-full px-4 py-2.5 bg-black/5 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500"
                             required
                             autoFocus
                         />

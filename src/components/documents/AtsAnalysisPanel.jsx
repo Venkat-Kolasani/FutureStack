@@ -65,7 +65,7 @@ const AtsAnalysisPanel = ({
         return (
             <div className="mt-3 rounded-lg border border-blue-500/20 bg-blue-500/5 p-4">
                 <p className="text-sm font-medium text-blue-200">Analyzing resume...</p>
-                <p className="mt-1 text-xs text-gray-400">Extracting text and scoring structure, content, and ATS-friendly signals.</p>
+                <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">Extracting text and scoring structure, content, and ATS-friendly signals.</p>
             </div>
         );
     }
@@ -73,8 +73,8 @@ const AtsAnalysisPanel = ({
     if (showEmptyState && !hasScore) {
         return (
             <div className="mt-3 rounded-lg border border-dashed border-white/15 bg-white/[0.03] px-4 py-3">
-                <p className="text-sm font-medium text-white">No ATS score yet</p>
-                <p className="mt-1 text-xs text-gray-400 leading-relaxed">
+                <p className="text-sm font-medium text-gray-900 dark:text-white">No ATS score yet</p>
+                <p className="mt-1 text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
                     Use Check ATS Score below to analyze this resume. Rule-based hints only — not an official ATS score.
                 </p>
             </div>
@@ -86,9 +86,9 @@ const AtsAnalysisPanel = ({
     }
 
     return (
-        <div className="mt-3 rounded-lg border border-white/10 bg-black/20 p-3">
+        <div className="mt-3 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-black/20 p-3">
             <div className="flex items-center justify-between gap-3">
-                <p className="text-xs text-gray-400">Rule-based hints — not an official ATS score</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400">Rule-based hints — not an official ATS score</p>
                 {onToggle && (
                     <button
                         type="button"
@@ -103,23 +103,23 @@ const AtsAnalysisPanel = ({
             {isOpen && (
                 <div className="mt-3 space-y-3">
                     <div className="grid grid-cols-3 gap-2 text-xs">
-                        <div className="rounded-md bg-white/5 p-2">
+                        <div className="rounded-md bg-black/5 dark:bg-white/5 p-2">
                             <p className="text-gray-500">Structure</p>
-                            <p className="mt-1 text-white">{parsedAnalysis?.breakdown?.structure ?? '--'}/60</p>
+                            <p className="mt-1 text-gray-900 dark:text-white">{parsedAnalysis?.breakdown?.structure ?? '--'}/60</p>
                         </div>
-                        <div className="rounded-md bg-white/5 p-2">
+                        <div className="rounded-md bg-black/5 dark:bg-white/5 p-2">
                             <p className="text-gray-500">Content</p>
-                            <p className="mt-1 text-white">{parsedAnalysis?.breakdown?.content ?? '--'}/25</p>
+                            <p className="mt-1 text-gray-900 dark:text-white">{parsedAnalysis?.breakdown?.content ?? '--'}/25</p>
                         </div>
-                        <div className="rounded-md bg-white/5 p-2">
+                        <div className="rounded-md bg-black/5 dark:bg-white/5 p-2">
                             <p className="text-gray-500">ATS</p>
-                            <p className="mt-1 text-white">{parsedAnalysis?.breakdown?.atsFriendly ?? '--'}/15</p>
+                            <p className="mt-1 text-gray-900 dark:text-white">{parsedAnalysis?.breakdown?.atsFriendly ?? '--'}/15</p>
                         </div>
                     </div>
 
                     {parsedAnalysis?.missingSections?.length > 0 && (
                         <div>
-                            <p className="text-xs font-medium text-gray-300">Missing sections</p>
+                            <p className="text-xs font-medium text-gray-700 dark:text-gray-300">Missing sections</p>
                             <div className="mt-2 flex flex-wrap gap-1.5">
                                 {parsedAnalysis.missingSections.map(section => (
                                     <span key={section} className="rounded-md bg-red-500/10 px-2 py-1 text-xs text-red-300">
@@ -132,8 +132,8 @@ const AtsAnalysisPanel = ({
 
                     {parsedAnalysis?.suggestions?.length > 0 && (
                         <div>
-                            <p className="text-xs font-medium text-gray-300">Top suggestions</p>
-                            <ul className="mt-2 space-y-1 text-xs text-gray-400">
+                            <p className="text-xs font-medium text-gray-700 dark:text-gray-300">Top suggestions</p>
+                            <ul className="mt-2 space-y-1 text-xs text-gray-600 dark:text-gray-400">
                                 {parsedAnalysis.suggestions.slice(0, 3).map(suggestion => (
                                     <li key={suggestion}>{suggestion}</li>
                                 ))}
@@ -142,7 +142,7 @@ const AtsAnalysisPanel = ({
                     )}
 
                     {parsedAnalysis?.matchedKeywords?.length > 0 && (
-                        <p className="text-xs text-gray-400">
+                        <p className="text-xs text-gray-600 dark:text-gray-400">
                             Role keywords matched ({parsedAnalysis.matchedKeywords.length}): {parsedAnalysis.matchedKeywords.slice(0, 8).join(', ')}
                             {parsedAnalysis.matchedKeywords.length > 8 ? '…' : ''}
                         </p>

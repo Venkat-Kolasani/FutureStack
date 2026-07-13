@@ -59,7 +59,7 @@ const documentTypeConfig = {
     resume: { icon: FaFilePdf, color: 'text-blue-400' },
     cover_letter: { icon: FaFileAlt, color: 'text-green-400' },
     portfolio: { icon: FaLink, color: 'text-purple-400' },
-    other: { icon: FaFile, color: 'text-gray-400' }
+    other: { icon: FaFile, color: 'text-gray-600 dark:text-gray-400' }
 };
 
 /**
@@ -250,25 +250,25 @@ const OpportunityDetailModal = ({
         <div className="fixed inset-0 z-50 overflow-hidden">
             {/* Backdrop */}
             <div
-                className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+                className="fixed inset-0 bg-white dark:bg-black/60 backdrop-blur-sm transition-opacity"
                 onClick={onClose}
             />
 
             {/* Drawer Panel - slides in from right */}
             <div className="fixed inset-y-0 right-0 w-full sm:max-w-lg flex">
-                <div className="relative w-full bg-[#0A0A0A] shadow-2xl flex flex-col border-l border-white/10">
+                <div className="relative w-full bg-white dark:bg-[#0A0A0A] shadow-2xl flex flex-col border-l border-gray-200 dark:border-white/10">
 
                     {/* Header */}
-                    <div className="flex items-start justify-between p-6 border-b border-white/10">
+                    <div className="flex items-start justify-between p-6 border-b border-gray-200 dark:border-white/10">
                         <div className="flex-1 pr-4">
-                            <h2 className="text-xl font-bold text-white mb-3">
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
                                 {displayOpportunity.title}
                             </h2>
                             <div className="flex flex-wrap gap-2">
-                                <span className={`px-3 py-1 rounded-full text-xs font-medium ${categoryColors[displayOpportunity.category] || 'bg-gray-500/10 text-gray-400 border border-gray-500/20'}`}>
+                                <span className={`px-3 py-1 rounded-full text-xs font-medium ${categoryColors[displayOpportunity.category] || 'bg-gray-500/10 text-gray-600 dark:text-gray-400 border border-gray-500/20'}`}>
                                     {displayOpportunity.category.charAt(0).toUpperCase() + displayOpportunity.category.slice(1)}
                                 </span>
-                                <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusColors[displayOpportunity.status] || 'bg-gray-500/10 text-gray-400 border border-gray-500/20'}`}>
+                                <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusColors[displayOpportunity.status] || 'bg-gray-500/10 text-gray-600 dark:text-gray-400 border border-gray-500/20'}`}>
                                     {displayOpportunity.status.charAt(0).toUpperCase() + displayOpportunity.status.slice(1)}
                                 </span>
                                 {roundStats.total > 0 && (
@@ -286,7 +286,7 @@ const OpportunityDetailModal = ({
                         </div>
                         <button
                             onClick={onClose}
-                            className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                            className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 rounded-lg transition-colors"
                             aria-label="Close"
                         >
                             <FaTimes size={20} />
@@ -298,15 +298,15 @@ const OpportunityDetailModal = ({
 
                         {/* Deadline Section */}
                         <section>
-                            <div className="flex items-center gap-2 text-gray-400 mb-2">
+                            <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400 mb-2">
                                 <FaCalendarAlt size={14} />
                                 <h3 className="text-sm font-medium uppercase tracking-wide">Deadline</h3>
                             </div>
-                            <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                                <p className="text-white font-medium">
+                            <div className="bg-black/5 dark:bg-white/5 rounded-lg p-4 border border-gray-200 dark:border-white/10">
+                                <p className="text-gray-900 dark:text-white font-medium">
                                     {formatDate(displayOpportunity.deadline)}
                                 </p>
-                                <p className={`text-sm mt-1 ${overdue ? 'text-red-400' : 'text-gray-400'}`}>
+                                <p className={`text-sm mt-1 ${overdue ? 'text-red-400' : 'text-gray-600 dark:text-gray-400'}`}>
                                     {overdue
                                         ? `Overdue by ${Math.abs(daysRemaining)} days`
                                         : `${daysRemaining} days remaining`
@@ -318,12 +318,12 @@ const OpportunityDetailModal = ({
                         {/* Description Section */}
                         {displayOpportunity.description && (
                             <section>
-                                <div className="flex items-center gap-2 text-gray-400 mb-2">
+                                <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400 mb-2">
                                     <FaFileAlt size={14} />
                                     <h3 className="text-sm font-medium uppercase tracking-wide">Description</h3>
                                 </div>
-                                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                                    <p className="text-gray-300 whitespace-pre-wrap leading-relaxed">
+                                <div className="bg-black/5 dark:bg-white/5 rounded-lg p-4 border border-gray-200 dark:border-white/10">
+                                    <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
                                         {displayOpportunity.description}
                                     </p>
                                 </div>
@@ -333,11 +333,11 @@ const OpportunityDetailModal = ({
                         {/* Interview Pipeline (internships only) */}
                         {showInterviewRounds && (
                             <section>
-                                <div className="flex items-center justify-between gap-3 text-gray-400 mb-2">
+                                <div className="flex items-center justify-between gap-3 text-gray-600 dark:text-gray-400 mb-2">
                                     <div className="flex items-center gap-2 min-w-0">
                                         <FaLayerGroup size={14} className="shrink-0 text-purple-400" />
                                         <div className="min-w-0">
-                                            <h3 className="text-sm font-medium uppercase tracking-wide text-gray-300">
+                                            <h3 className="text-sm font-medium uppercase tracking-wide text-gray-700 dark:text-gray-300">
                                                 Interview Pipeline
                                             </h3>
                                             {!roundsLoading && roundStats.total > 0 && (
@@ -357,7 +357,7 @@ const OpportunityDetailModal = ({
                                         Add round
                                     </Button>
                                 </div>
-                                <div className="rounded-xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-transparent p-4">
+                                <div className="rounded-xl border border-gray-200 dark:border-white/10 bg-gradient-to-b from-white/[0.04] to-transparent p-4">
                                     {roundsLoading ? (
                                         <RoundTimelineSkeleton />
                                     ) : (
@@ -378,11 +378,11 @@ const OpportunityDetailModal = ({
                         {/* Attached Documents Section (Internships only) */}
                         {supportsDocuments(displayOpportunity.category) && (
                             <section>
-                                <div className="flex items-center gap-2 text-gray-400 mb-2">
+                                <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400 mb-2">
                                     <FaFilePdf size={14} />
                                     <h3 className="text-sm font-medium uppercase tracking-wide">Attached Documents</h3>
                                 </div>
-                                <div className="bg-white/5 rounded-lg border border-white/10 overflow-hidden">
+                                <div className="bg-black/5 dark:bg-white/5 rounded-lg border border-gray-200 dark:border-white/10 overflow-hidden">
                                     {loadingDocs ? (
                                         <div className="p-4 text-center text-gray-500">
                                             <span className="animate-spin inline-block mr-2">⟳</span>
@@ -398,7 +398,7 @@ const OpportunityDetailModal = ({
                                                         <div className="flex items-center gap-3">
                                                             <Icon className={config.color} size={18} />
                                                             <div>
-                                                                <p className="text-white text-sm font-medium">{doc.name}</p>
+                                                                <p className="text-gray-900 dark:text-white text-sm font-medium">{doc.name}</p>
                                                                 {doc.version && (
                                                                     <p className="text-gray-500 text-xs">{doc.version}</p>
                                                                 )}
@@ -431,12 +431,12 @@ const OpportunityDetailModal = ({
                         {/* Notes Section */}
                         {displayOpportunity.notes && (
                             <section>
-                                <div className="flex items-center gap-2 text-gray-400 mb-2">
+                                <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400 mb-2">
                                     <FaStickyNote size={14} />
                                     <h3 className="text-sm font-medium uppercase tracking-wide">Notes</h3>
                                 </div>
-                                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                                    <p className="text-gray-300 whitespace-pre-wrap leading-relaxed">
+                                <div className="bg-black/5 dark:bg-white/5 rounded-lg p-4 border border-gray-200 dark:border-white/10">
+                                    <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
                                         {displayOpportunity.notes}
                                     </p>
                                 </div>
@@ -446,7 +446,7 @@ const OpportunityDetailModal = ({
                         {/* External Link Section */}
                         {displayOpportunity.link && (
                             <section>
-                                <div className="flex items-center gap-2 text-gray-400 mb-2">
+                                <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400 mb-2">
                                     <FaExternalLinkAlt size={14} />
                                     <h3 className="text-sm font-medium uppercase tracking-wide">Application Link</h3>
                                 </div>
@@ -454,7 +454,7 @@ const OpportunityDetailModal = ({
                                     href={displayOpportunity.link}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex items-center justify-center gap-2 w-full py-3 px-4 bg-white/5 border border-white/10 rounded-lg text-blue-400 hover:text-blue-300 hover:bg-white/10 transition-all"
+                                    className="flex items-center justify-center gap-2 w-full py-3 px-4 bg-black/5 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-blue-400 hover:text-blue-300 hover:bg-white/10 transition-all"
                                 >
                                     <FaExternalLinkAlt size={14} />
                                     Open Job Posting
@@ -464,7 +464,7 @@ const OpportunityDetailModal = ({
                     </div>
 
                     {/* Fixed Footer with Actions */}
-                    <div className="p-6 border-t border-white/10 bg-[#0A0A0A]">
+                    <div className="p-6 border-t border-gray-200 dark:border-white/10 bg-white dark:bg-[#0A0A0A]">
                         <div className="flex gap-3">
                             {displayOpportunity.category === 'hackathon' && onManage && (
                                 <Button

@@ -65,7 +65,7 @@ const Footer = () => {
                 </div>
 
                 <div className="border-t border-gray-200 dark:border-white/10 pt-8 flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-6">
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
                         © {new Date().getFullYear()} FutureTracker. All rights reserved.
                     </p>
                     <StatusIndicator />

@@ -15,6 +15,20 @@ class IntersectionObserverMock {
 }
 global.IntersectionObserver = IntersectionObserverMock;
 
+Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: (query) => ({
+        matches: false,
+        media: query,
+        onchange: null,
+        addEventListener: () => {},
+        removeEventListener: () => {},
+        addListener: () => {},
+        removeListener: () => {},
+        dispatchEvent: () => false,
+    }),
+});
+
 process.env.REACT_APP_CLERK_PUBLISHABLE_KEY =
     process.env.REACT_APP_CLERK_PUBLISHABLE_KEY || 'pk_test_ci_placeholder';
 process.env.REACT_APP_API_URL =

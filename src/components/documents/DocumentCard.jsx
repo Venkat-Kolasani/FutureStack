@@ -22,7 +22,7 @@ const typeColors = {
     resume: 'text-blue-400',
     cover_letter: 'text-green-400',
     portfolio: 'text-purple-400',
-    other: 'text-gray-400'
+    other: 'text-gray-600 dark:text-gray-400'
 };
 
 const typeLabels = {
@@ -55,7 +55,7 @@ const DocumentCard = ({
     aiCheckResult = null,
 }) => {
     const Icon = typeIcons[document.type] || FaFile;
-    const colorClass = typeColors[document.type] || 'text-gray-400';
+    const colorClass = typeColors[document.type] || 'text-gray-600 dark:text-gray-400';
     const canCheckAts = isAtsEligible(document);
     const canAiCheck = AI_RESUME_CHECK_ENABLED && document.type === 'resume' && !document.is_external;
     const showAiComingSoon = !AI_RESUME_CHECK_ENABLED && document.type === 'resume' && !document.is_external;
@@ -126,15 +126,15 @@ const DocumentCard = ({
     };
 
     return (
-        <div className="bg-white/5 border border-white/10 rounded-xl p-4 hover:border-white/20 transition-all group h-full flex flex-col">
+        <div className="bg-black/5 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl p-4 hover:border-white/20 transition-all group h-full flex flex-col">
             {/* Header */}
             <div className="flex items-start gap-3">
-                <div className={`w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center ${colorClass}`}>
+                <div className={`w-10 h-10 rounded-lg bg-black/5 dark:bg-white/5 flex items-center justify-center ${colorClass}`}>
                     <Icon size={20} />
                 </div>
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="text-white font-medium truncate">{document.name}</h3>
+                        <h3 className="text-gray-900 dark:text-white font-medium truncate">{document.name}</h3>
                         {atsScore != null && (
                             <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold ${scoreClasses.bg} ${scoreClasses.text}`}>
                                 ATS {document.ats_score}
@@ -146,7 +146,7 @@ const DocumentCard = ({
                             </span>
                         )}
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-400">
+                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                         <span>{typeLabels[document.type]}</span>
                         {document.version && (
                             <>
@@ -171,7 +171,7 @@ const DocumentCard = ({
 
             {/* Notes preview */}
             {document.notes && (
-                <p className="mt-2 text-sm text-gray-400 line-clamp-2">{document.notes}</p>
+                <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 line-clamp-2">{document.notes}</p>
             )}
 
             {/* Usage badge */}
@@ -226,7 +226,7 @@ const DocumentCard = ({
                     <button
                         type="button"
                         onClick={() => onEdit(document)}
-                        className="h-10 w-10 shrink-0 flex items-center justify-center bg-white/5 text-gray-400 rounded-lg hover:bg-white/10 hover:text-white transition-colors"
+                        className="h-10 w-10 shrink-0 flex items-center justify-center bg-black/5 dark:bg-white/5 text-gray-600 dark:text-gray-400 rounded-lg hover:bg-white/10 hover:text-white transition-colors"
                         title="Edit"
                     >
                         <FaEdit size={14} />
@@ -234,7 +234,7 @@ const DocumentCard = ({
                     <button
                         type="button"
                         onClick={() => onDelete(document)}
-                        className="h-10 w-10 shrink-0 flex items-center justify-center bg-white/5 text-gray-400 rounded-lg hover:bg-red-600/20 hover:text-red-400 transition-colors"
+                        className="h-10 w-10 shrink-0 flex items-center justify-center bg-black/5 dark:bg-white/5 text-gray-600 dark:text-gray-400 rounded-lg hover:bg-red-600/20 hover:text-red-400 transition-colors"
                         title="Delete"
                     >
                         <FaTrash size={14} />

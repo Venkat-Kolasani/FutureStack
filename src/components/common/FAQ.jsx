@@ -13,7 +13,7 @@ const FAQItem = ({ question, answer, isOpen, onClick }) => {
                 className="w-full px-6 py-5 flex items-center justify-between text-left gap-4"
             >
                 <span className="text-lg font-medium text-gray-900 dark:text-white">{question}</span>
-                <div className={`flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full border border-gray-300 dark:border-white/20 transition-colors ${isOpen ? 'bg-gray-900 text-white dark:bg-white dark:text-black' : 'text-gray-900 dark:text-white'}`}>
+                <div className={`flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full border border-gray-300 dark:border-white/20 transition-colors ${isOpen ? 'bg-gray-900 text-gray-900 dark:text-white dark:bg-white dark:text-black' : 'text-gray-900 dark:text-white'}`}>
                     {isOpen ? <FiMinus size={14} /> : <FiPlus size={14} />}
                 </div>
             </button>

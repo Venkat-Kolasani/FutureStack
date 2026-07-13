@@ -21,7 +21,7 @@ const EXPIRY_OPTIONS = [
 ];
 
 const SectionTitle = ({ children }) => (
-  <h4 className="mb-2 text-sm font-semibold text-white">{children}</h4>
+  <h4 className="mb-2 text-sm font-semibold text-gray-900 dark:text-white">{children}</h4>
 );
 
 const SectionHint = ({ children }) => (
@@ -173,14 +173,14 @@ const ShareProgressModal = ({
               <FaCheck size={14} />
               <p className="text-sm font-medium">Share link created</p>
             </div>
-            <p className="mt-1 text-xs text-gray-400">
+            <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
               Anyone with this link can view a read-only snapshot. You can copy it again from Shared Links.
             </p>
             <div className="mt-3 flex flex-col gap-2 sm:flex-row">
               <input
                 readOnly
                 value={generatedShare.url}
-                className="flex-1 rounded-lg border border-white/10 bg-black/40 px-3 py-2 font-mono text-xs text-gray-200"
+                className="flex-1 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-black/40 px-3 py-2 font-mono text-xs text-gray-200"
                 aria-label="Generated share link"
               />
               <Button onClick={handleCopy} variant="success" className="shrink-0">
@@ -189,20 +189,20 @@ const ShareProgressModal = ({
               </Button>
             </div>
           </div>
-          <div className="flex justify-end border-t border-white/10 pt-4">
+          <div className="flex justify-end border-t border-gray-200 dark:border-white/10 pt-4">
             <Button onClick={resetAndClose}>Done</Button>
           </div>
         </div>
       ) : (
         <div className="space-y-5">
           {isSingleShare && (
-            <div className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2.5">
+            <div className="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-white/10 bg-white/[0.03] px-3 py-2.5">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-300">
                 <FaBriefcase size={13} />
               </div>
               <div className="min-w-0">
                 <p className="text-xs text-gray-500">Sharing</p>
-                <p className="truncate text-sm font-medium text-white">{preselectedOpportunity.title}</p>
+                <p className="truncate text-sm font-medium text-gray-900 dark:text-white">{preselectedOpportunity.title}</p>
               </div>
             </div>
           )}
@@ -211,14 +211,14 @@ const ShareProgressModal = ({
             <section>
               <SectionTitle>Scope</SectionTitle>
               <SectionHint>Choose which opportunities are included in this link.</SectionHint>
-              <div className="inline-flex flex-wrap w-full rounded-lg border border-white/10 bg-white/[0.03] p-1 gap-1 sm:w-auto">
+              <div className="inline-flex flex-wrap w-full rounded-lg border border-gray-200 dark:border-white/10 bg-white/[0.03] p-1 gap-1 sm:w-auto">
                 <button
                   type="button"
                   onClick={() => setSelectionMode('all')}
                   className={`flex-1 rounded-md px-3 py-2 text-sm transition-colors sm:flex-none ${
                     selectionMode === 'all'
                       ? 'bg-blue-500/15 text-blue-200'
-                      : 'text-gray-400 hover:text-gray-200'
+                      : 'text-gray-600 dark:text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                   }`}
                 >
                   All ({shareableOpportunities.length})
@@ -229,7 +229,7 @@ const ShareProgressModal = ({
                   className={`flex-1 rounded-md px-3 py-2 text-sm transition-colors sm:flex-none ${
                     selectionMode === 'internships'
                       ? 'bg-blue-500/15 text-blue-200'
-                      : 'text-gray-400 hover:text-gray-200'
+                      : 'text-gray-600 dark:text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                   }`}
                 >
                   Internships ({shareableOpportunities.filter((o) => o.category === 'internship').length})
@@ -240,7 +240,7 @@ const ShareProgressModal = ({
                   className={`flex-1 rounded-md px-3 py-2 text-sm transition-colors sm:flex-none ${
                     selectionMode === 'hackathons'
                       ? 'bg-blue-500/15 text-blue-200'
-                      : 'text-gray-400 hover:text-gray-200'
+                      : 'text-gray-600 dark:text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                   }`}
                 >
                   Hackathons ({shareableOpportunities.filter((o) => o.category === 'hackathon').length})
@@ -251,14 +251,14 @@ const ShareProgressModal = ({
                   className={`flex-1 rounded-md px-3 py-2 text-sm transition-colors sm:flex-none ${
                     selectionMode === 'specific'
                       ? 'bg-blue-500/15 text-blue-200'
-                      : 'text-gray-400 hover:text-gray-200'
+                      : 'text-gray-600 dark:text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                   }`}
                 >
                   Selected ({selectedIds.length})
                 </button>
               </div>
               {selectionMode === 'specific' && (
-                <div className="mt-3 max-h-36 space-y-1 overflow-y-auto rounded-lg border border-white/10 p-2">
+                <div className="mt-3 max-h-36 space-y-1 overflow-y-auto rounded-lg border border-gray-200 dark:border-white/10 p-2">
                   {shareableOpportunities.length === 0 ? (
                     <p className="px-2 py-3 text-sm text-gray-500">Add an opportunity first.</p>
                   ) : (
@@ -283,10 +283,10 @@ const ShareProgressModal = ({
             </section>
           )}
 
-          <section className="border-t border-white/10 pt-5">
+          <section className="border-t border-gray-200 dark:border-white/10 pt-5">
             <SectionTitle>Visible fields</SectionTitle>
             <SectionHint>Notes, documents, and interview prep are never shared.</SectionHint>
-            <div className="rounded-lg border border-white/10 divide-y divide-white/8">
+            <div className="rounded-lg border border-gray-200 dark:border-white/10 divide-y divide-white/8">
               {FIELD_OPTIONS.map((option) => (
                 <label
                   key={option.key}
@@ -306,7 +306,7 @@ const ShareProgressModal = ({
             </div>
           </section>
 
-          <section className="border-t border-white/10 pt-5">
+          <section className="border-t border-gray-200 dark:border-white/10 pt-5">
             <SectionTitle>Access</SectionTitle>
             <SectionHint>Set when the link expires and whether a passcode is required.</SectionHint>
             <div className="flex flex-wrap gap-2">
@@ -318,14 +318,14 @@ const ShareProgressModal = ({
                   className={`rounded-lg border px-3 py-2 text-sm transition-colors ${
                     expiry === option.value
                       ? 'border-blue-500/40 bg-blue-500/10 text-blue-200'
-                      : 'border-white/10 text-gray-400 hover:border-white/20 hover:text-gray-200'
+                      : 'border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:border-white/20 hover:text-gray-200'
                   }`}
                 >
                   {option.label}
                 </button>
               ))}
             </div>
-            <label className="mt-3 flex cursor-pointer items-center gap-2.5 rounded-lg border border-white/10 px-3 py-2.5 hover:bg-white/[0.02]">
+            <label className="mt-3 flex cursor-pointer items-center gap-2.5 rounded-lg border border-gray-200 dark:border-white/10 px-3 py-2.5 hover:bg-white/[0.02]">
               <input
                 type="checkbox"
                 checked={passcodeEnabled}
@@ -342,13 +342,13 @@ const ShareProgressModal = ({
                 value={passcode}
                 onChange={(event) => setPasscode(event.target.value.replace(/\D/g, '').slice(0, 4))}
                 placeholder="Enter 4 digits"
-                className="mt-2 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-gray-600 sm:w-40"
+                className="mt-2 w-full rounded-lg border border-gray-200 dark:border-white/10 bg-black/5 dark:bg-white/5 px-3 py-2 text-sm text-gray-900 dark:text-white placeholder:text-gray-600 sm:w-40"
                 aria-label="Share link passcode"
               />
             )}
           </section>
 
-          <div className="flex flex-col-reverse gap-2 border-t border-white/10 pt-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col-reverse gap-2 border-t border-gray-200 dark:border-white/10 pt-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs text-gray-500">
               {selectedCount} opportunit{selectedCount === 1 ? 'y' : 'ies'} · read-only snapshot
             </p>

@@ -19,7 +19,7 @@ const Home = () => {
   const cardBaseClass = "border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-white/[0.03]";
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-white font-sans selection:bg-blue-500 selection:text-white overflow-x-hidden transition-colors duration-300">
+    <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-white font-sans selection:bg-blue-500 selection:text-gray-900 dark:text-white overflow-x-hidden transition-colors duration-300">
       <SEO
         title={null}
         description="Free opportunity tracker for students and developers. Track multi-round interviews, visualize rejections, manage hackathons, and export PDF reports."
@@ -33,16 +33,16 @@ const Home = () => {
         <div className="absolute top-0 left-0 right-0 h-[500px] bg-gradient-to-b from-white dark:from-black via-transparent to-transparent transition-colors duration-300" />
 
         {/* Subtle Glows */}
-        <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-black/5 dark:bg-white/5 rounded-full blur-[120px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-black/5 dark:bg-white/5 rounded-full blur-[120px]" />
+        <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-white dark:bg-black/5 dark:bg-white/5 rounded-full blur-[120px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-white dark:bg-black/5 dark:bg-white/5 rounded-full blur-[120px]" />
       </div>
 
       {/* Navbar */}
       <nav className="fixed top-0 w-full z-50 border-b border-gray-200 dark:border-white/10 bg-white/70 dark:bg-black/50 backdrop-blur-md transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-black dark:bg-white rounded-lg flex items-center justify-center">
-              <span className="font-bold text-white dark:text-black text-xl">F</span>
+            <div className="w-8 h-8 bg-gray-900 dark:bg-white rounded-lg flex items-center justify-center">
+              <span className="font-bold text-white dark:text-gray-900 text-xl">F</span>
             </div>
             <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400">
               FutureTracker

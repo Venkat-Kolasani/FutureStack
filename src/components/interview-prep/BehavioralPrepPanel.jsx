@@ -82,11 +82,11 @@ const BehavioralPrepPanel = ({ behavioral, onCreateBehavioral, onUpdateBehaviora
     const isComplete = (entry) => entry.situation?.trim() && entry.task?.trim() && entry.action?.trim() && entry.result?.trim();
 
     return (
-        <div className="bg-[#0A0A0A] rounded-xl p-6 border border-white/10">
+        <div className="bg-white dark:bg-[#0A0A0A] rounded-xl p-6 border border-gray-200 dark:border-white/10">
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                     <FaUserTie className="text-orange-400" size={16} />
-                    <h3 className="text-lg font-semibold text-white">Behavioral Question Prep (STAR)</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Behavioral Question Prep (STAR)</h3>
                 </div>
                 {!showAddForm && !editingId && (
                     <Button
@@ -103,14 +103,14 @@ const BehavioralPrepPanel = ({ behavioral, onCreateBehavioral, onUpdateBehaviora
 
             {/* STAR Method Guide */}
             <div className="mb-4 p-3 bg-blue-500/5 border border-blue-500/20 rounded-lg">
-                <p className="text-xs text-blue-300">
+                <p className="text-xs text-blue-700 dark:text-blue-300">
                     <strong>STAR Method:</strong> Structure your answers using Situation, Task, Action, and Result for clear, compelling responses.
                 </p>
             </div>
 
             {/* Add/Edit Form */}
             {(showAddForm || editingId) && (
-                <form onSubmit={editingId ? handleUpdate : handleAdd} className="mb-6 bg-white/5 rounded-lg p-4 border border-white/10">
+                <form onSubmit={editingId ? handleUpdate : handleAdd} className="mb-6 bg-black/5 dark:bg-white/5 rounded-lg p-4 border border-gray-200 dark:border-white/10">
                     {error && (
                         <div className="mb-3 p-2 bg-red-500/10 border border-red-500/20 rounded text-sm text-red-400">
                             {error}
@@ -118,57 +118,57 @@ const BehavioralPrepPanel = ({ behavioral, onCreateBehavioral, onUpdateBehaviora
                     )}
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-1">Question</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Question</label>
                             <input
                                 type="text"
                                 value={formData.question}
                                 onChange={(e) => setFormData({ ...formData, question: e.target.value })}
                                 placeholder="e.g., Tell me about a time you led a team"
-                                className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                className="w-full bg-white dark:bg-black/50 border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
                                 autoFocus
                             />
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-1">Situation</label>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Situation</label>
                                 <textarea
                                     value={formData.situation}
                                     onChange={(e) => setFormData({ ...formData, situation: e.target.value })}
                                     placeholder="Describe the context..."
                                     rows={2}
-                                    className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-gray-300 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none text-sm"
+                                    className="w-full bg-white dark:bg-black/50 border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2 text-gray-700 dark:text-gray-300 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none text-sm"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-1">Task</label>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Task</label>
                                 <textarea
                                     value={formData.task}
                                     onChange={(e) => setFormData({ ...formData, task: e.target.value })}
                                     placeholder="What was your responsibility?"
                                     rows={2}
-                                    className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-gray-300 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none text-sm"
+                                    className="w-full bg-white dark:bg-black/50 border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2 text-gray-700 dark:text-gray-300 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none text-sm"
                                 />
                             </div>
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-1">Action</label>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Action</label>
                                 <textarea
                                     value={formData.action}
                                     onChange={(e) => setFormData({ ...formData, action: e.target.value })}
                                     placeholder="What steps did you take?"
                                     rows={2}
-                                    className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-gray-300 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none text-sm"
+                                    className="w-full bg-white dark:bg-black/50 border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2 text-gray-700 dark:text-gray-300 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none text-sm"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-1">Result</label>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Result</label>
                                 <textarea
                                     value={formData.result}
                                     onChange={(e) => setFormData({ ...formData, result: e.target.value })}
                                     placeholder="What was the outcome?"
                                     rows={2}
-                                    className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-gray-300 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none text-sm"
+                                    className="w-full bg-white dark:bg-black/50 border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2 text-gray-700 dark:text-gray-300 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none text-sm"
                                 />
                             </div>
                         </div>
@@ -195,17 +195,17 @@ const BehavioralPrepPanel = ({ behavioral, onCreateBehavioral, onUpdateBehaviora
                     {behavioral.map((entry) => (
                         <div
                             key={entry.id}
-                            className={`bg-white/5 rounded-lg p-4 border transition-all ${
-                                isComplete(entry) ? 'border-orange-500/30' : 'border-white/10'
+                            className={`bg-black/5 dark:bg-white/5 rounded-lg p-4 border transition-all ${
+                                isComplete(entry) ? 'border-orange-500/30' : 'border-gray-200 dark:border-white/10'
                             }`}
                         >
                             <div className="flex items-start justify-between gap-3 mb-3">
-                                <p className="font-medium text-white flex-1">{entry.question}</p>
+                                <p className="font-medium text-gray-900 dark:text-white flex-1">{entry.question}</p>
                                 <div className="flex items-center gap-1 shrink-0">
                                     <button
                                         onClick={() => handleEdit(entry)}
                                         disabled={isLoading}
-                                        className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="p-1.5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                         title="Edit"
                                     >
                                         <FaEdit size={12} />
@@ -213,7 +213,7 @@ const BehavioralPrepPanel = ({ behavioral, onCreateBehavioral, onUpdateBehaviora
                                     <button
                                         onClick={() => handleDelete(entry.id)}
                                         disabled={isLoading}
-                                        className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="p-1.5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                         title="Delete"
                                     >
                                         <FaTrash size={12} />
@@ -221,21 +221,21 @@ const BehavioralPrepPanel = ({ behavioral, onCreateBehavioral, onUpdateBehaviora
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-2 text-xs">
-                                <div className="bg-black/30 rounded p-2">
+                                <div className="bg-white dark:bg-black/30 rounded p-2">
                                     <span className="text-orange-400 font-medium">S:</span>
-                                    <p className="text-gray-400 mt-0.5">{entry.situation || '—'}</p>
+                                    <p className="text-gray-600 dark:text-gray-400 mt-0.5">{entry.situation || '—'}</p>
                                 </div>
-                                <div className="bg-black/30 rounded p-2">
+                                <div className="bg-white dark:bg-black/30 rounded p-2">
                                     <span className="text-orange-400 font-medium">T:</span>
-                                    <p className="text-gray-400 mt-0.5">{entry.task || '—'}</p>
+                                    <p className="text-gray-600 dark:text-gray-400 mt-0.5">{entry.task || '—'}</p>
                                 </div>
-                                <div className="bg-black/30 rounded p-2">
+                                <div className="bg-white dark:bg-black/30 rounded p-2">
                                     <span className="text-orange-400 font-medium">A:</span>
-                                    <p className="text-gray-400 mt-0.5">{entry.action || '—'}</p>
+                                    <p className="text-gray-600 dark:text-gray-400 mt-0.5">{entry.action || '—'}</p>
                                 </div>
-                                <div className="bg-black/30 rounded p-2">
+                                <div className="bg-white dark:bg-black/30 rounded p-2">
                                     <span className="text-orange-400 font-medium">R:</span>
-                                    <p className="text-gray-400 mt-0.5">{entry.result || '—'}</p>
+                                    <p className="text-gray-600 dark:text-gray-400 mt-0.5">{entry.result || '—'}</p>
                                 </div>
                             </div>
                         </div>

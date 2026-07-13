@@ -73,11 +73,11 @@ const InterviewQuestionsPanel = ({ questions, onCreateQuestion, onUpdateQuestion
     };
 
     return (
-        <div className="bg-[#0A0A0A] rounded-xl p-6 border border-white/10">
+        <div className="bg-white dark:bg-[#0A0A0A] rounded-xl p-6 border border-gray-200 dark:border-white/10">
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                     <FaQuestionCircle className="text-purple-400" size={16} />
-                    <h3 className="text-lg font-semibold text-white">Common Interview Questions</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Common Interview Questions</h3>
                 </div>
                 {!showAddForm && !editingId && (
                     <Button
@@ -94,7 +94,7 @@ const InterviewQuestionsPanel = ({ questions, onCreateQuestion, onUpdateQuestion
 
             {/* Add/Edit Form */}
             {(showAddForm || editingId) && (
-                <form onSubmit={editingId ? handleUpdate : handleAdd} className="mb-6 bg-white/5 rounded-lg p-4 border border-white/10">
+                <form onSubmit={editingId ? handleUpdate : handleAdd} className="mb-6 bg-black/5 dark:bg-white/5 rounded-lg p-4 border border-gray-200 dark:border-white/10">
                     {error && (
                         <div className="mb-3 p-2 bg-red-500/10 border border-red-500/20 rounded text-sm text-red-400">
                             {error}
@@ -102,24 +102,24 @@ const InterviewQuestionsPanel = ({ questions, onCreateQuestion, onUpdateQuestion
                     )}
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-1">Question</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Question</label>
                             <input
                                 type="text"
                                 value={formData.question}
                                 onChange={(e) => setFormData({ ...formData, question: e.target.value })}
                                 placeholder="e.g., Tell me about a challenging project you worked on"
-                                className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                className="w-full bg-white dark:bg-black/50 border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
                                 autoFocus
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-1">Your Answer / Notes</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Your Answer / Notes</label>
                             <textarea
                                 value={formData.answer}
                                 onChange={(e) => setFormData({ ...formData, answer: e.target.value })}
                                 placeholder="Write your prepared answer or key points to remember..."
                                 rows={3}
-                                className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-gray-300 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+                                className="w-full bg-white dark:bg-black/50 border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2 text-gray-700 dark:text-gray-300 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
                             />
                         </div>
                         <div className="flex items-center gap-2">
@@ -128,9 +128,9 @@ const InterviewQuestionsPanel = ({ questions, onCreateQuestion, onUpdateQuestion
                                 id="prepared"
                                 checked={formData.is_prepared}
                                 onChange={(e) => setFormData({ ...formData, is_prepared: e.target.checked })}
-                                className="w-4 h-4 rounded border-white/10 bg-black/50 text-purple-500 focus:ring-purple-500"
+                                className="w-4 h-4 rounded border-gray-200 dark:border-white/10 bg-white dark:bg-black/50 text-purple-500 focus:ring-purple-500"
                             />
-                            <label htmlFor="prepared" className="text-sm text-gray-300">Mark as prepared</label>
+                            <label htmlFor="prepared" className="text-sm text-gray-700 dark:text-gray-300">Mark as prepared</label>
                         </div>
                         <div className="flex gap-2">
                             <Button type="submit" variant="primary" className="flex-1">
@@ -155,8 +155,8 @@ const InterviewQuestionsPanel = ({ questions, onCreateQuestion, onUpdateQuestion
                     {questions.map((q) => (
                         <div
                             key={q.id}
-                            className={`bg-white/5 rounded-lg p-4 border transition-all ${
-                                q.is_prepared ? 'border-green-500/30' : 'border-white/10'
+                            className={`bg-black/5 dark:bg-white/5 rounded-lg p-4 border transition-all ${
+                                q.is_prepared ? 'border-green-500/30' : 'border-gray-200 dark:border-white/10'
                             }`}
                         >
                             <div className="flex items-start justify-between gap-3">
@@ -165,17 +165,17 @@ const InterviewQuestionsPanel = ({ questions, onCreateQuestion, onUpdateQuestion
                                         {q.is_prepared && (
                                             <FaCheck className="text-green-400" size={12} />
                                         )}
-                                        <p className="font-medium text-white">{q.question}</p>
+                                        <p className="font-medium text-gray-900 dark:text-white">{q.question}</p>
                                     </div>
                                     {q.answer && (
-                                        <p className="text-sm text-gray-400 whitespace-pre-wrap">{q.answer}</p>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap">{q.answer}</p>
                                     )}
                                 </div>
                                 <div className="flex items-center gap-1 shrink-0">
                                     <button
                                         onClick={() => handleEdit(q)}
                                         disabled={isLoading}
-                                        className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="p-1.5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                         title="Edit"
                                     >
                                         <FaEdit size={12} />
@@ -183,7 +183,7 @@ const InterviewQuestionsPanel = ({ questions, onCreateQuestion, onUpdateQuestion
                                     <button
                                         onClick={() => handleDelete(q.id)}
                                         disabled={isLoading}
-                                        className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="p-1.5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                         title="Delete"
                                     >
                                         <FaTrash size={12} />

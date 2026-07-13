@@ -38,7 +38,7 @@ const AddOpportunity = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black p-4 sm:p-6">
+    <div className="min-h-screen bg-white dark:bg-black p-4 sm:p-6">
       <SEO
         title="Add Opportunity"
         description="Add a new internship or hackathon opportunity to track."
@@ -46,17 +46,17 @@ const AddOpportunity = () => {
         noindex={true}
       />
       <div className="max-w-2xl mx-auto">
-        <div className="bg-[#0A0A0A] rounded-xl shadow-lg p-6 sm:p-8 border border-white/10">
-          <h2 className="text-lg font-semibold text-white mb-4 border-b border-white/10 pb-2">
+        <div className="bg-white dark:bg-[#0A0A0A] rounded-xl shadow-lg p-6 sm:p-8 border border-gray-200 dark:border-white/10">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 border-b border-gray-200 dark:border-white/10 pb-2">
             Add New Opportunity
           </h2>
 
           <OpportunityForm onSubmit={handleSubmit} isEdit={false} />
 
-          <div className="mt-6 pt-4 border-t border-white/10">
+          <div className="mt-6 pt-4 border-t border-gray-200 dark:border-white/10">
             <button
               onClick={handleCancel}
-              className="w-full px-4 py-2 text-gray-400 hover:text-gray-200 transition-colors text-sm font-medium"
+              className="w-full px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors text-sm font-medium"
             >
               Cancel
             </button>

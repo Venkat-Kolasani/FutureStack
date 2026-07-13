@@ -30,8 +30,8 @@ const Navbar = () => {
             to="/"
             className="flex items-center gap-2 group"
           >
-            <div className="w-8 h-8 bg-black dark:bg-white rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform">
-              <span className="font-bold text-white dark:text-black text-xl">F</span>
+            <div className="w-8 h-8 bg-gray-900 dark:bg-white rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform">
+              <span className="font-bold text-white dark:text-gray-900 text-xl">F</span>
             </div>
             <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 transition-all">
               FutureTracker
@@ -89,7 +89,7 @@ const Navbar = () => {
                 to={link.path}
                 onClick={() => setIsOpen(false)}
                 className={`block py-3 px-4 rounded-md text-base font-medium transition-colors ${isActive(link.path)
-                  ? 'bg-black/5 dark:bg-white/10 text-gray-900 dark:text-white font-semibold'
+                  ? 'bg-white dark:bg-black/5 dark:bg-white/10 text-gray-900 dark:text-white font-semibold'
                   : 'text-gray-600 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/10 hover:text-gray-900 dark:hover:text-white'
                   }`}
                 style={{ fontFamily: 'Inter, system-ui, sans-serif' }}

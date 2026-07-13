@@ -7,18 +7,18 @@ const DeadlineWidget = ({ deadlines, onDelete }) => {
   if (!deadlines || deadlines.length === 0) {
     return (
       <Card className="p-4 sm:p-6">
-        <h3 className="text-base sm:text-lg font-semibold text-white mb-4 flex items-center">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
           <FaClock className="mr-2 text-blue-400" />
           Upcoming Deadlines
         </h3>
-        <p className="text-gray-400 text-center py-4 text-sm sm:text-base">No upcoming deadlines</p>
+        <p className="text-gray-600 dark:text-gray-400 text-center py-4 text-sm sm:text-base">No upcoming deadlines</p>
       </Card>
     );
   }
 
   return (
     <Card className="p-4 sm:p-6">
-      <h3 className="text-base sm:text-lg font-semibold text-white mb-4 flex items-center">
+      <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
         <FaClock className="mr-2 text-blue-400" />
         Upcoming Deadlines
       </h3>
@@ -39,8 +39,8 @@ const DeadlineWidget = ({ deadlines, onDelete }) => {
             >
               <div className="flex items-start justify-between gap-2 sm:gap-3">
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-medium text-white text-sm sm:text-base truncate">{opportunity.title}</h4>
-                  <p className="text-xs sm:text-sm text-gray-400 mt-1">
+                  <h4 className="font-medium text-gray-900 dark:text-white text-sm sm:text-base truncate">{opportunity.title}</h4>
+                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
                     {formatDate(opportunity.deadline)}
                   </p>
                 </div>
