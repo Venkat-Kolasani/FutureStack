@@ -1,5 +1,7 @@
 # Documents Vault, ATS Scorer & AI Resume Checker
 
+> **Current availability:** the document vault and rule-based ATS scorer are available. The AI Resume Checker implementation is present but its frontend controls are gated off; see [PROJECT_STATUS.md](PROJECT_STATUS.md) and [ai-resume-checker.md](ai-resume-checker.md).
+
 > **Interview talking point:** Two-tier resume analysis — (1) a fast client-side rule-based ATS
 > scorer that extracts text in the browser and scores structure and content heuristically, and
 > (2) a server-side agentic AI pipeline that calls an LLM to extract a structured JSON Resume,
