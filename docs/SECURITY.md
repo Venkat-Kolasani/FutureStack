@@ -1,5 +1,7 @@
 # Security Guide
 
+> **Scope:** This guide describes the controls currently implemented in the API and deployment safeguards for production. Consult [PROJECT_STATUS.md](PROJECT_STATUS.md) for feature availability; in particular, the AI Resume Checker UI remains gated.
+
 This document covers security best practices and deployment guidelines for the FutureTracker backend API.
 
 ## Overview
