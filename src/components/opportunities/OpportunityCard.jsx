@@ -64,7 +64,7 @@ const OpportunityCard = ({ opportunity, onView, onEdit, onDelete, onShare }) => 
               }
             }}
           >
-            <h3 className="text-lg font-semibold text-white hover:text-blue-400 transition-colors">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white hover:text-blue-400 transition-colors">
               {opportunity.title}
             </h3>
           </div>
@@ -81,7 +81,7 @@ const OpportunityCard = ({ opportunity, onView, onEdit, onDelete, onShare }) => 
               </button>
             )}
             <span
-              className={`px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap ${categoryColors[opportunity.category] || 'bg-gray-500/10 text-gray-400 border border-gray-500/20'
+              className={`px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap ${categoryColors[opportunity.category] || 'bg-gray-500/10 text-gray-600 dark:text-gray-400 border border-gray-500/20'
                 }`}
             >
               {opportunity.category}
@@ -96,17 +96,17 @@ const OpportunityCard = ({ opportunity, onView, onEdit, onDelete, onShare }) => 
         >
           {/* Description (truncated) */}
           {opportunity.description && (
-            <p className="text-gray-400 text-sm mb-3 line-clamp-2">
+            <p className="text-gray-600 dark:text-gray-400 text-sm mb-3 line-clamp-2">
               {opportunity.description}
             </p>
           )}
 
           {/* Deadline */}
           <div className="mb-3">
-            <p className="text-sm text-gray-400">
-              Deadline: <span className="font-medium text-gray-300">{formatDate(opportunity.deadline)}</span>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Deadline: <span className="font-medium text-gray-700 dark:text-gray-300">{formatDate(opportunity.deadline)}</span>
             </p>
-            <p className={`text-sm font-medium ${overdue ? 'text-red-400' : 'text-gray-300'}`}>
+            <p className={`text-sm font-medium ${overdue ? 'text-red-400' : 'text-gray-700 dark:text-gray-300'}`}>
               {overdue
                 ? `Overdue by ${Math.abs(daysRemaining)} days`
                 : `${daysRemaining} days remaining`
@@ -117,7 +117,7 @@ const OpportunityCard = ({ opportunity, onView, onEdit, onDelete, onShare }) => 
           {/* Status Badge */}
           <div className="mb-4 flex flex-wrap items-center gap-2">
             <span
-              className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${statusColors[opportunity.status] || 'bg-gray-500/10 text-gray-400 border border-gray-500/20'
+              className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${statusColors[opportunity.status] || 'bg-gray-500/10 text-gray-600 dark:text-gray-400 border border-gray-500/20'
                 }`}
             >
               {opportunity.status.charAt(0).toUpperCase() + opportunity.status.slice(1)}

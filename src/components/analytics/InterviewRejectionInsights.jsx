@@ -28,11 +28,11 @@ const InterviewRejectionInsights = ({
   if (!pipeline || pipeline.rejectedCount === 0) {
     return (
       <Card className={compact ? 'p-4' : 'p-6'}>
-        <h3 className={`font-semibold text-white mb-2 flex items-center gap-2 ${compact ? 'text-base' : 'text-lg'}`}>
+        <h3 className={`font-semibold text-gray-900 dark:text-white mb-2 flex items-center gap-2 ${compact ? 'text-base' : 'text-lg'}`}>
           <FaLayerGroup className="text-red-400" />
           Where you were rejected
         </h3>
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-gray-600 dark:text-gray-400">
           No rejected internships with pipeline data yet. Mark a round as rejected on an internship to see
           where you tend to drop off.
         </p>
@@ -58,22 +58,22 @@ const InterviewRejectionInsights = ({
       {showMetrics && !compact && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="p-4 bg-red-500/10 border-red-500/20">
-            <p className="text-xs text-gray-400">Rejected internships</p>
-            <p className="text-2xl font-bold text-red-300">{pipeline.rejectedCount}</p>
+            <p className="text-xs text-gray-600 dark:text-gray-400">Rejected internships</p>
+            <p className="text-2xl font-bold text-red-600 dark:text-red-300">{pipeline.rejectedCount}</p>
           </Card>
           <Card className="p-4 bg-purple-500/10 border-purple-500/20">
-            <p className="text-xs text-gray-400">Avg round reached</p>
-            <p className="text-2xl font-bold text-purple-200">
+            <p className="text-xs text-gray-600 dark:text-gray-400">Avg round reached</p>
+            <p className="text-2xl font-bold text-purple-600 dark:text-purple-200">
               {pipeline.averageRoundsBeforeRejection ?? '—'}
             </p>
           </Card>
           <Card className="p-4 bg-blue-500/10 border-blue-500/20">
-            <p className="text-xs text-gray-400">Active in pipeline</p>
-            <p className="text-2xl font-bold text-blue-200">{pipeline.activeInPipeline}</p>
+            <p className="text-xs text-gray-600 dark:text-gray-400">Active in pipeline</p>
+            <p className="text-2xl font-bold text-blue-600 dark:text-blue-200">{pipeline.activeInPipeline}</p>
           </Card>
           <Card className="p-4 bg-indigo-500/10 border-indigo-500/20">
-            <p className="text-xs text-gray-400">With rounds logged</p>
-            <p className="text-2xl font-bold text-indigo-200">{pipeline.trackedWithRounds}</p>
+            <p className="text-xs text-gray-600 dark:text-gray-400">With rounds logged</p>
+            <p className="text-2xl font-bold text-indigo-600 dark:text-indigo-200">{pipeline.trackedWithRounds}</p>
           </Card>
         </div>
       )}
@@ -82,7 +82,7 @@ const InterviewRejectionInsights = ({
       <div className={`grid grid-cols-1 ${compact ? '' : 'lg:grid-cols-2'} gap-6`}>
         {byRoundChart.length > 0 && (
           <Card className="p-6">
-            <h3 className={`font-semibold text-white mb-4 ${compact ? 'text-base' : 'text-lg'}`}>
+            <h3 className={`font-semibold text-gray-900 dark:text-white mb-4 ${compact ? 'text-base' : 'text-lg'}`}>
               Rejections by round number
             </h3>
             <div className={chartHeight}>
@@ -95,9 +95,9 @@ const InterviewRejectionInsights = ({
                     content={({ active, payload }) => {
                       if (!active || !payload?.length) return null;
                       return (
-                        <div className="bg-gray-900/95 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/10">
-                          <p className="text-white font-medium">{payload[0].payload.label}</p>
-                          <p className="text-gray-300">{payload[0].value} rejection(s)</p>
+                        <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm px-4 py-2 rounded-lg border border-gray-200 dark:border-white/10 shadow-xl">
+                          <p className="text-gray-900 dark:text-white font-medium">{payload[0].payload.label}</p>
+                          <p className="text-gray-700 dark:text-gray-300">{payload[0].value} rejection(s)</p>
                         </div>
                       );
                     }}
@@ -115,7 +115,7 @@ const InterviewRejectionInsights = ({
 
         {byTypeChart.length > 0 && (
           <Card className="p-6">
-            <h3 className={`font-semibold text-white mb-4 ${compact ? 'text-base' : 'text-lg'}`}>
+            <h3 className={`font-semibold text-gray-900 dark:text-white mb-4 ${compact ? 'text-base' : 'text-lg'}`}>
               Rejections by stage type
             </h3>
             <div className={chartHeight}>
@@ -134,9 +134,9 @@ const InterviewRejectionInsights = ({
                     content={({ active, payload }) => {
                       if (!active || !payload?.length) return null;
                       return (
-                        <div className="bg-gray-900/95 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/10">
-                          <p className="text-white font-medium">{payload[0].payload.name}</p>
-                          <p className="text-gray-300">{payload[0].value} rejection(s)</p>
+                        <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm px-4 py-2 rounded-lg border border-gray-200 dark:border-white/10 shadow-xl">
+                          <p className="text-gray-900 dark:text-white font-medium">{payload[0].payload.name}</p>
+                          <p className="text-gray-700 dark:text-gray-300">{payload[0].value} rejection(s)</p>
                         </div>
                       );
                     }}
@@ -151,14 +151,14 @@ const InterviewRejectionInsights = ({
       )}
 
       <Card className={compact ? 'p-4' : 'p-6'}>
-        <h3 className={`font-semibold text-white mb-4 flex items-center gap-2 ${compact ? 'text-base' : 'text-lg'}`}>
+        <h3 className={`font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2 ${compact ? 'text-base' : 'text-lg'}`}>
           <FaExclamationTriangle className="text-red-400" />
           Rejection log
         </h3>
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
             <thead>
-              <tr className="text-gray-400 border-b border-white/10">
+              <tr className="text-gray-600 dark:text-gray-400 border-b border-gray-200 dark:border-white/10">
                 <th className="pb-3 pr-4 font-medium">Internship</th>
                 <th className="pb-3 pr-4 font-medium">Stopped at</th>
                 <th className="pb-3 font-medium hidden sm:table-cell">Cleared before</th>
@@ -166,10 +166,10 @@ const InterviewRejectionInsights = ({
             </thead>
             <tbody>
               {pipeline.rejections.map((item) => (
-                <tr key={item.opportunityId} className="border-b border-white/5 last:border-0">
-                  <td className="py-3 pr-4 text-white font-medium">{item.title}</td>
-                  <td className="py-3 pr-4 text-red-300">{item.roundTypeLabel}</td>
-                  <td className="py-3 text-gray-400 hidden sm:table-cell">
+                <tr key={item.opportunityId} className="border-b border-gray-200 dark:border-white/10 last:border-0">
+                  <td className="py-3 pr-4 text-gray-900 dark:text-white font-medium">{item.title}</td>
+                  <td className="py-3 pr-4 text-red-600 dark:text-red-300">{item.roundTypeLabel}</td>
+                  <td className="py-3 text-gray-600 dark:text-gray-400 hidden sm:table-cell">
                     {item.clearedRoundsBeforeRejection} round
                     {item.clearedRoundsBeforeRejection !== 1 ? 's' : ''}
                   </td>

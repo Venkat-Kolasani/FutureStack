@@ -18,8 +18,8 @@ const UpcomingInterviewsWidget = ({ interviews = [], loading = false }) => {
       <Card className="p-4 sm:p-6 animate-pulse">
         <div className="h-6 w-48 bg-white/10 rounded mb-4" />
         <div className="space-y-3">
-          <div className="h-14 bg-white/5 rounded-lg" />
-          <div className="h-14 bg-white/5 rounded-lg" />
+          <div className="h-14 bg-black/5 dark:bg-white/5 rounded-lg" />
+          <div className="h-14 bg-black/5 dark:bg-white/5 rounded-lg" />
         </div>
       </Card>
     );
@@ -28,7 +28,7 @@ const UpcomingInterviewsWidget = ({ interviews = [], loading = false }) => {
   return (
     <Card className="p-4 sm:p-6">
       <div className="mb-4 flex items-center justify-between gap-2">
-        <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white flex items-center">
           <FaLayerGroup className="mr-2 text-purple-400" />
           Upcoming Interviews
         </h3>
@@ -41,7 +41,7 @@ const UpcomingInterviewsWidget = ({ interviews = [], loading = false }) => {
       </div>
 
       {interviews.length === 0 ? (
-        <p className="text-gray-400 text-center py-4 text-sm">
+        <p className="text-gray-600 dark:text-gray-400 text-center py-4 text-sm">
           No scheduled interview rounds. Add a date when you log a pending round on an internship.
         </p>
       ) : (
@@ -64,11 +64,11 @@ const UpcomingInterviewsWidget = ({ interviews = [], loading = false }) => {
                 onClick={() => navigate('/internships')}
                 className={`w-full text-left rounded-lg border-l-4 p-3 transition-all hover:brightness-110 ${urgencyClass}`}
               >
-                <p className="font-medium text-white text-sm truncate">{item.opportunityTitle}</p>
-                <p className="text-xs text-gray-300 mt-1">
+                <p className="font-medium text-gray-900 dark:text-white text-sm truncate">{item.opportunityTitle}</p>
+                <p className="text-xs text-gray-700 dark:text-gray-300 mt-1">
                   Round {item.roundNumber} · {getRoundTypeLabel(item.roundType)}
                 </p>
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                   {formatDate(item.scheduledDate)}
                   {days === 0 && ' · Today'}
                   {days === 1 && ' · Tomorrow'}

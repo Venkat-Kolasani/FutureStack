@@ -47,7 +47,7 @@ const StatusColumn = ({ status, opportunities, onStatusChange, onDelete }) => {
   return (
     <div className="flex-shrink-0 w-72 sm:w-80">
       {/* Column Header */}
-      <div className={`${config.headerColor} text-white rounded-t-lg p-3 sm:p-4`}>
+      <div className={`${config.headerColor} text-gray-900 dark:text-white rounded-t-lg p-3 sm:p-4`}>
         <h3 className="font-semibold text-base sm:text-lg flex items-center justify-between">
           <span>{config.title}</span>
           <span className="bg-white bg-opacity-30 px-2 py-1 rounded-full text-xs sm:text-sm font-bold">
@@ -59,7 +59,7 @@ const StatusColumn = ({ status, opportunities, onStatusChange, onDelete }) => {
       {/* Column Content */}
       <div className={`${config.color} border-2 border-t-0 rounded-b-lg p-3 sm:p-4 min-h-[400px] max-h-[600px] overflow-y-auto`}>
         {opportunities.length === 0 ? (
-          <p className="text-gray-400 text-sm text-center py-8">No opportunities</p>
+          <p className="text-gray-600 dark:text-gray-400 text-sm text-center py-8">No opportunities</p>
         ) : (
           opportunities.map((opportunity) => (
             <StatusCard

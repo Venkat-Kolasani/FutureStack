@@ -365,7 +365,7 @@ const Documents = () => {
 
 
     return (
-        <div className="min-h-screen bg-black text-white p-4 sm:p-6">
+        <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-white p-4 sm:p-6">
             <SEO
                 title="Documents"
                 description="Manage your resumes, cover letters, and portfolio links"
@@ -376,7 +376,7 @@ const Documents = () => {
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                     <div>
                         <h1 className="text-2xl sm:text-3xl font-bold mb-2">Documents</h1>
-                        <p className="text-sm sm:text-base text-gray-400">
+                        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
                             Manage your resumes, cover letters, and portfolio links
                         </p>
                     </div>
@@ -410,17 +410,17 @@ const Documents = () => {
                 </div>
 
                 {/* Search and Filter Bar */}
-                <div className="bg-[#0A0A0A] rounded-xl p-4 mb-6 border border-white/10">
+                <div className="bg-white dark:bg-[#0A0A0A] rounded-xl p-4 mb-6 border border-gray-200 dark:border-white/10">
                     <div className="flex flex-col md:flex-row gap-4">
                         {/* Search Input */}
                         <div className="flex-1 relative">
-                            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600 dark:text-gray-400" />
                             <input
                                 type="text"
                                 placeholder="Search by name or notes..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                                className="w-full pl-10 pr-4 py-2.5 bg-black/5 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                             />
                         </div>
 
@@ -429,13 +429,13 @@ const Documents = () => {
                             <select
                                 value={typeFilter}
                                 onChange={(e) => setTypeFilter(e.target.value)}
-                                className="px-4 py-2.5 bg-gray-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all w-full sm:w-auto"
+                                className="px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all w-full sm:w-auto"
                             >
-                                <option value="all" style={{ backgroundColor: '#111827', color: 'white' }}>All Types</option>
-                                <option value="resume" style={{ backgroundColor: '#111827', color: 'white' }}>Resumes</option>
-                                <option value="cover_letter" style={{ backgroundColor: '#111827', color: 'white' }}>Cover Letters</option>
-                                <option value="portfolio" style={{ backgroundColor: '#111827', color: 'white' }}>Portfolio</option>
-                                <option value="other" style={{ backgroundColor: '#111827', color: 'white' }}>Other</option>
+                                <option value="all" className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">All Types</option>
+                                <option value="resume" className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">Resumes</option>
+                                <option value="cover_letter" className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">Cover Letters</option>
+                                <option value="portfolio" className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">Portfolio</option>
+                                <option value="other" className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">Other</option>
                             </select>
 
                             {/* Clear Filters Button */}
@@ -449,7 +449,7 @@ const Documents = () => {
 
                     {/* Results Count + Storage Info */}
                     <div className="mt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                        <span className="text-sm text-gray-400">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
                             Showing {filteredDocuments.length} of {documents.length} documents
                         </span>
                         <span className="text-sm text-gray-500">
@@ -462,7 +462,7 @@ const Documents = () => {
                 {loading ? (
                     <div className="flex flex-col items-center justify-center py-20">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
-                        <p className="text-gray-400">Loading documents...</p>
+                        <p className="text-gray-600 dark:text-gray-400">Loading documents...</p>
                     </div>
                 ) : filteredDocuments.length > 0 ? (
                     /* Documents Grid */
@@ -490,7 +490,7 @@ const Documents = () => {
                 ) : documents.length > 0 ? (
                     <div className="text-center py-16 sm:py-20">
                         <FaSearch className="mx-auto h-16 w-16 text-gray-600 mb-4" />
-                        <p className="text-gray-400 text-lg font-medium mb-2">No documents match your search</p>
+                        <p className="text-gray-600 dark:text-gray-400 text-lg font-medium mb-2">No documents match your search</p>
                         <p className="text-gray-500 text-sm">Try adjusting your filters</p>
                     </div>
                 ) : (
@@ -500,7 +500,7 @@ const Documents = () => {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
                         </div>
-                        <p className="text-gray-400 text-lg font-medium mb-2">No documents yet</p>
+                        <p className="text-gray-600 dark:text-gray-400 text-lg font-medium mb-2">No documents yet</p>
                         <p className="text-gray-500 text-sm mb-6">Upload your resumes, cover letters, and portfolio links</p>
                         <Button
                             variant="primary"
@@ -546,7 +546,7 @@ const Documents = () => {
                                 type="text"
                                 value={editDocument.name}
                                 onChange={(e) => setEditDocument({ ...editDocument, name: e.target.value })}
-                                className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-3 py-2.5 bg-black/5 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
                         <div>
@@ -554,7 +554,7 @@ const Documents = () => {
                             <select
                                 value={editDocument.type}
                                 onChange={(e) => setEditDocument({ ...editDocument, type: e.target.value })}
-                                className="w-full px-3 py-2.5 bg-gray-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-3 py-2.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                             >
                                 <option value="resume">Resume</option>
                                 <option value="cover_letter">Cover Letter</option>
@@ -568,7 +568,7 @@ const Documents = () => {
                                 type="text"
                                 value={editDocument.version || ''}
                                 onChange={(e) => setEditDocument({ ...editDocument, version: e.target.value })}
-                                className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-3 py-2.5 bg-black/5 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
                         <div>
@@ -577,7 +577,7 @@ const Documents = () => {
                                 value={editDocument.notes || ''}
                                 onChange={(e) => setEditDocument({ ...editDocument, notes: e.target.value })}
                                 rows={2}
-                                className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-3 py-2.5 bg-black/5 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
                         <div className="flex gap-3 pt-2">
@@ -610,8 +610,8 @@ const Documents = () => {
             >
                 {deleteConfirm && (
                     <div>
-                        <p className="text-gray-300 mb-6">
-                            Are you sure you want to delete <strong className="text-white">{deleteConfirm.name}</strong>? This action cannot be undone.
+                        <p className="text-gray-700 dark:text-gray-300 mb-6">
+                            Are you sure you want to delete <strong className="text-gray-900 dark:text-white">{deleteConfirm.name}</strong>? This action cannot be undone.
                             {deleteConfirm.opportunity_documents?.length > 0 && (
                                 <span className="block mt-2 text-yellow-400">
                                     This document is linked to {deleteConfirm.opportunity_documents.length} opportunity(s).

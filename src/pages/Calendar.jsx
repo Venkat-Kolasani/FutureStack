@@ -133,11 +133,11 @@ const CalendarPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black p-4 sm:p-6">
+      <div className="min-h-screen bg-white dark:bg-black p-4 sm:p-6">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col items-center justify-center py-20">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
-            <p className="text-white text-lg">Loading calendar...</p>
+            <p className="text-gray-900 dark:text-white text-lg">Loading calendar...</p>
           </div>
         </div>
       </div>
@@ -145,7 +145,7 @@ const CalendarPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black p-4 sm:p-6">
+    <div className="min-h-screen bg-white dark:bg-black p-4 sm:p-6">
       <SEO 
         title="Calendar"
         description="View all your opportunity deadlines in a calendar format. Never miss an important date."
@@ -155,8 +155,8 @@ const CalendarPage = () => {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Calendar</h1>
-          <p className="text-sm sm:text-base text-gray-400">View all your deadlines in calendar format</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">Calendar</h1>
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">View all your deadlines in calendar format</p>
         </div>
 
         {/* Legend */}
@@ -164,19 +164,19 @@ const CalendarPage = () => {
           <div className="flex flex-wrap items-center gap-6">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-blue-500 rounded-full" />
-              <span className="text-gray-300 text-sm">Internship Deadline</span>
+              <span className="text-gray-700 dark:text-gray-300 text-sm">Internship Deadline</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-green-500 rounded-full" />
-              <span className="text-gray-300 text-sm">Hackathon Deadline</span>
+              <span className="text-gray-700 dark:text-gray-300 text-sm">Hackathon Deadline</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-purple-500 rounded-full" />
-              <span className="text-gray-300 text-sm">Interview Round</span>
+              <span className="text-gray-700 dark:text-gray-300 text-sm">Interview Round</span>
             </div>
             <div className="flex items-center gap-2">
-              <FaCalendarAlt className="text-gray-400" />
-              <span className="text-gray-300 text-sm">Click on a date to view opportunities</span>
+              <FaCalendarAlt className="text-gray-600 dark:text-gray-400" />
+              <span className="text-gray-700 dark:text-gray-300 text-sm">Click on a date to view opportunities</span>
             </div>
           </div>
         </Card>
@@ -199,8 +199,8 @@ const CalendarPage = () => {
             <div className="flex items-center gap-3">
               <FaCalendarAlt className="text-blue-400 text-2xl" />
               <div>
-                <p className="text-gray-400 text-sm">Total Deadlines</p>
-                <p className="text-white text-2xl font-bold">{opportunities.length}</p>
+                <p className="text-gray-600 dark:text-gray-400 text-sm">Total Deadlines</p>
+                <p className="text-gray-900 dark:text-white text-2xl font-bold">{opportunities.length}</p>
               </div>
             </div>
           </Card>
@@ -208,8 +208,8 @@ const CalendarPage = () => {
             <div className="flex items-center gap-3">
               <FaBriefcase className="text-blue-400 text-2xl" />
               <div>
-                <p className="text-gray-400 text-sm">Internship Deadlines</p>
-                <p className="text-white text-2xl font-bold">
+                <p className="text-gray-600 dark:text-gray-400 text-sm">Internship Deadlines</p>
+                <p className="text-gray-900 dark:text-white text-2xl font-bold">
                   {opportunities.filter(opp => opp.category === 'internship').length}
                 </p>
               </div>
@@ -219,8 +219,8 @@ const CalendarPage = () => {
             <div className="flex items-center gap-3">
               <FaCode className="text-green-400 text-2xl" />
               <div>
-                <p className="text-gray-400 text-sm">Hackathon Deadlines</p>
-                <p className="text-white text-2xl font-bold">
+                <p className="text-gray-600 dark:text-gray-400 text-sm">Hackathon Deadlines</p>
+                <p className="text-gray-900 dark:text-white text-2xl font-bold">
                   {opportunities.filter(opp => opp.category === 'hackathon').length}
                 </p>
               </div>
@@ -247,8 +247,8 @@ const CalendarPage = () => {
                     key={round.id}
                     className="bg-purple-900/20 rounded-lg p-3 border border-purple-500/30"
                   >
-                    <p className="text-white font-medium">{round.opportunityTitle}</p>
-                    <p className="text-sm text-gray-300 mt-1">
+                    <p className="text-gray-900 dark:text-white font-medium">{round.opportunityTitle}</p>
+                    <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">
                       Round {round.roundNumber} · {getRoundTypeLabel(round.roundType)}
                     </p>
                   </div>
@@ -263,10 +263,10 @@ const CalendarPage = () => {
               >
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex-1">
-                    <h4 className="text-lg font-semibold text-white mb-1">{opp.title}</h4>
+                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">{opp.title}</h4>
                     <div className="flex flex-wrap items-center gap-2 mb-2">
                       <span
-                        className={`px-2 py-1 rounded text-xs font-medium text-white ${opp.category === 'internship' ? 'bg-blue-600' : 'bg-green-600'
+                        className={`px-2 py-1 rounded text-xs font-medium text-gray-900 dark:text-white ${opp.category === 'internship' ? 'bg-blue-600' : 'bg-green-600'
                           }`}
                       >
                         {opp.category === 'internship' ? (
@@ -282,7 +282,7 @@ const CalendarPage = () => {
                         )}
                       </span>
                       <span
-                        className={`px-2 py-1 rounded text-xs font-medium text-white ${getStatusColor(
+                        className={`px-2 py-1 rounded text-xs font-medium text-gray-900 dark:text-white ${getStatusColor(
                           opp.status
                         )}`}
                       >
@@ -290,14 +290,14 @@ const CalendarPage = () => {
                       </span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 text-gray-300 text-sm">
+                  <div className="flex items-center gap-1 text-gray-700 dark:text-gray-300 text-sm">
                     <FaClock size={12} />
                     <span>{getDaysRemaining(opp.deadline)} days</span>
                   </div>
                 </div>
 
                 {opp.description && (
-                  <p className="text-gray-300 text-sm mb-2">{opp.description}</p>
+                  <p className="text-gray-700 dark:text-gray-300 text-sm mb-2">{opp.description}</p>
                 )}
 
                 {opp.link && (
@@ -313,7 +313,7 @@ const CalendarPage = () => {
 
                 {opp.notes && (
                   <div className="mt-2 pt-2 border-t border-gray-600">
-                    <p className="text-gray-400 text-xs">
+                    <p className="text-gray-600 dark:text-gray-400 text-xs">
                       <span className="font-semibold">Notes:</span> {opp.notes}
                     </p>
                   </div>

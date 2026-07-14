@@ -18,7 +18,7 @@ const typeColors = {
     resume: 'text-blue-400',
     cover_letter: 'text-green-400',
     portfolio: 'text-purple-400',
-    other: 'text-gray-400'
+    other: 'text-gray-600 dark:text-gray-400'
 };
 
 const DocumentSelector = ({ opportunityId, category, onDocumentsChange }) => {
@@ -120,9 +120,9 @@ const DocumentSelector = ({ opportunityId, category, onDocumentsChange }) => {
     const availableDocuments = allDocuments.filter(d => !isLinked(d.id));
 
     return (
-        <div className="mt-6 pt-6 border-t border-white/10">
+        <div className="mt-6 pt-6 border-t border-gray-200 dark:border-white/10">
             <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-medium text-gray-200">
+                <h3 className="text-sm font-medium text-gray-900 dark:text-gray-200">
                     Attached Documents
                 </h3>
                 {availableDocuments.length > 0 && (
@@ -142,17 +142,17 @@ const DocumentSelector = ({ opportunityId, category, onDocumentsChange }) => {
                 <div className="space-y-2 mb-4">
                     {linkedDocuments.map(doc => {
                         const Icon = typeIcons[doc.type] || FaFile;
-                        const colorClass = typeColors[doc.type] || 'text-gray-400';
+                        const colorClass = typeColors[doc.type] || 'text-gray-600 dark:text-gray-400';
 
                         return (
                             <div
                                 key={doc.id}
-                                className="flex items-center justify-between p-3 bg-white/5 border border-white/10 rounded-lg"
+                                className="flex items-center justify-between p-3 bg-black/5 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg"
                             >
                                 <div className="flex items-center gap-3">
                                     <Icon className={colorClass} size={16} />
                                     <div>
-                                        <p className="text-white text-sm">{doc.name}</p>
+                                        <p className="text-gray-900 dark:text-white text-sm">{doc.name}</p>
                                         {doc.version && (
                                             <p className="text-gray-500 text-xs">{doc.version}</p>
                                         )}
@@ -162,7 +162,7 @@ const DocumentSelector = ({ opportunityId, category, onDocumentsChange }) => {
                                     type="button"
                                     onClick={() => handleUnlink(doc.id)}
                                     disabled={actionLoading === doc.id}
-                                    className="p-1.5 text-gray-400 hover:text-red-400 transition-colors"
+                                    className="p-1.5 text-gray-600 dark:text-gray-400 hover:text-red-400 transition-colors"
                                     title="Remove"
                                 >
                                     {actionLoading === doc.id ? (
@@ -183,10 +183,10 @@ const DocumentSelector = ({ opportunityId, category, onDocumentsChange }) => {
 
             {/* Document Selection Dropdown */}
             {isOpen && availableDocuments.length > 0 && (
-                <div className="bg-gray-900 border border-white/10 rounded-lg p-2 max-h-48 overflow-y-auto">
+                <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-lg p-2 max-h-48 overflow-y-auto">
                     {availableDocuments.map(doc => {
                         const Icon = typeIcons[doc.type] || FaFile;
-                        const colorClass = typeColors[doc.type] || 'text-gray-400';
+                        const colorClass = typeColors[doc.type] || 'text-gray-600 dark:text-gray-400';
 
                         return (
                             <button
@@ -194,17 +194,17 @@ const DocumentSelector = ({ opportunityId, category, onDocumentsChange }) => {
                                 type="button"
                                 onClick={() => handleLink(doc.id)}
                                 disabled={actionLoading === doc.id}
-                                className="w-full flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg transition-colors text-left"
+                                className="w-full flex items-center gap-3 p-2 hover:bg-black/5 dark:hover:bg-white/5 rounded-lg transition-colors text-left"
                             >
                                 <Icon className={colorClass} size={16} />
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-white text-sm truncate">{doc.name}</p>
+                                    <p className="text-gray-900 dark:text-white text-sm truncate">{doc.name}</p>
                                     {doc.version && (
                                         <p className="text-gray-500 text-xs">{doc.version}</p>
                                     )}
                                 </div>
                                 {actionLoading === doc.id ? (
-                                    <span className="text-gray-400 animate-spin">⟳</span>
+                                    <span className="text-gray-600 dark:text-gray-400 animate-spin">⟳</span>
                                 ) : (
                                     <FaPlus className="text-green-400" size={14} />
                                 )}

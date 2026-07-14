@@ -5,7 +5,7 @@ const StatusIndicator = ({ className = '' }) => (
     href={STATUS_PAGE_URL}
     target="_blank"
     rel="noopener noreferrer"
-    className={`inline-flex items-center gap-2 text-xs text-gray-400 hover:text-gray-200 transition-colors ${className}`}
+    className={`inline-flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-200 transition-colors ${className}`}
     aria-label="View system status on UptimeRobot"
   >
     <span className="relative flex h-2 w-2" aria-hidden="true">

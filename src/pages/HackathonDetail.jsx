@@ -35,7 +35,7 @@ const statusColors = {
     interviewed: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
     selected: 'bg-green-500/10 text-green-400 border-green-500/20',
     rejected: 'bg-red-500/10 text-red-400 border-red-500/20',
-    ghosted: 'bg-gray-500/10 text-gray-400 border-gray-500/20'
+    ghosted: 'bg-gray-500/10 text-gray-600 dark:text-gray-400 border-gray-500/20'
 };
 
 const HackathonDetail = () => {
@@ -268,10 +268,10 @@ const HackathonDetail = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-black text-white flex items-center justify-center">
+            <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-white flex items-center justify-center">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
-                    <p className="text-gray-400">Loading hackathon...</p>
+                    <p className="text-gray-600 dark:text-gray-400">Loading hackathon...</p>
                 </div>
             </div>
         );
@@ -280,7 +280,7 @@ const HackathonDetail = () => {
     if (!hackathon) return null;
 
     return (
-        <div className="min-h-screen bg-black text-white p-4 sm:p-6">
+        <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-white p-4 sm:p-6">
             <SEO
                 title={hackathon.title}
                 description={`Manage your hackathon project: ${hackathon.title}`}
@@ -292,7 +292,7 @@ const HackathonDetail = () => {
                 {/* Back Button */}
                 <button
                     onClick={() => navigate('/hackathons')}
-                    className="flex items-center gap-2 text-gray-400 hover:text-white mb-6 transition-colors"
+                    className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-6 transition-colors"
                 >
                     <FaArrowLeft />
                     Back to Hackathons
@@ -302,7 +302,7 @@ const HackathonDetail = () => {
                 <div className="mb-6">
                     <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
                         <div>
-                            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+                            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
                                 {hackathon.title}
                             </h1>
                             <div className="flex flex-wrap items-center gap-3">
@@ -310,7 +310,7 @@ const HackathonDetail = () => {
                                     {hackathon.status?.charAt(0).toUpperCase() + hackathon.status?.slice(1)}
                                 </span>
                                 {hackathon.deadline && (
-                                    <span className="text-sm text-gray-400 flex items-center gap-1">
+                                    <span className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-1">
                                         <FaCalendar size={12} />
                                         {new Date(hackathon.deadline).toLocaleDateString()}
                                     </span>
@@ -332,14 +332,14 @@ const HackathonDetail = () => {
                 </div>
 
                 {/* Tabs */}
-                <div className="flex gap-1 overflow-x-auto pb-2 mb-6 border-b border-white/10">
+                <div className="flex gap-1 overflow-x-auto pb-2 mb-6 border-b border-gray-200 dark:border-white/10">
                     {tabs.map((tab) => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={`flex items-center gap-2 px-4 py-2.5 rounded-t-lg font-medium text-sm whitespace-nowrap transition-colors ${activeTab === tab.id
-                                ? 'bg-white/10 text-white border-b-2 border-purple-500'
-                                : 'text-gray-400 hover:text-white hover:bg-white/5'
+                                ? 'bg-white/10 text-gray-900 dark:text-white border-b-2 border-purple-500'
+                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
                                 }`}
                         >
                             <tab.icon size={14} />
@@ -351,20 +351,20 @@ const HackathonDetail = () => {
                 {/* Tab Content */}
                 <div className="min-h-[400px]">
                     {activeTab === 'overview' && (
-                        <div className="bg-[#0A0A0A] rounded-xl p-6 border border-white/10">
-                            <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                        <div className="bg-white dark:bg-[#0A0A0A] rounded-xl p-6 border border-gray-200 dark:border-white/10">
+                            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                                 <FaInfoCircle className="text-blue-400" />
                                 Overview
                             </h3>
                             {hackathon.description ? (
-                                <p className="text-gray-300 whitespace-pre-wrap">{hackathon.description}</p>
+                                <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{hackathon.description}</p>
                             ) : (
                                 <p className="text-gray-500 italic">No description provided</p>
                             )}
                             {hackathon.notes && (
-                                <div className="mt-6 pt-6 border-t border-white/10">
-                                    <h4 className="font-medium text-white mb-2">Notes</h4>
-                                    <p className="text-gray-400 whitespace-pre-wrap">{hackathon.notes}</p>
+                                <div className="mt-6 pt-6 border-t border-gray-200 dark:border-white/10">
+                                    <h4 className="font-medium text-gray-900 dark:text-white mb-2">Notes</h4>
+                                    <p className="text-gray-600 dark:text-gray-400 whitespace-pre-wrap">{hackathon.notes}</p>
                                 </div>
                             )}
                         </div>

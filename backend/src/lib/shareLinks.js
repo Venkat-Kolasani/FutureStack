@@ -147,6 +147,7 @@ function toPublicOpportunity(opportunity, fields, interviewRounds = null) {
         id: opportunity.id,
         title: opportunity.title,
         category: opportunity.category,
+        campus_mode: opportunity.campus_mode || null,
     };
 
     if (fields.status) {

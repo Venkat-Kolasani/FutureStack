@@ -153,17 +153,17 @@ const StatusBoard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black p-4 sm:p-6">
+      <div className="min-h-screen bg-white dark:bg-black p-4 sm:p-6">
         <div className="flex flex-col items-center justify-center py-20">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mb-4"></div>
-          <p className="text-white text-lg">Loading status board...</p>
+          <p className="text-gray-900 dark:text-white text-lg">Loading status board...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black p-4 sm:p-6">
+    <div className="min-h-screen bg-white dark:bg-black p-4 sm:p-6">
       <SEO 
         title="Status Board"
         description="Kanban-style status board to track your application progress. Drag and drop opportunities between stages."
@@ -173,7 +173,7 @@ const StatusBoard = () => {
       {/* Page Header */}
       <div className="mb-6 sm:mb-8">
         <div className="flex items-center gap-3 mb-2">
-          <h1 className="text-2xl sm:text-3xl font-bold text-white">Status Board</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Status Board</h1>
           {/* Realtime status indicator */}
           {isRealtimeAvailable ? (
             <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium ${realtimeConnected
@@ -184,13 +184,13 @@ const StatusBoard = () => {
               {realtimeConnected ? 'Live' : 'Connecting...'}
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-500/20 text-gray-400">
+            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-500/20 text-gray-600 dark:text-gray-400">
               <span className="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
               Offline
             </span>
           )}
         </div>
-        <p className="text-sm sm:text-base text-gray-400">Track your application progress across different stages</p>
+        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">Track your application progress across different stages</p>
       </div>
 
       {/* Status Board - Horizontal scrollable on mobile, side-by-side on desktop */}
@@ -236,7 +236,7 @@ const StatusBoard = () => {
         title="Confirm Delete"
       >
         <div>
-          <p className="text-gray-300 mb-6">
+          <p className="text-gray-700 dark:text-gray-300 mb-6">
             Are you sure you want to delete this opportunity? This action cannot
             be undone.
           </p>

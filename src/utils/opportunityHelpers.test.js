@@ -52,8 +52,8 @@ describe('opportunityHelpers', () => {
 
     describe('getCampusModeLabel', () => {
         it('returns labels for known campus modes', () => {
-            expect(getCampusModeLabel('on_campus')).toBe('On-campus');
-            expect(getCampusModeLabel('off_campus')).toBe('Off-campus');
+            expect(getCampusModeLabel('on_campus')).toBe('On-Campus');
+            expect(getCampusModeLabel('off_campus')).toBe('Off-Campus');
         });
 
         it('returns null for unset campus mode', () => {

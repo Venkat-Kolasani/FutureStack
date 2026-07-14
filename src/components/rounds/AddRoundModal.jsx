@@ -22,11 +22,11 @@ const RESULT_BUTTON_STYLES = {
   pending: 'border-blue-500/40 bg-blue-500/15 text-blue-300 ring-1 ring-blue-500/30',
   cleared: 'border-green-500/40 bg-green-500/15 text-green-300 ring-1 ring-green-500/30',
   rejected: 'border-red-500/40 bg-red-500/15 text-red-300 ring-1 ring-red-500/30',
-  skipped: 'border-gray-500/40 bg-gray-500/15 text-gray-300 ring-1 ring-gray-500/30',
+  skipped: 'border-gray-500/40 bg-gray-500/15 text-gray-700 dark:text-gray-300 ring-1 ring-gray-500/30',
 };
 
 const RESULT_IDLE_STYLES =
-  'border-white/10 bg-white/5 text-gray-400 hover:border-white/20 hover:bg-white/10 hover:text-gray-300';
+  'border-gray-200 dark:border-white/10 bg-black/5 dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:border-white/20 hover:bg-white/10 hover:text-gray-300';
 
 /**
  * Create or edit an interview round.
@@ -91,14 +91,14 @@ const AddRoundModal = ({
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title={title}>
       <form onSubmit={handleSubmit} className="space-y-5">
-        <p className="text-sm text-gray-400 -mt-1">
+        <p className="text-sm text-gray-600 dark:text-gray-400 -mt-1">
           {isEdit
             ? 'Update details or mark the outcome when you hear back.'
             : 'Log the next step in your hiring pipeline.'}
         </p>
 
         <div>
-          <label htmlFor="round_type" className="mb-1.5 block text-sm font-medium text-gray-300">
+          <label htmlFor="round_type" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
             Round type
           </label>
           <select
@@ -106,7 +106,7 @@ const AddRoundModal = ({
             value={form.round_type}
             onChange={handleChange('round_type')}
             disabled={saving}
-            className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2.5 text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500/50 disabled:opacity-60"
+            className="w-full rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-black/40 px-3 py-2.5 text-gray-900 dark:text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500/50 disabled:opacity-60"
             required
           >
             {ROUND_TYPES.map((type) => (
@@ -118,7 +118,7 @@ const AddRoundModal = ({
         </div>
 
         <div>
-          <label htmlFor="scheduled_date" className="mb-1.5 block text-sm font-medium text-gray-300">
+          <label htmlFor="scheduled_date" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
             Scheduled date
             <span className="ml-1 font-normal text-gray-500">(optional)</span>
           </label>
@@ -128,12 +128,12 @@ const AddRoundModal = ({
             value={form.scheduled_date}
             onChange={handleChange('scheduled_date')}
             disabled={saving}
-            className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2.5 text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500/50 disabled:opacity-60 [color-scheme:dark]"
+            className="w-full rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-black/40 px-3 py-2.5 text-gray-900 dark:text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500/50 disabled:opacity-60 [color-scheme:dark]"
           />
         </div>
 
         <fieldset disabled={saving}>
-          <legend className="mb-2 block text-sm font-medium text-gray-300">Result</legend>
+          <legend className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Result</legend>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             {ROUND_RESULTS.map((result) => (
               <button
@@ -154,7 +154,7 @@ const AddRoundModal = ({
 
         <div>
           <div className="mb-1.5 flex items-center justify-between">
-            <label htmlFor="notes" className="text-sm font-medium text-gray-300">
+            <label htmlFor="notes" className="text-sm font-medium text-gray-700 dark:text-gray-300">
               Notes
               <span className="ml-1 font-normal text-gray-500">(optional)</span>
             </label>
@@ -169,12 +169,12 @@ const AddRoundModal = ({
             maxLength={NOTES_MAX_LENGTH}
             rows={3}
             disabled={saving}
-            className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2.5 text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500/50 resize-none disabled:opacity-60"
+            className="w-full rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-black/40 px-3 py-2.5 text-gray-900 dark:text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500/50 resize-none disabled:opacity-60"
             placeholder="Prep topics, interviewer names, feedback..."
           />
         </div>
 
-        <div className="flex justify-end gap-3 border-t border-white/10 pt-4">
+        <div className="flex justify-end gap-3 border-t border-gray-200 dark:border-white/10 pt-4">
           <Button type="button" variant="secondary" onClick={handleClose} disabled={saving}>
             Cancel
           </Button>

@@ -13,13 +13,13 @@ import Button from '../common/Button';
 import Modal from '../common/Modal';
 
 const statusConfig = {
-    todo: { label: 'To Do', color: 'bg-gray-500/10 border-gray-500/30', headerColor: 'text-gray-400' },
+    todo: { label: 'To Do', color: 'bg-gray-500/10 border-gray-500/30', headerColor: 'text-gray-600 dark:text-gray-400' },
     in_progress: { label: 'In Progress', color: 'bg-blue-500/10 border-blue-500/30', headerColor: 'text-blue-400' },
     done: { label: 'Done', color: 'bg-green-500/10 border-green-500/30', headerColor: 'text-green-400' }
 };
 
 const priorityConfig = {
-    low: { label: 'Low', color: 'text-gray-400', bg: 'bg-gray-500/20' },
+    low: { label: 'Low', color: 'text-gray-600 dark:text-gray-400', bg: 'bg-gray-500/20' },
     medium: { label: 'Medium', color: 'text-yellow-400', bg: 'bg-yellow-500/20' },
     high: { label: 'High', color: 'text-red-400', bg: 'bg-red-500/20' }
 };
@@ -77,8 +77,8 @@ const TaskBoard = ({
 
     if (!hasTeam) {
         return (
-            <div className="bg-[#0A0A0A] rounded-xl p-6 border border-white/10">
-                <div className="text-center py-8 text-gray-400">
+            <div className="bg-white dark:bg-[#0A0A0A] rounded-xl p-6 border border-gray-200 dark:border-white/10">
+                <div className="text-center py-8 text-gray-600 dark:text-gray-400">
                     <FaTasks className="text-4xl mx-auto mb-4 text-gray-600" />
                     <p>Create a team first to manage tasks</p>
                 </div>
@@ -87,7 +87,7 @@ const TaskBoard = ({
     }
 
     const TaskCard = ({ task }) => (
-        <div className="bg-[#0A0A0A] rounded-lg p-4 border border-white/10 hover:border-white/20 transition-all">
+        <div className="bg-white dark:bg-[#0A0A0A] rounded-lg p-4 border border-gray-200 dark:border-white/10 hover:border-white/20 transition-all">
             {/* Priority Badge */}
             <div className="flex items-center justify-between mb-2">
                 <span className={`text-xs px-2 py-0.5 rounded ${priorityConfig[task.priority]?.bg} ${priorityConfig[task.priority]?.color}`}>
@@ -103,23 +103,23 @@ const TaskBoard = ({
             </div>
 
             {/* Title */}
-            <h4 className="font-medium text-white mb-2">{task.title}</h4>
+            <h4 className="font-medium text-gray-900 dark:text-white mb-2">{task.title}</h4>
 
             {/* Description */}
             {task.description && (
-                <p className="text-sm text-gray-400 mb-3 line-clamp-2">{task.description}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">{task.description}</p>
             )}
 
             {/* Meta Info */}
             <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500 mb-3">
                 {task.assigned_to && (
-                    <span className="flex items-center gap-1 bg-white/5 px-2 py-1 rounded">
+                    <span className="flex items-center gap-1 bg-black/5 dark:bg-white/5 px-2 py-1 rounded">
                         <FaUser size={10} />
                         {task.assigned_to}
                     </span>
                 )}
                 {task.due_date && (
-                    <span className="flex items-center gap-1 bg-white/5 px-2 py-1 rounded">
+                    <span className="flex items-center gap-1 bg-black/5 dark:bg-white/5 px-2 py-1 rounded">
                         <FaCalendar size={10} />
                         {new Date(task.due_date).toLocaleDateString()}
                     </span>
@@ -130,25 +130,25 @@ const TaskBoard = ({
             <select
                 value={task.status}
                 onChange={(e) => handleStatusChange(task.id, e.target.value)}
-                className="w-full px-3 py-2 text-sm bg-white/5 border border-white/10 rounded text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-3 py-2 text-sm bg-black/5 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
-                <option value="todo" className="bg-gray-900">To Do</option>
-                <option value="in_progress" className="bg-gray-900">In Progress</option>
-                <option value="done" className="bg-gray-900">Done</option>
+                <option value="todo" className="bg-white dark:bg-gray-900">To Do</option>
+                <option value="in_progress" className="bg-white dark:bg-gray-900">In Progress</option>
+                <option value="done" className="bg-white dark:bg-gray-900">Done</option>
             </select>
         </div>
     );
 
     return (
-        <div className="bg-[#0A0A0A] rounded-xl p-6 border border-white/10">
+        <div className="bg-white dark:bg-[#0A0A0A] rounded-xl p-6 border border-gray-200 dark:border-white/10">
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                 <div>
-                    <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                         <FaTasks className="text-blue-400" />
                         Tasks
                     </h3>
-                    <p className="text-gray-400 text-sm mt-1">
+                    <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
                         Manage and track hackathon tasks
                     </p>
                 </div>
@@ -192,7 +192,7 @@ const TaskBoard = ({
                 <form onSubmit={handleSubmit}>
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Task Title *
                             </label>
                             <input
@@ -200,12 +200,12 @@ const TaskBoard = ({
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
                                 placeholder="e.g., Set up database"
-                                className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-4 py-2.5 bg-black/5 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 required
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Description
                             </label>
                             <textarea
@@ -213,18 +213,18 @@ const TaskBoard = ({
                                 onChange={(e) => setDescription(e.target.value)}
                                 placeholder="Task details..."
                                 rows={2}
-                                className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                                className="w-full px-4 py-2.5 bg-black/5 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                             />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                     Assign To
                                 </label>
                                 <select
                                     value={assignedTo}
                                     onChange={(e) => setAssignedTo(e.target.value)}
-                                    className="w-full px-4 py-2.5 bg-gray-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 >
                                     <option value="">Unassigned</option>
                                     {members.map(m => (
@@ -233,13 +233,13 @@ const TaskBoard = ({
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                     Priority
                                 </label>
                                 <select
                                     value={priority}
                                     onChange={(e) => setPriority(e.target.value)}
-                                    className="w-full px-4 py-2.5 bg-gray-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 >
                                     <option value="low">Low</option>
                                     <option value="medium">Medium</option>
@@ -248,14 +248,14 @@ const TaskBoard = ({
                             </div>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Due Date
                             </label>
                             <input
                                 type="date"
                                 value={dueDate}
                                 onChange={(e) => setDueDate(e.target.value)}
-                                className="w-full px-4 py-2.5 bg-gray-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
                     </div>

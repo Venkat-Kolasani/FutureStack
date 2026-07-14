@@ -54,11 +54,11 @@ const ReflectionPanel = ({ prep, onUpdate, isLoading }) => {
     }, [saveTimeout]);
 
     return (
-        <div className="bg-[#0A0A0A] rounded-xl p-6 border border-white/10">
+        <div className="bg-white dark:bg-[#0A0A0A] rounded-xl p-6 border border-gray-200 dark:border-white/10">
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                     <FaLightbulb className="text-yellow-400" size={16} />
-                    <h3 className="text-lg font-semibold text-white">Post-Interview Reflection</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Post-Interview Reflection</h3>
                 </div>
                 {isSaving && (
                     <div className="flex items-center gap-1 text-green-400 text-sm">
@@ -73,7 +73,7 @@ const ReflectionPanel = ({ prep, onUpdate, isLoading }) => {
                 onChange={handleChange}
                 disabled={isLoading}
                 placeholder="Reflect on your interview: What went well? What could be improved? Any follow-up actions needed?"
-                className="w-full h-48 bg-white/5 border border-white/10 rounded-lg p-4 text-gray-300 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-500 resize-none"
+                className="w-full h-48 bg-black/5 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg p-4 text-gray-700 dark:text-gray-300 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-500 resize-none"
             />
 
             <div className="mt-3 text-xs text-gray-500">

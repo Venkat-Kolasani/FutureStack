@@ -25,10 +25,10 @@ const LoadingSpinner = ({
 
     if (fullScreen) {
         return (
-            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="fixed inset-0 bg-white dark:bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
                 <div className="text-center">
                     <div className={spinnerClasses}></div>
-                    {text && <p className="text-white mt-4 text-lg">{text}</p>}
+                    {text && <p className="text-gray-900 dark:text-white mt-4 text-lg">{text}</p>}
                 </div>
             </div>
         );
@@ -37,7 +37,7 @@ const LoadingSpinner = ({
     return (
         <div className={`flex flex-col items-center justify-center ${className}`}>
             <div className={spinnerClasses}></div>
-            {text && <p className="text-gray-400 mt-2 text-sm">{text}</p>}
+            {text && <p className="text-gray-600 dark:text-gray-400 mt-2 text-sm">{text}</p>}
         </div>
     );
 };

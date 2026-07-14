@@ -35,10 +35,10 @@ const PrepProgressBar = ({ questions, topics, behavioral }) => {
     };
 
     return (
-        <div className="bg-[#0A0A0A] rounded-xl p-4 border border-white/10">
+        <div className="bg-white dark:bg-[#0A0A0A] rounded-xl p-4 border border-gray-200 dark:border-white/10">
             <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-medium text-gray-300">Preparation Progress</h3>
-                <span className="text-sm font-bold text-white">{Math.round(overallProgress)}%</span>
+                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">Preparation Progress</h3>
+                <span className="text-sm font-bold text-gray-900 dark:text-white">{Math.round(overallProgress)}%</span>
             </div>
 
             {/* Overall Progress Bar */}
@@ -66,9 +66,9 @@ const PrepProgressBar = ({ questions, topics, behavioral }) => {
                         ) : (
                             <FaCircle className="text-gray-600" size={12} />
                         )}
-                        <span className="text-xs text-gray-400">Questions</span>
+                        <span className="text-xs text-gray-600 dark:text-gray-400">Questions</span>
                     </div>
-                    <p className="text-sm font-medium text-white">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">
                         {questionsPrepared}/{questionsTotal}
                     </p>
                 </div>
@@ -81,9 +81,9 @@ const PrepProgressBar = ({ questions, topics, behavioral }) => {
                         ) : (
                             <FaCircle className="text-gray-600" size={12} />
                         )}
-                        <span className="text-xs text-gray-400">Topics</span>
+                        <span className="text-xs text-gray-600 dark:text-gray-400">Topics</span>
                     </div>
-                    <p className="text-sm font-medium text-white">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">
                         {topicsReviewed}/{topicsTotal}
                     </p>
                 </div>
@@ -96,9 +96,9 @@ const PrepProgressBar = ({ questions, topics, behavioral }) => {
                         ) : (
                             <FaCircle className="text-gray-600" size={12} />
                         )}
-                        <span className="text-xs text-gray-400">Behavioral</span>
+                        <span className="text-xs text-gray-600 dark:text-gray-400">Behavioral</span>
                     </div>
-                    <p className="text-sm font-medium text-white">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">
                         {behavioralComplete}/{behavioralTotal}
                     </p>
                 </div>

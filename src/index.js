@@ -1,11 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { ClerkProvider } from '@clerk/clerk-react';
+import reportWebVitals from './reportWebVitals';
+import { initAnalytics } from './lib/analytics';
 import './index.css';
 import App from './App';
-import reportWebVitals from './reportWebVitals';
-import { clerkPublishableKey } from './lib/clerk';
-import { initAnalytics } from './lib/analytics';
 
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from "@vercel/speed-insights/react"
@@ -16,11 +14,9 @@ initAnalytics();
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <ClerkProvider publishableKey={clerkPublishableKey}>
-      <App />
-      <Analytics />
-      <SpeedInsights />
-    </ClerkProvider>
+    <App />
+    <Analytics />
+    <SpeedInsights />
   </React.StrictMode>
 );
 

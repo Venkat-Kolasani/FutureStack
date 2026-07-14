@@ -107,11 +107,11 @@ const ManageSharesPanel = ({ refreshKey = 0, onCreateShare }) => {
     <Card className="p-4 sm:p-6">
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h3 className="flex items-center text-base font-semibold text-white sm:text-lg">
+          <h3 className="flex items-center text-base font-semibold text-gray-900 dark:text-white sm:text-lg">
             <FaLink className="mr-2 text-blue-400" />
             Shared Links
           </h3>
-          <p className="mt-1 text-sm text-gray-400">
+          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
             Read-only links you have created. Revoke access at any time.
           </p>
         </div>
@@ -126,12 +126,12 @@ const ManageSharesPanel = ({ refreshKey = 0, onCreateShare }) => {
       {loading ? (
         <div className="space-y-2">
           {[1, 2].map((item) => (
-            <div key={item} className="h-12 animate-pulse rounded-lg bg-white/5" />
+            <div key={item} className="h-12 animate-pulse rounded-lg bg-black/5 dark:bg-white/5" />
           ))}
         </div>
       ) : activeShares.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-white/10 bg-white/[0.02] px-4 py-10 text-center">
-          <p className="text-sm font-medium text-gray-300">No active share links</p>
+        <div className="rounded-lg border border-dashed border-gray-200 dark:border-white/10 bg-white/[0.02] px-4 py-10 text-center">
+          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">No active share links</p>
           <p className="mx-auto mt-1 max-w-sm text-sm text-gray-500">
             Share your full progress from here, or share a single internship from the Internships tab.
           </p>
@@ -143,7 +143,7 @@ const ManageSharesPanel = ({ refreshKey = 0, onCreateShare }) => {
           )}
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-white/10">
+        <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-white/10">
           <table className="hidden w-full table-fixed md:table">
             <colgroup>
               <col className="w-auto" />
@@ -153,7 +153,7 @@ const ManageSharesPanel = ({ refreshKey = 0, onCreateShare }) => {
               <col className="w-[152px]" />
             </colgroup>
             <thead>
-              <tr className="border-b border-white/10 bg-white/[0.02] text-left text-xs font-medium uppercase tracking-wide text-gray-500">
+              <tr className="border-b border-gray-200 dark:border-white/10 bg-white/[0.02] text-left text-xs font-medium uppercase tracking-wide text-gray-500">
                 <th className="px-4 py-3 font-medium">Shared content</th>
                 <th className="px-4 py-3 font-medium">Created</th>
                 <th className="px-4 py-3 font-medium">Expires</th>
@@ -167,8 +167,8 @@ const ManageSharesPanel = ({ refreshKey = 0, onCreateShare }) => {
                   {confirmRevokeId === share.id ? (
                     <td colSpan={5} className="px-4 py-3">
                       <div className="flex flex-col gap-3 rounded-lg border border-red-500/20 bg-red-500/5 p-3 sm:flex-row sm:items-center sm:justify-between">
-                        <p className="text-sm text-gray-300">
-                          Revoke <span className="font-medium text-white">{getShareLabel(share)}</span>?
+                        <p className="text-sm text-gray-700 dark:text-gray-300">
+                          Revoke <span className="font-medium text-gray-900 dark:text-white">{getShareLabel(share)}</span>?
                           This link will stop working immediately.
                         </p>
                         <div className="flex gap-2">
@@ -193,9 +193,9 @@ const ManageSharesPanel = ({ refreshKey = 0, onCreateShare }) => {
                   ) : (
                     <>
                       <td className="px-4 py-3 align-middle">
-                        <p className="truncate text-sm font-medium text-white">{getShareLabel(share)}</p>
+                        <p className="truncate text-sm font-medium text-gray-900 dark:text-white">{getShareLabel(share)}</p>
                         <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                          <span className="rounded bg-white/5 px-1.5 py-0.5 text-xs text-gray-400">
+                          <span className="rounded bg-black/5 dark:bg-white/5 px-1.5 py-0.5 text-xs text-gray-600 dark:text-gray-400">
                             {getShareScope(share)}
                           </span>
                           {share.hasPasscode && (
@@ -210,13 +210,13 @@ const ManageSharesPanel = ({ refreshKey = 0, onCreateShare }) => {
                           )}
                         </div>
                       </td>
-                      <td className="px-4 py-3 align-middle text-sm text-gray-400 whitespace-nowrap">
+                      <td className="px-4 py-3 align-middle text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">
                         {formatDate(share.createdAt)}
                       </td>
-                      <td className="px-4 py-3 align-middle text-sm text-gray-400 whitespace-nowrap">
+                      <td className="px-4 py-3 align-middle text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">
                         {formatDate(share.expiresAt)}
                       </td>
-                      <td className="px-4 py-3 align-middle text-center text-sm text-gray-400">
+                      <td className="px-4 py-3 align-middle text-center text-sm text-gray-600 dark:text-gray-400">
                         {share.viewCount || 0}
                       </td>
                       <td className="px-3 py-2.5 align-middle">
@@ -252,8 +252,8 @@ const ManageSharesPanel = ({ refreshKey = 0, onCreateShare }) => {
               <div key={share.id} className="px-4 py-3">
                 {confirmRevokeId === share.id ? (
                   <div className="flex flex-col gap-3 rounded-lg border border-red-500/20 bg-red-500/5 p-3">
-                    <p className="text-sm text-gray-300">
-                      Revoke <span className="font-medium text-white">{getShareLabel(share)}</span>?
+                    <p className="text-sm text-gray-700 dark:text-gray-300">
+                      Revoke <span className="font-medium text-gray-900 dark:text-white">{getShareLabel(share)}</span>?
                       This link will stop working immediately.
                     </p>
                     <div className="flex gap-2">
@@ -272,9 +272,9 @@ const ManageSharesPanel = ({ refreshKey = 0, onCreateShare }) => {
                   </div>
                 ) : (
                   <>
-                    <p className="truncate text-sm font-medium text-white">{getShareLabel(share)}</p>
+                    <p className="truncate text-sm font-medium text-gray-900 dark:text-white">{getShareLabel(share)}</p>
                     <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                      <span className="rounded bg-white/5 px-1.5 py-0.5 text-xs text-gray-400">
+                      <span className="rounded bg-black/5 dark:bg-white/5 px-1.5 py-0.5 text-xs text-gray-600 dark:text-gray-400">
                         {getShareScope(share)}
                       </span>
                       {share.hasPasscode && (

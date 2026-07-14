@@ -3,7 +3,6 @@ import { Link, useParams } from 'react-router-dom';
 import {
   FaBriefcase,
   FaCalendarAlt,
-  FaChartLine,
   FaExternalLinkAlt,
   FaLock,
   FaRocket,
@@ -17,6 +16,7 @@ import LoadingSpinner from '../components/common/LoadingSpinner';
 import RoundTimelineReadOnly from '../components/rounds/RoundTimelineReadOnly';
 import { shareLinkService } from '../services/api';
 import { formatDate, getDaysRemaining } from '../utils/dateHelpers';
+import { getCampusModeLabel, CAMPUS_MODE_BADGE_STYLES } from '../utils/opportunityHelpers';
 
 const STATUS_STYLES = {
   applied: 'bg-blue-500/10 text-blue-200 border-blue-500/20',
@@ -46,7 +46,7 @@ const formatSharedTimestamp = (value) => {
 };
 
 const getDeadlineState = (deadline) => {
-  if (!deadline) return { label: 'No deadline shared', className: 'text-gray-400' };
+  if (!deadline) return { label: 'No deadline shared', className: 'text-gray-600 dark:text-gray-400' };
 
   const diffDays = getDaysRemaining(deadline);
 
@@ -131,7 +131,7 @@ const PublicSharePage = () => {
   );
 
   const renderUnavailable = (message) => (
-    <div className="min-h-screen bg-black px-4 py-12 text-white">
+    <div className="min-h-screen bg-white dark:bg-black px-4 py-12 text-gray-900 dark:text-white">
       <SEO
         title="Shared Dashboard Unavailable"
         description="This FutureStack shared dashboard link is unavailable."
@@ -143,8 +143,8 @@ const PublicSharePage = () => {
           <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-red-500/10 text-red-300">
             <FaLock size={24} />
           </div>
-          <h1 className="text-2xl font-bold text-white">Shared dashboard unavailable</h1>
-          <p className="mt-3 text-gray-400">{message}</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Shared dashboard unavailable</h1>
+          <p className="mt-3 text-gray-600 dark:text-gray-400">{message}</p>
           <Link to="/" className="mt-6 inline-flex">
             <Button>
               Visit FutureStack
@@ -158,7 +158,7 @@ const PublicSharePage = () => {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-black text-white">
+      <div className="flex min-h-screen items-center justify-center bg-white dark:bg-black text-gray-900 dark:text-white">
         <SEO
           title="Loading Shared Dashboard"
           description="Loading shared FutureStack opportunities."
@@ -167,7 +167,7 @@ const PublicSharePage = () => {
         />
         <div className="text-center">
           <LoadingSpinner size="lg" />
-          <p className="mt-4 text-gray-400">Loading shared opportunities...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading shared opportunities...</p>
         </div>
       </div>
     );
@@ -179,7 +179,7 @@ const PublicSharePage = () => {
 
   if (share?.requiresPasscode) {
     return (
-      <div className="min-h-screen bg-black px-4 py-12 text-white">
+      <div className="min-h-screen bg-white dark:bg-black px-4 py-12 text-gray-900 dark:text-white">
         <SEO
           title="Passcode Required"
           description="Enter the passcode to view these shared FutureStack opportunities."
@@ -191,13 +191,13 @@ const PublicSharePage = () => {
             <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-blue-500/15 text-blue-200">
               <FaLock size={24} />
             </div>
-            <h1 className="text-center text-2xl font-bold text-white">Passcode required</h1>
-            <p className="mt-3 text-center text-gray-300">
+            <h1 className="text-center text-2xl font-bold text-gray-900 dark:text-white">Passcode required</h1>
+            <p className="mt-3 text-center text-gray-700 dark:text-gray-300">
               These shared opportunities are protected. Enter the 4-digit passcode from the sender.
             </p>
             <form onSubmit={verifyPasscode} className="mt-6 space-y-4">
               <label className="block">
-                <span className="mb-2 block text-sm font-medium text-gray-300">4-digit passcode</span>
+                <span className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">4-digit passcode</span>
                 <input
                   value={passcode}
                   onChange={(event) => {
@@ -206,7 +206,7 @@ const PublicSharePage = () => {
                   }}
                   inputMode="numeric"
                   maxLength={4}
-                  className="w-full rounded-xl border border-white/10 bg-black/50 px-4 py-3 text-center text-2xl tracking-[0.5em] text-white outline-none focus:border-blue-500"
+                  className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-black/50 px-4 py-3 text-center text-2xl tracking-[0.5em] text-gray-900 dark:text-white outline-none focus:border-blue-500"
                   aria-label="Share passcode"
                 />
               </label>
@@ -226,7 +226,7 @@ const PublicSharePage = () => {
   }
 
   return (
-    <div className="min-h-screen overflow-hidden bg-black text-white">
+    <div className="min-h-screen overflow-hidden bg-white dark:bg-black text-gray-900 dark:text-white">
       <SEO
         title="Shared Opportunities"
         description="Read-only FutureStack opportunities with deadlines and application links."
@@ -239,18 +239,18 @@ const PublicSharePage = () => {
         <div className="absolute bottom-20 right-0 h-96 w-96 rounded-full bg-purple-500/10 blur-3xl" />
       </div>
 
-      <main className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:py-12">
-        <header className="mb-10 rounded-3xl border border-white/10 bg-white/[0.04] p-6 shadow-2xl shadow-blue-950/20 backdrop-blur sm:p-8 lg:p-10">
+      <main className="relative mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:py-12">
+        <header className="mb-10 rounded-3xl border border-gray-200 dark:border-white/10 bg-white/[0.04] p-6 shadow-2xl shadow-blue-950/20 backdrop-blur sm:p-8 lg:p-10">
           <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl">
               <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1 text-sm text-blue-200">
                 <FaShieldAlt />
                 Read-only opportunity share
               </div>
-              <h1 className="text-3xl font-bold tracking-tight text-white sm:text-5xl">
+              <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-5xl">
                 Shared opportunities you can act on.
               </h1>
-              <p className="mt-4 text-base leading-7 text-gray-300 sm:text-lg">
+              <p className="mt-4 text-base leading-7 text-gray-700 dark:text-gray-300 sm:text-lg">
                 Review the opportunity details, deadlines, progress, and application links shared from FutureStack.
                 Private notes, documents, prep work, and owner identity stay hidden.
               </p>
@@ -265,18 +265,18 @@ const PublicSharePage = () => {
 
           <div className="mt-8 grid grid-cols-2 gap-3 lg:grid-cols-4">
             {heroStats.map((stat) => (
-              <div key={stat.label} className="rounded-2xl border border-white/10 bg-black/30 p-4">
-                <p className="text-sm text-gray-400">{stat.label}</p>
+              <div key={stat.label} className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-black/30 p-4">
+                <p className="text-sm text-gray-600 dark:text-gray-400">{stat.label}</p>
                 <p className={`mt-2 text-3xl font-bold ${stat.accent}`}>{stat.value}</p>
               </div>
             ))}
           </div>
         </header>
 
-        <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-          <div className="space-y-4">
+        <section className="space-y-8">
+          <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="flex items-center gap-2 text-xl font-semibold text-white">
+              <h2 className="flex items-center gap-2 text-xl font-semibold text-gray-900 dark:text-white">
                 <FaBriefcase className="text-blue-300" />
                 Shared opportunities
               </h2>
@@ -285,28 +285,37 @@ const PublicSharePage = () => {
 
             {opportunities.length === 0 ? (
               <Card className="p-8 text-center">
-                <p className="text-gray-400">No opportunities were included in this shared snapshot.</p>
+                <p className="text-gray-600 dark:text-gray-400">No opportunities were included in this shared snapshot.</p>
               </Card>
             ) : (
               <div className="grid gap-4">
                 {opportunities.map((opportunity) => (
-                  <Card key={opportunity.id} className="p-5 hover:border-blue-500/20">
+                  <Card key={opportunity.id} className="p-6 transition-all duration-300 hover:-translate-y-1 hover:border-blue-500/30 hover:bg-white/[0.02] hover:shadow-xl hover:shadow-blue-900/10">
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                       <div>
                         <p className="text-xs uppercase tracking-[0.2em] text-gray-500">
                           {opportunity.category || 'internship'}
                         </p>
-                        <h3 className="mt-1 text-lg font-semibold text-white">{opportunity.title}</h3>
+                        <h3 className="mt-1 text-lg font-semibold text-gray-900 dark:text-white">{opportunity.title}</h3>
                       </div>
-                      {fields.status && (
-                        <span className={`w-fit rounded-full border px-3 py-1 text-sm ${STATUS_STYLES[opportunity.status] || 'border-white/10 bg-white/5 text-gray-200'}`}>
-                          {statusLabel(opportunity.status)}
-                        </span>
-                      )}
+                      <div className="flex flex-col sm:items-end gap-2">
+                        <div className="flex items-center gap-2">
+                          {opportunity.campus_mode && getCampusModeLabel(opportunity.campus_mode) && (
+                            <span className={`w-fit rounded-full px-3 py-1 text-sm ${CAMPUS_MODE_BADGE_STYLES[opportunity.campus_mode] || 'border border-gray-200 dark:border-white/10 bg-black/5 dark:bg-white/5 text-gray-700 dark:text-gray-300'}`}>
+                              {getCampusModeLabel(opportunity.campus_mode)}
+                            </span>
+                          )}
+                          {fields.status && (
+                            <span className={`w-fit rounded-full border px-3 py-1 text-sm ${STATUS_STYLES[opportunity.status] || 'border-gray-200 dark:border-white/10 bg-black/5 dark:bg-white/5 text-gray-200'}`}>
+                              {statusLabel(opportunity.status)}
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </div>
 
                     {fields.description && opportunity.description && (
-                      <p className="mt-4 rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm leading-6 text-gray-300">
+                      <p className="mt-4 rounded-xl border border-gray-200 dark:border-white/10 bg-white/[0.03] p-4 text-sm leading-6 text-gray-700 dark:text-gray-300">
                         {opportunity.description}
                       </p>
                     )}
@@ -318,7 +327,7 @@ const PublicSharePage = () => {
                             <FaCalendarAlt />
                             Deadline
                           </p>
-                          <p className="mt-1 text-sm font-medium text-white">{formatDate(opportunity.deadline)}</p>
+                          <p className="mt-1 text-sm font-medium text-gray-900 dark:text-white">{formatDate(opportunity.deadline)}</p>
                           <p className={`mt-1 text-xs ${getDeadlineState(opportunity.deadline).className}`}>
                             {getDeadlineState(opportunity.deadline).label}
                           </p>
@@ -327,7 +336,7 @@ const PublicSharePage = () => {
                       {fields.rejectedRound && (
                         <div className="rounded-xl bg-white/[0.03] p-3">
                           <p className="text-xs text-gray-500">Pipeline stage</p>
-                          <p className="mt-1 text-sm font-medium text-white">
+                          <p className="mt-1 text-sm font-medium text-gray-900 dark:text-white">
                             {opportunity.rejectedRoundNumber
                               ? `Rejected at round ${opportunity.rejectedRoundNumber}`
                               : opportunity.currentRoundNumber
@@ -339,7 +348,7 @@ const PublicSharePage = () => {
                       {fields.dateApplied && (
                         <div className="rounded-xl bg-white/[0.03] p-3">
                           <p className="text-xs text-gray-500">Date applied</p>
-                          <p className="mt-1 text-sm font-medium text-white">{formatSharedTimestamp(opportunity.dateApplied)}</p>
+                          <p className="mt-1 text-sm font-medium text-gray-900 dark:text-white">{formatSharedTimestamp(opportunity.dateApplied)}</p>
                         </div>
                       )}
                     </div>
@@ -367,78 +376,35 @@ const PublicSharePage = () => {
             )}
           </div>
 
-          <aside className="space-y-4">
-            <Card className="p-6 bg-gradient-to-br from-purple-500/10 to-blue-500/5">
-              <h2 className="flex items-center gap-2 text-lg font-semibold text-white">
-                <FaChartLine className="text-purple-300" />
-                Snapshot insights
-              </h2>
-              <div className="mt-5 space-y-4">
-                <div>
-                  <div className="flex justify-between text-sm text-gray-400">
-                    <span>Has application link</span>
-                    <span>{summary.opportunitiesWithLinks || 0}</span>
+          <section className="mt-16">
+            <Card className="relative overflow-hidden border-gray-200 dark:border-white/10 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-blue-500/5 p-[1px]">
+              <div className="relative flex flex-col items-center justify-between gap-6 rounded-2xl bg-white dark:bg-black/40 p-8 text-center backdrop-blur-md sm:flex-row sm:p-10 sm:text-left">
+                <div className="flex items-start gap-5">
+                  <div className="hidden rounded-2xl bg-blue-500/20 p-4 text-blue-300 ring-1 ring-white/10 sm:flex">
+                    <FaUserGraduate size={28} />
                   </div>
-                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/10">
-                    <div
-                      className="h-full rounded-full bg-purple-400"
-                      style={{ width: `${summary.total ? ((summary.opportunitiesWithLinks || 0) / summary.total) * 100 : 0}%` }}
-                    />
+                  <div>
+                    <h2 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Build your own tracker</h2>
+                    <p className="mt-2 max-w-xl text-base leading-relaxed text-gray-600 dark:text-gray-400">
+                      FutureStack helps students organize applications, interview rounds, prep work,
+                      documents, hackathons, analytics, and reports in one focused, premium workspace.
+                    </p>
                   </div>
                 </div>
-                <div>
-                  <div className="flex justify-between text-sm text-gray-400">
-                    <span>Upcoming deadlines</span>
-                    <span>{summary.upcomingDeadlineCount || 0}</span>
-                  </div>
-                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/10">
-                    <div
-                      className="h-full rounded-full bg-amber-400"
-                      style={{ width: `${summary.total ? ((summary.upcomingDeadlineCount || 0) / summary.total) * 100 : 0}%` }}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <div className="flex justify-between text-sm text-gray-400">
-                    <span>In progress</span>
-                    <span>{summary.inProgress || 0}</span>
-                  </div>
-                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/10">
-                    <div
-                      className="h-full rounded-full bg-blue-400"
-                      style={{ width: `${summary.total ? ((summary.inProgress || 0) / summary.total) * 100 : 0}%` }}
-                    />
-                  </div>
-                </div>
+                <Link to="/" className="inline-flex shrink-0">
+                  <Button className="px-6 py-3 text-base font-semibold shadow-xl shadow-blue-500/20 hover:shadow-blue-500/40">
+                    Explore FutureStack
+                    <FaExternalLinkAlt className="ml-2 text-sm" />
+                  </Button>
+                </Link>
               </div>
             </Card>
-
-            <Card className="p-6">
-              <div className="flex items-start gap-3">
-                <div className="rounded-xl bg-blue-500/10 p-3 text-blue-300">
-                  <FaUserGraduate />
-                </div>
-                <div>
-                  <h2 className="font-semibold text-white">Build your own tracker</h2>
-                  <p className="mt-2 text-sm leading-6 text-gray-400">
-                    FutureStack helps students organize applications, interview rounds, prep work,
-                    documents, hackathons, analytics, and reports in one focused workspace.
-                  </p>
-                  <Link to="/" className="mt-4 inline-flex">
-                    <Button variant="outline">
-                      Explore FutureStack
-                      <FaExternalLinkAlt className="ml-2 text-xs" />
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            </Card>
-          </aside>
+          </section>
         </section>
       </main>
 
-      <footer className="relative border-t border-white/10 px-4 py-8 text-center text-sm text-gray-500">
-        Shared via FutureStack — futurestack.online
+      <footer className="relative border-t border-gray-200 dark:border-white/10 px-4 py-8 text-center text-sm text-gray-500">
+        Shared via FutureTracker — futuretracker.online
       </footer>
     </div>
   );

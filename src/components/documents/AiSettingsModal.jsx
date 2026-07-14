@@ -48,7 +48,7 @@ const AiSettingsModal = ({
                     <FaBrain className="text-violet-400 mt-0.5 shrink-0" size={16} />
                     <div>
                         <p className="text-sm text-gray-200 font-medium">Bring your own API key</p>
-                        <p className="text-xs text-gray-400 mt-1 leading-relaxed">
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 leading-relaxed">
                             Use a key from Google AI Studio. Keys with HTTP referrer or IP restrictions
                             will fail here — create an unrestricted key.
                         </p>
@@ -66,7 +66,7 @@ const AiSettingsModal = ({
                         <FaCheckCircle className="text-emerald-400 mt-0.5 shrink-0" size={14} />
                         <div className="text-sm">
                             <p className="text-emerald-300 font-medium">Connected</p>
-                            <p className="text-xs text-gray-400 mt-0.5">
+                            <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
                                 Key{settings.keyHint ? ` ${settings.keyHint}` : ''} · {settings.model}
                             </p>
                         </div>
@@ -88,7 +88,7 @@ const AiSettingsModal = ({
                             value={apiKey}
                             onChange={(e) => setApiKey(e.target.value)}
                             placeholder={settings?.configured && !settings?.needsKeyRefresh ? 'Leave blank to keep current key' : 'Paste your Gemini API key'}
-                            className="w-full pl-9 pr-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-violet-500"
+                            className="w-full pl-9 pr-3 py-2.5 bg-black/5 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-violet-500"
                             autoComplete="off"
                             required={!settings?.configured || settings?.needsKeyRefresh}
                         />
@@ -112,7 +112,7 @@ const AiSettingsModal = ({
                         id="gemini-model"
                         value={model}
                         onChange={(e) => setModel(e.target.value)}
-                        className="w-full px-3 py-2.5 bg-gray-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
+                        className="w-full px-3 py-2.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
                     >
                         {MODEL_OPTIONS.map((opt) => (
                             <option key={opt.value} value={opt.value}>

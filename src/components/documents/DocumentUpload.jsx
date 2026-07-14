@@ -204,22 +204,22 @@ const DocumentUpload = ({ isOpen, onClose, onUpload, onCreateExternal, isLoading
         <div className="fixed inset-0 z-50 overflow-y-auto">
             {/* Backdrop */}
             <div
-                className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+                className="fixed inset-0 bg-white dark:bg-black bg-opacity-50 transition-opacity"
                 onClick={handleClose}
             />
 
             {/* Modal Container - styled like AddOpportunity card */}
             <div className="flex min-h-full items-end sm:items-center justify-center p-0 sm:p-4">
                 <div
-                    className="relative bg-[#0A0A0A] rounded-t-2xl sm:rounded-xl shadow-lg max-w-lg w-full border border-white/10 transform transition-all"
+                    className="relative bg-white dark:bg-[#0A0A0A] rounded-t-2xl sm:rounded-xl shadow-lg max-w-lg w-full border border-gray-200 dark:border-white/10 transform transition-all"
                     onClick={(e) => e.stopPropagation()}
                 >
                     {/* Header - styled like AddOpportunity */}
-                    <div className="flex items-center justify-between p-6 border-b border-white/10">
-                        <h2 className="text-lg font-semibold text-white">Add New Document</h2>
+                    <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-white/10">
+                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Add New Document</h2>
                         <button
                             onClick={handleClose}
-                            className="text-gray-400 hover:text-gray-200 transition-colors p-2 rounded-md hover:bg-white/5"
+                            className="text-gray-600 dark:text-gray-400 hover:text-gray-200 transition-colors p-2 rounded-md hover:bg-white/5"
                         >
                             <FaTimes size={20} />
                         </button>
@@ -234,7 +234,7 @@ const DocumentUpload = ({ isOpen, onClose, onUpload, onCreateExternal, isLoading
                                 onClick={() => setMode('upload')}
                                 className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 ${mode === 'upload'
                                     ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
-                                    : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10'
+                                    : 'bg-black/5 dark:bg-white/5 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-white/10 hover:bg-white/10'
                                     }`}
                             >
                                 <FaUpload size={14} />
@@ -245,7 +245,7 @@ const DocumentUpload = ({ isOpen, onClose, onUpload, onCreateExternal, isLoading
                                 onClick={() => setMode('external')}
                                 className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 ${mode === 'external'
                                     ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
-                                    : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10'
+                                    : 'bg-black/5 dark:bg-white/5 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-white/10 hover:bg-white/10'
                                     }`}
                             >
                                 <FaLink size={14} />
@@ -272,7 +272,7 @@ const DocumentUpload = ({ isOpen, onClose, onUpload, onCreateExternal, isLoading
                                                 ? 'border-green-500/50 bg-green-500/5'
                                                 : errors.file
                                                     ? 'border-red-500 bg-red-500/5'
-                                                    : 'border-white/20 hover:border-white/40 bg-white/5'
+                                                    : 'border-white/20 hover:border-white/40 bg-black/5 dark:bg-white/5'
                                             }`}
                                     >
                                         <input
@@ -287,8 +287,8 @@ const DocumentUpload = ({ isOpen, onClose, onUpload, onCreateExternal, isLoading
                                                 <div className="flex items-center gap-3">
                                                     <FaFile className="text-green-400" size={24} />
                                                     <div className="text-left">
-                                                        <p className="text-white font-medium">{file.name}</p>
-                                                        <p className="text-gray-400 text-sm">
+                                                        <p className="text-gray-900 dark:text-white font-medium">{file.name}</p>
+                                                        <p className="text-gray-600 dark:text-gray-400 text-sm">
                                                             {(file.size / 1024).toFixed(1)} KB
                                                         </p>
                                                     </div>
@@ -300,15 +300,15 @@ const DocumentUpload = ({ isOpen, onClose, onUpload, onCreateExternal, isLoading
                                                         setFile(null);
                                                         setAtsAnalysis(null);
                                                     }}
-                                                    className="p-1 text-gray-400 hover:text-red-400"
+                                                    className="p-1 text-gray-600 dark:text-gray-400 hover:text-red-400"
                                                 >
                                                     <FaTimes size={16} />
                                                 </button>
                                             </div>
                                         ) : (
                                             <>
-                                                <FaUpload className="mx-auto text-gray-400 mb-2" size={32} />
-                                                <p className="text-gray-300">Drag & drop or click to upload</p>
+                                                <FaUpload className="mx-auto text-gray-600 dark:text-gray-400 mb-2" size={32} />
+                                                <p className="text-gray-700 dark:text-gray-300">Drag & drop or click to upload</p>
                                                 <p className="text-gray-500 text-sm mt-1">PDF, DOC, DOCX (max 5MB)</p>
                                             </>
                                         )}
@@ -329,7 +329,7 @@ const DocumentUpload = ({ isOpen, onClose, onUpload, onCreateExternal, isLoading
                                         value={formData.file_url}
                                         onChange={handleChange}
                                         placeholder="https://drive.google.com/..."
-                                        className={`w-full px-3 py-2.5 bg-white/5 border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${errors.file_url ? 'border-red-500' : 'border-white/10'
+                                        className={`w-full px-3 py-2.5 bg-black/5 dark:bg-white/5 border rounded-lg text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${errors.file_url ? 'border-red-500' : 'border-gray-200 dark:border-white/10'
                                             }`}
                                     />
                                     {errors.file_url && <p className="text-red-400 text-sm mt-1">{errors.file_url}</p>}
@@ -347,7 +347,7 @@ const DocumentUpload = ({ isOpen, onClose, onUpload, onCreateExternal, isLoading
                                     value={formData.name}
                                     onChange={handleChange}
                                     placeholder="e.g., Software Engineer Resume v2"
-                                    className={`w-full px-3 py-2.5 bg-white/5 border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${errors.name ? 'border-red-500' : 'border-white/10'
+                                    className={`w-full px-3 py-2.5 bg-black/5 dark:bg-white/5 border rounded-lg text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${errors.name ? 'border-red-500' : 'border-gray-200 dark:border-white/10'
                                         }`}
                                 />
                                 {errors.name && <p className="text-red-400 text-sm mt-1">{errors.name}</p>}
@@ -360,12 +360,12 @@ const DocumentUpload = ({ isOpen, onClose, onUpload, onCreateExternal, isLoading
                                     name="type"
                                     value={formData.type}
                                     onChange={handleChange}
-                                    className="w-full px-3 py-2.5 bg-gray-900 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                                    className="w-full px-3 py-2.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/10 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                                 >
-                                    <option value="resume" style={{ backgroundColor: '#111827', color: 'white' }}>Resume</option>
-                                    <option value="cover_letter" style={{ backgroundColor: '#111827', color: 'white' }}>Cover Letter</option>
-                                    <option value="portfolio" style={{ backgroundColor: '#111827', color: 'white' }}>Portfolio</option>
-                                    <option value="other" style={{ backgroundColor: '#111827', color: 'white' }}>Other</option>
+                                    <option value="resume" className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">Resume</option>
+                                    <option value="cover_letter" className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">Cover Letter</option>
+                                    <option value="portfolio" className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">Portfolio</option>
+                                    <option value="other" className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">Other</option>
                                 </select>
                             </div>
 
@@ -378,7 +378,7 @@ const DocumentUpload = ({ isOpen, onClose, onUpload, onCreateExternal, isLoading
                                     value={formData.version}
                                     onChange={handleChange}
                                     placeholder="e.g., v1, v2, Final"
-                                    className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                    className="w-full px-3 py-2.5 bg-black/5 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                                 />
                             </div>
 
@@ -391,13 +391,13 @@ const DocumentUpload = ({ isOpen, onClose, onUpload, onCreateExternal, isLoading
                                     onChange={handleChange}
                                     rows={3}
                                     placeholder="Optional notes about this document..."
-                                    className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                    className="w-full px-3 py-2.5 bg-black/5 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                                 />
                             </div>
 
                             {/* ATS Analysis */}
                             {mode === 'upload' && (isAnalyzing || atsAnalysis) && (
-                                <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-gray-200">
+                                <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-black/5 dark:bg-white/5 p-4 text-sm text-gray-200">
                                     <div className="flex items-center justify-between mb-2">
                                         <span className="font-medium">ATS Analysis</span>
                                         {isAnalyzing ? (
@@ -418,22 +418,22 @@ const DocumentUpload = ({ isOpen, onClose, onUpload, onCreateExternal, isLoading
                                         {!isAnalyzing && (
                                             <p className="text-xs text-emerald-300">Done</p>
                                         )}
-                                        <div className="flex items-center justify-between text-xs text-gray-400">
+                                        <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
                                             <span>Structure</span>
                                             <span>{atsAnalysis?.breakdown?.structure ?? '--'}/60</span>
                                         </div>
-                                        <div className="flex items-center justify-between text-xs text-gray-400">
+                                        <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
                                             <span>Content</span>
                                             <span>{atsAnalysis?.breakdown?.content ?? '--'}/25</span>
                                         </div>
-                                        <div className="flex items-center justify-between text-xs text-gray-400">
+                                        <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
                                             <span>ATS Friendly</span>
                                             <span>{atsAnalysis?.breakdown?.atsFriendly ?? '--'}/15</span>
                                         </div>
                                         {atsAnalysis?.suggestions?.length > 0 && (
-                                            <div className="rounded-lg bg-black/20 p-3">
-                                                <p className="mb-1 text-xs font-medium text-gray-300">Top suggestions</p>
-                                                <ul className="space-y-1 text-xs text-gray-400">
+                                            <div className="rounded-lg bg-white dark:bg-black/20 p-3">
+                                                <p className="mb-1 text-xs font-medium text-gray-700 dark:text-gray-300">Top suggestions</p>
+                                                <ul className="space-y-1 text-xs text-gray-600 dark:text-gray-400">
                                                     {atsAnalysis.suggestions.slice(0, 3).map((suggestion) => (
                                                         <li key={suggestion}>{suggestion}</li>
                                                     ))}
@@ -467,10 +467,10 @@ const DocumentUpload = ({ isOpen, onClose, onUpload, onCreateExternal, isLoading
                         </form>
 
                         {/* Cancel button - styled like AddOpportunity */}
-                        <div className="mt-6 pt-4 border-t border-white/10">
+                        <div className="mt-6 pt-4 border-t border-gray-200 dark:border-white/10">
                             <button
                                 onClick={handleClose}
-                                className="w-full px-4 py-2 text-gray-400 hover:text-gray-200 transition-colors text-sm font-medium"
+                                className="w-full px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-200 transition-colors text-sm font-medium"
                             >
                                 Cancel
                             </button>

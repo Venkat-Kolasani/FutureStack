@@ -19,7 +19,7 @@ const {
 const router = express.Router();
 
 const OPPORTUNITY_SHARE_FIELDS =
-    'id, title, description, link, deadline, status, category, created_at, rejected_round_number, current_round_number';
+    'id, title, description, link, deadline, status, category, campus_mode, created_at, rejected_round_number, current_round_number';
 
 const OWNER_SHARE_FIELDS =
     'id, snapshot, snapshot_type, expires_at, is_active, view_count, passcode_hash, token_ciphertext, token_iv, token_auth_tag, created_at, updated_at';

@@ -1,7 +1,8 @@
 import { useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
-import { useUser } from '@clerk/clerk-react';
+import { useUser, ClerkProvider } from '@clerk/clerk-react';
+import { clerkPublishableKey } from './lib/clerk';
 import { HelmetProvider } from 'react-helmet-async';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -11,6 +12,9 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import LoadingSpinner from './components/common/LoadingSpinner';
 import Home from './pages/Home'; // Landing page - load immediately for best UX
+
+// Context
+import { ThemeProvider, useTheme } from './context/ThemeContext';
 
 // Hooks
 import { useAuthToken } from './hooks/useAuthToken';
@@ -37,7 +41,7 @@ const PublicSharePage = lazy(() => import('./pages/PublicSharePage'));
 
 // Loading fallback component for Suspense
 const PageLoader = () => (
-  <div className="min-h-screen bg-black flex items-center justify-center">
+  <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
     <LoadingSpinner size="lg" />
   </div>
 );
@@ -47,6 +51,7 @@ function AppContent() {
   const isHomePage = location.pathname === '/';
   const isPublicSharePage = location.pathname.startsWith('/share/');
   const { user, isSignedIn } = useUser();
+  const { isDark } = useTheme();
 
   // Initialize auth token getter for API calls
   useAuthToken();
@@ -72,7 +77,7 @@ function AppContent() {
   }, [isSignedIn, user]);
 
   return (
-    <div className="min-h-screen bg-black text-white font-sans">
+    <div className="min-h-screen font-sans transition-colors duration-300">
       {/* Skip to main content link for accessibility */}
       <a
         href="#main-content"
@@ -162,20 +167,60 @@ function AppContent() {
         pauseOnFocusLoss
         draggable
         pauseOnHover
-        theme="dark"
+        theme={isDark ? 'dark' : 'light'}
       />
     </div>
+  );
+}
+
+function ClerkThemeProvider({ children }) {
+  const { isDark } = useTheme();
+
+  return (
+    <ClerkProvider
+      publishableKey={clerkPublishableKey}
+      appearance={{
+        variables: {
+          colorBackground: isDark ? '#0A0A0A' : '#ffffff',
+          colorText: isDark ? '#ffffff' : '#111827',
+          colorPrimary: '#3B82F6',
+          colorInputBackground: isDark ? '#1a1a1a' : '#ffffff',
+          colorInputText: isDark ? '#ffffff' : '#111827',
+          colorDanger: '#EF4444',
+          colorSuccess: '#10B981',
+          colorWarning: '#F59E0B',
+          colorNeutral: isDark ? '#9CA3AF' : '#6B7280',
+        },
+        elements: {
+          card: isDark ? 'border border-white/10 shadow-2xl' : 'border border-gray-200 shadow-xl',
+          headerTitle: isDark ? 'text-white' : 'text-gray-900',
+          headerSubtitle: isDark ? 'text-gray-400' : 'text-gray-500',
+          socialButtonsBlockButton: isDark ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-white border-gray-200 hover:bg-gray-50 text-gray-900',
+          dividerLine: isDark ? 'bg-white/10' : 'bg-gray-200',
+          dividerText: isDark ? 'text-gray-400' : 'text-gray-500',
+          formFieldLabel: isDark ? 'text-gray-300' : 'text-gray-700',
+          formFieldInput: isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-white border-gray-300 text-gray-900',
+          footerActionText: isDark ? 'text-gray-400' : 'text-gray-500',
+        }
+      }}
+    >
+      {children}
+    </ClerkProvider>
   );
 }
 
 function App() {
   return (
     <HelmetProvider>
-      <ErrorBoundary>
-        <Router>
-          <AppContent />
-        </Router>
-      </ErrorBoundary>
+      <ThemeProvider>
+        <ClerkThemeProvider>
+          <ErrorBoundary>
+            <Router>
+              <AppContent />
+            </Router>
+          </ErrorBoundary>
+        </ClerkThemeProvider>
+      </ThemeProvider>
     </HelmetProvider>
   );
 }

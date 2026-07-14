@@ -12,10 +12,15 @@ import { SkeletonChart } from '../components/common/LoadingSpinner';
 import InterviewRejectionInsights from '../components/analytics/InterviewRejectionInsights';
 import InterviewFunnelChart from '../components/analytics/InterviewFunnelChart';
 import { analyticsService } from '../services/api';
+import { useTheme } from '../context/ThemeContext';
 
 const Analytics = () => {
     const [analytics, setAnalytics] = useState(null);
     const [loading, setLoading] = useState(true);
+    const { isDark } = useTheme();
+
+    const axisColor = isDark ? '#9CA3AF' : '#6B7280';
+    const gridColor = isDark ? '#374151' : '#E5E7EB';
 
     useEffect(() => {
         fetchAnalytics();
@@ -67,9 +72,9 @@ const Analytics = () => {
     const CustomPieTooltip = ({ active, payload }) => {
         if (active && payload && payload.length) {
             return (
-                <div className="bg-gray-900/95 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/10 shadow-xl">
-                    <p className="text-white font-medium">{payload[0].name}</p>
-                    <p className="text-gray-300">{payload[0].value} opportunities</p>
+                <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm px-4 py-2 rounded-lg border border-gray-200 dark:border-white/10 shadow-xl">
+                    <p className="text-gray-900 dark:text-white font-medium">{payload[0].name}</p>
+                    <p className="text-gray-700 dark:text-gray-300">{payload[0].value} opportunities</p>
                 </div>
             );
         }
@@ -80,9 +85,9 @@ const Analytics = () => {
     const CustomLineTooltip = ({ active, payload, label }) => {
         if (active && payload && payload.length) {
             return (
-                <div className="bg-gray-900/95 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/10 shadow-xl">
-                    <p className="text-gray-400 text-sm">{label}</p>
-                    <p className="text-white font-medium">{payload[0].value} applications</p>
+                <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm px-4 py-2 rounded-lg border border-gray-200 dark:border-white/10 shadow-xl">
+                    <p className="text-gray-600 dark:text-gray-400 text-sm">{label}</p>
+                    <p className="text-gray-900 dark:text-white font-medium">{payload[0].value} applications</p>
                 </div>
             );
         }
@@ -92,15 +97,15 @@ const Analytics = () => {
     // Loading state with skeleton
     if (loading) {
         return (
-            <div className="min-h-screen bg-black p-4 sm:p-6">
+            <div className="min-h-screen bg-white dark:bg-black p-4 sm:p-6">
                 <div className="max-w-7xl mx-auto">
                     <div className="mb-6 sm:mb-8">
-                        <div className="h-8 bg-gray-800 rounded w-1/3 mb-2 animate-pulse"></div>
-                        <div className="h-4 bg-gray-800 rounded w-1/2 animate-pulse"></div>
+                        <div className="h-8 bg-gray-200 dark:bg-gray-800 rounded w-1/3 mb-2 animate-pulse"></div>
+                        <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-1/2 animate-pulse"></div>
                     </div>
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                         {[...Array(4)].map((_, i) => (
-                            <div key={i} className="h-24 bg-gray-800/50 rounded-xl animate-pulse"></div>
+                            <div key={i} className="h-24 bg-gray-200 dark:bg-gray-800/50 rounded-xl animate-pulse"></div>
                         ))}
                     </div>
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -115,14 +120,14 @@ const Analytics = () => {
     // Empty state when no data or total is 0
     if (!analytics || analytics.total === 0) {
         return (
-            <div className="min-h-screen bg-black p-4 sm:p-6">
+            <div className="min-h-screen bg-white dark:bg-black p-4 sm:p-6">
                 <div className="max-w-7xl mx-auto">
                     <div className="mb-6 sm:mb-8">
-                        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2 flex items-center gap-3">
+                        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-3">
                             <FaChartPie className="text-purple-500" />
                             Analytics Dashboard
                         </h1>
-                        <p className="text-sm sm:text-base text-gray-400">
+                        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
                             Track your application progress and discover insights
                         </p>
                     </div>
@@ -137,7 +142,7 @@ const Analytics = () => {
     const statusPieData = getStatusPieData();
 
     return (
-        <div className="min-h-screen bg-black p-4 sm:p-6">
+        <div className="min-h-screen bg-white dark:bg-black p-4 sm:p-6">
             <SEO
                 title="Analytics"
                 description="Visualize your application progress with charts and insights. Track success rates and identify trends."
@@ -147,11 +152,11 @@ const Analytics = () => {
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="mb-6 sm:mb-8">
-                    <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2 flex items-center gap-3">
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-3">
                         <FaChartPie className="text-purple-500" />
                         Analytics Dashboard
                     </h1>
-                    <p className="text-sm sm:text-base text-gray-400">
+                    <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
                         Track your application progress and discover insights
                     </p>
                 </div>
@@ -164,8 +169,8 @@ const Analytics = () => {
                                 <FaFilter className="text-blue-400 text-xl" />
                             </div>
                             <div>
-                                <p className="text-gray-400 text-sm">Total Applied</p>
-                                <p className="text-2xl font-bold text-white">{analytics.total}</p>
+                                <p className="text-gray-600 dark:text-gray-400 text-sm">Total Applied</p>
+                                <p className="text-2xl font-bold text-gray-900 dark:text-white">{analytics.total}</p>
                             </div>
                         </div>
                     </Card>
@@ -176,8 +181,8 @@ const Analytics = () => {
                                 <FaTrophy className="text-green-400 text-xl" />
                             </div>
                             <div>
-                                <p className="text-gray-400 text-sm">Success Rate</p>
-                                <p className="text-2xl font-bold text-white">{analytics.metrics.conversionRate}%</p>
+                                <p className="text-gray-600 dark:text-gray-400 text-sm">Success Rate</p>
+                                <p className="text-2xl font-bold text-gray-900 dark:text-white">{analytics.metrics.conversionRate}%</p>
                             </div>
                         </div>
                     </Card>
@@ -188,8 +193,8 @@ const Analytics = () => {
                                 <FaChartLine className="text-purple-400 text-xl" />
                             </div>
                             <div>
-                                <p className="text-gray-400 text-sm">In Progress</p>
-                                <p className="text-2xl font-bold text-white">{analytics.metrics.inProgress}</p>
+                                <p className="text-gray-600 dark:text-gray-400 text-sm">In Progress</p>
+                                <p className="text-2xl font-bold text-gray-900 dark:text-white">{analytics.metrics.inProgress}</p>
                             </div>
                         </div>
                     </Card>
@@ -200,8 +205,8 @@ const Analytics = () => {
                                 <FaCalendarAlt className="text-amber-400 text-xl" />
                             </div>
                             <div>
-                                <p className="text-gray-400 text-sm">Selected</p>
-                                <p className="text-2xl font-bold text-white">{analytics.statusCounts.selected}</p>
+                                <p className="text-gray-600 dark:text-gray-400 text-sm">Selected</p>
+                                <p className="text-2xl font-bold text-gray-900 dark:text-white">{analytics.statusCounts.selected}</p>
                             </div>
                         </div>
                     </Card>
@@ -211,7 +216,7 @@ const Analytics = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                     {/* Status Distribution Pie Chart */}
                     <Card className="p-6">
-                        <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                             <FaChartPie className="text-purple-400" />
                             Status Distribution
                         </h3>
@@ -237,13 +242,13 @@ const Analytics = () => {
                                         <Tooltip content={<CustomPieTooltip />} />
                                         <Legend
                                             wrapperStyle={{ color: '#9CA3AF' }}
-                                            formatter={(value) => <span className="text-gray-300">{value}</span>}
+                                            formatter={(value) => <span className="text-gray-700 dark:text-gray-300">{value}</span>}
                                         />
                                     </PieChart>
                                 </ResponsiveContainer>
                             </div>
                         ) : (
-                            <div className="h-72 flex items-center justify-center text-gray-400">
+                            <div className="h-72 flex items-center justify-center text-gray-600 dark:text-gray-400">
                                 No data to display
                             </div>
                         )}
@@ -251,22 +256,22 @@ const Analytics = () => {
 
                     {/* Weekly Trend Line Chart */}
                     <Card className="p-6">
-                        <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                             <FaChartLine className="text-blue-400" />
                             Weekly Application Trend
                         </h3>
                         <div className="h-72">
                             <ResponsiveContainer width="100%" height="100%">
                                 <LineChart data={analytics.weeklyBreakdown}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                                    <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
                                     <XAxis
                                         dataKey="week"
-                                        stroke="#9CA3AF"
-                                        tick={{ fill: '#9CA3AF' }}
+                                        stroke={axisColor}
+                                        tick={{ fill: axisColor }}
                                     />
                                     <YAxis
-                                        stroke="#9CA3AF"
-                                        tick={{ fill: '#9CA3AF' }}
+                                        stroke={axisColor}
+                                        tick={{ fill: axisColor }}
                                         allowDecimals={false}
                                     />
                                     <Tooltip content={<CustomLineTooltip />} />
@@ -289,15 +294,15 @@ const Analytics = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
                     {/* Conversion Funnel */}
                     <Card className="p-6">
-                        <h3 className="text-lg font-semibold text-white mb-4">Conversion Funnel</h3>
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Conversion Funnel</h3>
                         <div className="space-y-4">
                             {analytics.funnelData?.map((stage, index) => (
                                 <div key={stage.stage} className="relative">
                                     <div className="flex justify-between items-center mb-1">
-                                        <span className="text-gray-300 font-medium">{stage.stage}</span>
-                                        <span className="text-gray-400 text-sm">{stage.count} ({stage.percentage}%)</span>
+                                        <span className="text-gray-700 dark:text-gray-300 font-medium">{stage.stage}</span>
+                                        <span className="text-gray-600 dark:text-gray-400 text-sm">{stage.count} ({stage.percentage}%)</span>
                                     </div>
-                                    <div className="h-8 bg-gray-800 rounded-lg overflow-hidden">
+                                    <div className="h-8 bg-gray-200 dark:bg-gray-800 rounded-lg overflow-hidden">
                                         <div
                                             className="h-full rounded-lg transition-all duration-1000 ease-out"
                                             style={{
@@ -313,7 +318,7 @@ const Analytics = () => {
 
                     {/* Category Breakdown */}
                     <Card className="p-6">
-                        <h3 className="text-lg font-semibold text-white mb-4">Category Breakdown</h3>
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Category Breakdown</h3>
                         <div className="h-64">
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart
@@ -323,16 +328,16 @@ const Analytics = () => {
                                     ]}
                                     layout="vertical"
                                 >
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" horizontal={false} />
-                                    <XAxis type="number" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} allowDecimals={false} />
-                                    <YAxis type="category" dataKey="name" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} width={100} />
+                                    <CartesianGrid strokeDasharray="3 3" stroke={gridColor} horizontal={false} />
+                                    <XAxis type="number" stroke={axisColor} tick={{ fill: axisColor }} allowDecimals={false} />
+                                    <YAxis type="category" dataKey="name" stroke={axisColor} tick={{ fill: axisColor }} width={100} />
                                     <Tooltip
                                         content={({ active, payload }) => {
                                             if (active && payload && payload.length) {
                                                 return (
-                                                    <div className="bg-gray-900/95 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/10">
-                                                        <p className="text-white font-medium">{payload[0].payload.name}</p>
-                                                        <p className="text-gray-300">{payload[0].value} opportunities</p>
+                                                    <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm shadow-xl px-4 py-2 rounded-lg border border-gray-200 dark:border-white/10">
+                                                        <p className="text-gray-900 dark:text-white font-medium">{payload[0].payload.name}</p>
+                                                        <p className="text-gray-700 dark:text-gray-300">{payload[0].value} opportunities</p>
                                                     </div>
                                                 );
                                             }
@@ -353,18 +358,18 @@ const Analytics = () => {
                         <div className="mt-4 flex justify-center gap-8">
                             <div className="flex items-center gap-2">
                                 <div className="w-3 h-3 rounded-full" style={{ backgroundColor: CATEGORY_COLORS.internship }}></div>
-                                <span className="text-gray-300 text-sm">Internships</span>
+                                <span className="text-gray-700 dark:text-gray-300 text-sm">Internships</span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <div className="w-3 h-3 rounded-full" style={{ backgroundColor: CATEGORY_COLORS.hackathon }}></div>
-                                <span className="text-gray-300 text-sm">Hackathons</span>
+                                <span className="text-gray-700 dark:text-gray-300 text-sm">Hackathons</span>
                             </div>
                         </div>
                     </Card>
 
                     {/* Campus Mode Breakdown */}
                     <Card className="p-6">
-                        <h3 className="text-lg font-semibold text-white mb-4">Campus Mode Breakdown</h3>
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Campus Mode Breakdown</h3>
                         {analytics.campusModeCounts ? (
                             <>
                                 <div className="h-64">
@@ -377,16 +382,16 @@ const Analytics = () => {
                                             ]}
                                             layout="vertical"
                                         >
-                                            <CartesianGrid strokeDasharray="3 3" stroke="#374151" horizontal={false} />
-                                            <XAxis type="number" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} allowDecimals={false} />
-                                            <YAxis type="category" dataKey="name" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} width={100} />
+                                            <CartesianGrid strokeDasharray="3 3" stroke={gridColor} horizontal={false} />
+                                            <XAxis type="number" stroke={axisColor} tick={{ fill: axisColor }} allowDecimals={false} />
+                                            <YAxis type="category" dataKey="name" stroke={axisColor} tick={{ fill: axisColor }} width={100} />
                                             <Tooltip
                                                 content={({ active, payload }) => {
                                                     if (active && payload && payload.length) {
                                                         return (
-                                                            <div className="bg-gray-900/95 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/10">
-                                                                <p className="text-white font-medium">{payload[0].payload.name}</p>
-                                                                <p className="text-gray-300">{payload[0].value} opportunities</p>
+                                                            <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm px-4 py-2 rounded-lg border border-gray-200 dark:border-white/10">
+                                                                <p className="text-gray-900 dark:text-white font-medium">{payload[0].payload.name}</p>
+                                                                <p className="text-gray-700 dark:text-gray-300">{payload[0].value} opportunities</p>
                                                             </div>
                                                         );
                                                     }
@@ -408,20 +413,20 @@ const Analytics = () => {
                                 <div className="mt-4 flex flex-wrap justify-center gap-6">
                                     <div className="flex items-center gap-2">
                                         <div className="w-3 h-3 rounded-full" style={{ backgroundColor: CAMPUS_MODE_COLORS.on_campus }}></div>
-                                        <span className="text-gray-300 text-sm">On-campus</span>
+                                        <span className="text-gray-700 dark:text-gray-300 text-sm">On-campus</span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <div className="w-3 h-3 rounded-full" style={{ backgroundColor: CAMPUS_MODE_COLORS.off_campus }}></div>
-                                        <span className="text-gray-300 text-sm">Off-campus</span>
+                                        <span className="text-gray-700 dark:text-gray-300 text-sm">Off-campus</span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <div className="w-3 h-3 rounded-full" style={{ backgroundColor: CAMPUS_MODE_COLORS.unspecified }}></div>
-                                        <span className="text-gray-300 text-sm">Not specified</span>
+                                        <span className="text-gray-700 dark:text-gray-300 text-sm">Not specified</span>
                                     </div>
                                 </div>
                             </>
                         ) : (
-                            <div className="h-64 flex items-center justify-center text-gray-400">
+                            <div className="h-64 flex items-center justify-center text-gray-600 dark:text-gray-400">
                                 No campus data to display
                             </div>
                         )}
@@ -430,7 +435,7 @@ const Analytics = () => {
 
                 {/* Deadline Heatmap */}
                 <Card className="p-6 mb-8">
-                    <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                         <FaCalendarAlt className="text-amber-400" />
                         Deadline Heatmap (Next 30 Days)
                     </h3>
@@ -448,14 +453,14 @@ const Analytics = () => {
                             if (paddingCells > 0 && index === 0) {
                                 for (let i = 0; i < paddingCells; i++) {
                                     cells.push(
-                                        <div key={`pad-${i}`} className="aspect-square rounded-lg bg-gray-900/30"></div>
+                                        <div key={`pad-${i}`} className="aspect-square rounded-lg bg-gray-100 dark:bg-gray-900/30"></div>
                                     );
                                 }
                             }
 
                             const intensity = item.count === 0 ? 0 : Math.min(item.count, 3);
                             const bgColor = intensity === 0
-                                ? 'bg-gray-800/50'
+                                ? 'bg-gray-100 dark:bg-gray-800/50'
                                 : intensity === 1
                                     ? 'bg-amber-500/30'
                                     : intensity === 2
@@ -468,9 +473,9 @@ const Analytics = () => {
                                     className={`aspect-square rounded-lg ${bgColor} flex items-center justify-center transition-all hover:scale-105 cursor-pointer group relative`}
                                     title={`${item.date}: ${item.count} deadline${item.count !== 1 ? 's' : ''}`}
                                 >
-                                    <span className="text-xs text-gray-300">{item.day}</span>
+                                    <span className="text-xs text-gray-700 dark:text-gray-300">{item.day}</span>
                                     {item.count > 0 && (
-                                        <span className="absolute -top-1 -right-1 w-4 h-4 bg-amber-500 rounded-full text-xs text-white flex items-center justify-center font-bold">
+                                        <span className="absolute -top-1 -right-1 w-4 h-4 bg-amber-500 rounded-full text-xs text-gray-900 dark:text-white flex items-center justify-center font-bold">
                                             {item.count}
                                         </span>
                                     )}
@@ -480,10 +485,10 @@ const Analytics = () => {
                             return cells;
                         })}
                     </div>
-                    <div className="mt-4 flex items-center justify-center gap-4 text-sm text-gray-400">
+                    <div className="mt-4 flex items-center justify-center gap-4 text-sm text-gray-600 dark:text-gray-400">
                         <span>Less</span>
                         <div className="flex gap-1">
-                            <div className="w-4 h-4 rounded bg-gray-800/50"></div>
+                            <div className="w-4 h-4 rounded bg-gray-100 dark:bg-gray-800/50"></div>
                             <div className="w-4 h-4 rounded bg-amber-500/30"></div>
                             <div className="w-4 h-4 rounded bg-amber-500/60"></div>
                             <div className="w-4 h-4 rounded bg-amber-500"></div>
@@ -495,11 +500,11 @@ const Analytics = () => {
                 {/* Interview pipeline — where rejections happen */}
                 <div className="mb-8">
                     <div className="mb-4">
-                        <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                             <FaLayerGroup className="text-red-400" />
                             Interview pipeline insights
                         </h2>
-                        <p className="text-sm text-gray-400 mt-1">
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                             See which round and stage type you were rejected at across internships
                         </p>
                     </div>

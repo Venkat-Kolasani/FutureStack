@@ -40,8 +40,8 @@ export const getDocumentUnavailableMessage = (category) => {
 
 /** Human-readable labels for campus_mode values. */
 export const getCampusModeLabel = (mode) => {
-    if (mode === 'on_campus') return 'On-campus';
-    if (mode === 'off_campus') return 'Off-campus';
+    if (mode === 'on_campus') return 'On-Campus';
+    if (mode === 'off_campus') return 'Off-Campus';
     return null;
 };
 
@@ -51,15 +51,15 @@ export const CAMPUS_MODE_BADGE_STYLES = {
 };
 
 export const CAMPUS_MODE_FILTER_OPTIONS = [
-    { value: 'all', label: 'All campus types' },
-    { value: 'on_campus', label: 'On-campus' },
-    { value: 'off_campus', label: 'Off-campus' },
+    { value: 'all', label: 'All Campus Types' },
+    { value: 'on_campus', label: 'On-Campus' },
+    { value: 'off_campus', label: 'Off-Campus' },
 ];
 
 export const CAMPUS_MODE_FORM_OPTIONS = [
     { value: '', label: 'Not specified' },
-    { value: 'on_campus', label: 'On-campus' },
-    { value: 'off_campus', label: 'Off-campus' },
+    { value: 'on_campus', label: 'On-Campus' },
+    { value: 'off_campus', label: 'Off-Campus' },
 ];
 
 /**
