@@ -123,10 +123,10 @@ GitHub Actions workflow [`.github/workflows/ci.yml`](../.github/workflows/ci.yml
 
 | Job | What it does |
 |-----|----------------|
-| **CI / frontend** | `npm ci`, `npm run build`, `npm run test:ci` |
-| **CI / backend** | `cd backend && npm ci && npm test` |
-| **CI / architecture** | `npm run check:architecture` |
-| **CI / audit** | `npm audit --audit-level=high` (informational; does not block merge) |
+| **frontend** | `npm ci`, `npm run build`, `npm run test:ci` |
+| **backend** | `cd backend && npm ci && npm test` |
+| **architecture** | `npm run check:architecture` |
+| **audit** | Root and backend `npm audit --audit-level=high` (informational; does not block merge) |
 
 No Clerk or Supabase secrets are required in CI — backend tests mock auth and the database client.
 
@@ -137,9 +137,9 @@ After this workflow is on `main`, require status checks so merges are blocked wh
 1. GitHub → **Settings** → **Branches** → branch protection rule for `main`
 2. Enable **Require status checks to pass before merging**
 3. Require at least:
-   - `CI / frontend`
-   - `CI / backend`
-   - `CI / architecture`
+   - `frontend`
+   - `backend`
+   - `architecture`
 4. Keep **Require pull request reviews** enabled for GSSoC assignment flow
 
 ## Running a single test file
