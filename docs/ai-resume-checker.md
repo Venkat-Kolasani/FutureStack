@@ -1,5 +1,7 @@
 # AI Resume Checker
 
+> **Rollout status:** The API, persistence layer, provider settings, and UI components are implemented, but the user-facing controls are currently disabled by `AI_RESUME_CHECK_ENABLED = false` in `src/config/features.js`. This guide documents the implementation and the requirements to enable it safely; it does not mean the feature is live in the product.
+
 > **Feature:** Agentic AI-powered resume evaluation inside the FutureTracker Documents vault.
 > Scores overall quality across four evidence-backed categories, surfaces GitHub signals, and
 > provides actionable suggestions — all powered by a server-side LLM pipeline.
