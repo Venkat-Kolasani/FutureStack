@@ -5,7 +5,7 @@ Thank you for contributing to FutureStack through **GirlScript Summer of Code (G
 ## Before you start
 
 1. Read the [README](README.md) and **[docs/CODEBASE_GUIDE.md](docs/CODEBASE_GUIDE.md)** for architecture and file orientation.
-2. Skim feature docs for your area: [interview-rounds](docs/interview-rounds.md), [interview-prep](docs/interview-prep.md), [documents-and-ats](docs/documents-and-ats.md).
+2. Check [docs/PROJECT_STATUS.md](docs/PROJECT_STATUS.md), then skim the feature documentation for your area.
 3. Pick **one open issue** you want to work on.
 4. **Do not open a PR** until a maintainer has assigned the issue to you.
 5. Comment on the issue with your approach (see below). Wait for assignment before coding.
@@ -18,7 +18,7 @@ Comment on the issue with:
 - **Files you expect to touch** — list paths (e.g. `src/utils/dateHelpers.js`, `OpportunityCard.jsx`)
 - **Libraries or patterns** — only if adding something new; prefer existing stack (React, Tailwind, Express, Supabase)
 - **Test plan** — how you will verify it works locally
-- **Dependencies** — if the issue depends on another issue or PR (e.g. share links require #18 first)
+- **Dependencies** — call out any migration, API, or UI work that must land first.
 
 **Example:**
 
@@ -80,17 +80,9 @@ If you changed backend routes without adding tests, request review only after ad
 | Minimal, focused diff | Large unrelated changes |
 | Respects auth, RLS, and validation | Bypasses API or exposes user data |
 
-## Issue dependencies (important)
+## Dependencies and product state
 
-Some features must be built in order:
-
-| Feature | Order |
-|---------|--------|
-| **Placement dashboard sharing** (#17) | #18 DB → #19 modal / #20 public page → #21 manage shares → #22 passcode (optional) |
-| **Light/dark theme** (#23) | Phase 1: infra + core layout only; full app migration is follow-up work |
-| **Application readiness** (#25) | V1 uses existing Documents API — no new tables required |
-
-Ask in the issue if you are unsure about scope.
+Share links and theming are already implemented. Do not recreate them from older issue plans; extend the existing services and components instead. The AI Resume Checker backend is present but its user interface is feature-gated, so work that exposes it must explicitly include rollout and security considerations. Check the project-status document and the relevant migration before proposing schema work.
 
 ## Labels (for maintainers & contributors)
 
