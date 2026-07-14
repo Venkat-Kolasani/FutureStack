@@ -1,6 +1,6 @@
 # Codebase Guide
 
-Quick orientation for contributors, reviewers, and technical interviews. Read this before diving into individual feature docs.
+Quick orientation for contributors, reviewers, and technical interviews. Read this before diving into individual feature docs. For availability and rollout state, see [PROJECT_STATUS.md](PROJECT_STATUS.md).
 
 ## What is FutureTracker?
 
@@ -84,7 +84,7 @@ sequenceDiagram
 | `/hackathons/:id` | `HackathonDetail.jsx` | ✅ | Team, ideas, tasks, checklist |
 | `/status-board` | `StatusBoard.jsx` | ✅ | Kanban + realtime |
 | `/calendar` | `Calendar.jsx` | ✅ | |
-| `/documents` | `Documents.jsx` | ✅ | Upload + ATS analysis |
+| `/documents` | `Documents.jsx` | ✅ | Upload, document links, ATS analysis, and gated AI controls |
 | `/analytics` | `Analytics.jsx` | ✅ | Charts + rejection insights |
 | `/reports` | `Reports.jsx` | ✅ | PDF export |
 | `/add`, `/edit/:id` | Add/Edit opportunity | ✅ | |
@@ -102,6 +102,8 @@ sequenceDiagram
 | `/api/interview-prep` | `routes/interview-prep.js` | Prep workspace |
 | `/api/share-links` | `routes/share-links.js` | Authenticated share create/list/revoke |
 | `/api/public/share-links` | `routes/public-share-links.js` | Public token/passcode read-only shares |
+| `/api/documents/:id/ai-check` | `routes/resume-checker.js` | Gated AI resume-check pipeline |
+| `/api/ai-settings` | `routes/ai-settings.js` | Encrypted user AI-provider settings |
 | `/api/health` | `app.js` | Liveness |
 | `/api/health/deps` | `app.js` | Supabase reachability |
 
@@ -119,7 +121,8 @@ and the provider-agnostic LLM layer in `lib/llm/`. See [`ai-resume-checker.md`](
 | `opportunityService` | `/opportunities` |
 | `roundService` | `/opportunities/:id/rounds` |
 | `documentService` | `/documents` |
-|| `resumeCheckerService` | `/documents/:id/ai-check` |
+| `resumeCheckerService` | `/documents/:id/ai-check` |
+| `aiSettingsService` | `/ai-settings` |
 | `hackathonService` | `/hackathons/:id/...` |
 | `interviewPrepService` | `/interview-prep/:opportunityId` |
 | `analyticsService` | `/analytics` |
@@ -136,7 +139,7 @@ Always add new endpoints here — pages should not construct URLs manually.
 | Interview rounds | [`interview-rounds.md`](interview-rounds.md) | `opportunity-rounds-migration.sql` |
 | Interview prep | [`interview-prep.md`](interview-prep.md) | `interview-prep-migration.sql` |
 | Documents + ATS | [`documents-and-ats.md`](documents-and-ats.md) | `documents-migration.sql` |
-|| AI Resume Checker | [`ai-resume-checker.md`](ai-resume-checker.md) | `ai-resume-check-migration.sql` |
+| AI Resume Checker (UI gated) | [`ai-resume-checker.md`](ai-resume-checker.md) | `ai-resume-check-migration.sql`, `user-ai-settings-migration.sql` |
 | Dashboard share links | [`share-links.md`](share-links.md) | `share-links-migration.sql`, `supabase/migrations/20260624163000_create_share_links.sql`, `supabase/migrations/20260624171000_add_recoverable_share_tokens.sql` |
 | Hackathon collaboration | [`DOCUMENTATION.md`](DOCUMENTATION.md#hackathon-team-collaboration-new) | `hackathon-collaboration-migration.sql` |
 | Architecture & challenges | [`DOCUMENTATION.md`](DOCUMENTATION.md) | `supabase-schema.sql` |
@@ -145,17 +148,14 @@ Always add new endpoints here — pages should not construct URLs manually.
 
 ---
 
-## Recent merged work (2026)
+## Current implementation notes
 
-| PR | Summary |
+| Area | Current state |
 |----|---------|
-| **AI Checker** | Agentic AI resume check pipeline (LLM extract → parse → GitHub → evaluate); MIT attribution to interviewstreet/hiring-agent |
-|| **#60** | Client-side ATS resume scorer on document upload |
-| **#58** | Interview preparation module (questions, topics, STAR, reflection) |
-| **#56** | Interview rounds UI (timeline, modal, Kanban sync) |
-| **#29** | CI, tests, architecture guardrails |
-| **#15** | Auth race condition + false session-expired redirects |
-| *(main)* | UptimeRobot status indicator in UI + README |
+| Theme | Light and dark mode are implemented through `ThemeContext` and `ThemeToggle`. |
+| AI Resume Checker | Server pipeline and BYOK settings are implemented, but `AI_RESUME_CHECK_ENABLED` is `false`; keep user-facing claims aligned with that flag. |
+| Share links | Create, list, revoke, public read, and optional passcode verification are available. |
+| Quality gates | CI builds/tests frontend and backend, runs architecture guardrails, and performs informational dependency audits. |
 
 When explaining the project in an interview, lead with **realtime Kanban + RLS challenge**, then **round save latency fix**, then **interview prep** or **ATS scorer** depending on the role.
 
