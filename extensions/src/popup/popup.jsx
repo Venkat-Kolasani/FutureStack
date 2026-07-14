@@ -60,12 +60,7 @@ export default function Popup() {
           <span style={{ marginLeft: '8px', fontWeight: 'bold', fontSize: '18px' }}>FutureTracker</span>
         </div>
         <p style={{ color: '#a1a1aa', marginBottom: '12px' }}>Please sign in first at</p>
-        
-          href="https://futuretracker.online/sign-in"
-          target="_blank"
-          rel="noreferrer"
-          style={{ color: '#6366f1', fontWeight: '500' }}
-        >
+        <a href="https://futuretracker.online/sign-in" target="_blank" rel="noreferrer" style={{ color: '#6366f1', fontWeight: '500' }}>
           futuretracker.online
         </a>
       </div>
@@ -112,7 +107,6 @@ export default function Popup() {
         <span style={{ background: '#ffffff', color: '#000000', fontWeight: 'bold', padding: '4px 8px', borderRadius: '4px', fontSize: '14px', marginRight: '8px' }}>F</span>
         <span style={{ fontWeight: 'bold', fontSize: '16px' }}>FutureTracker</span>
       </div>
-
       <label>Title</label>
       <input
         id="ft-title"
@@ -123,7 +117,6 @@ export default function Popup() {
         placeholder="Job title or role"
         style={inputStyle}
       />
-
       <label>Description</label>
       <textarea
         value={data.description}
@@ -131,14 +124,12 @@ export default function Popup() {
         placeholder="Optional description"
         style={{ ...inputStyle, height: '72px', resize: 'vertical' }}
       />
-
       <label>URL</label>
       <input
         value={data.link}
         readOnly
         style={{ ...inputStyle, color: '#71717a', marginBottom: '12px' }}
       />
-
       <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
         <div style={{ flex: 1 }}>
           <label>Category</label>
@@ -167,26 +158,13 @@ export default function Popup() {
           </select>
         </div>
       </div>
-
       <button
         onClick={handleSave}
         disabled={saveStatus === 'saving'}
-        style={{
-          width: '100%',
-          padding: '10px',
-          background: saveStatus === 'saving' ? '#4f46e5' : '#6366f1',
-          color: 'white',
-          border: 'none',
-          borderRadius: '6px',
-          cursor: saveStatus === 'saving' ? 'not-allowed' : 'pointer',
-          fontWeight: '600',
-          fontSize: '14px',
-          letterSpacing: '0.01em',
-        }}
+        style={{ width: '100%', padding: '10px', background: saveStatus === 'saving' ? '#4f46e5' : '#6366f1', color: 'white', border: 'none', borderRadius: '6px', cursor: saveStatus === 'saving' ? 'not-allowed' : 'pointer', fontWeight: '600', fontSize: '14px' }}
       >
         {saveStatus === 'saving' ? 'Saving...' : 'Save Opportunity'}
       </button>
-
       <div aria-live="polite" style={{ marginTop: '10px', textAlign: 'center', fontSize: '13px' }}>
         {saveStatus === 'saved' && <p style={{ color: '#22c55e' }}>✓ Saved successfully!</p>}
         {saveStatus === 'error' && <p style={{ color: '#ef4444' }}>Failed to save. Try again.</p>}
