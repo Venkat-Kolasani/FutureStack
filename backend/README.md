@@ -138,7 +138,7 @@ Authenticated owners manage links through `/api/share-links`; viewers use the pu
 
 ### Hackathons
 
-Team collaboration workspace. See [`../docs/DOCUMENTATION.md`](../docs/DOCUMENTATION.md#hackathon-team-collaboration-new).
+Team collaboration workspace. Its UI lives in `src/pages/HackathonDetail.jsx` and `src/components/hackathons/`; apply [`../docs/hackathon-collaboration-migration.sql`](../docs/hackathon-collaboration-migration.sql) before using it against a new database.
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
