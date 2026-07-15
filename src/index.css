@@ -45,79 +45,79 @@ html:not(.dark) {
   --light-text-yellow: #a16207;
 }
 
-html:not(.dark) .text-gray-200,
-html:not(.dark) .text-gray-300,
-html:not(.dark) .text-gray-400,
-html:not(.dark) .text-gray-500,
-html:not(.dark) .text-slate-200,
-html:not(.dark) .text-slate-300 {
+:where(html:not(.dark)) .text-gray-200,
+:where(html:not(.dark)) .text-gray-300,
+:where(html:not(.dark)) .text-gray-400,
+:where(html:not(.dark)) .text-gray-500,
+:where(html:not(.dark)) .text-slate-200,
+:where(html:not(.dark)) .text-slate-300 {
   color: var(--light-text-muted);
 }
 
-html:not(.dark) .text-blue-200,
-html:not(.dark) .text-blue-300,
-html:not(.dark) .text-blue-400 {
+:where(html:not(.dark)) .text-blue-200,
+:where(html:not(.dark)) .text-blue-300,
+:where(html:not(.dark)) .text-blue-400 {
   color: var(--light-text-blue);
 }
 
-html:not(.dark) .text-cyan-400 {
+:where(html:not(.dark)) .text-cyan-400 {
   color: var(--light-text-cyan);
 }
 
-html:not(.dark) .text-emerald-300,
-html:not(.dark) .text-emerald-400 {
+:where(html:not(.dark)) .text-emerald-300,
+:where(html:not(.dark)) .text-emerald-400 {
   color: var(--light-text-emerald);
 }
 
-html:not(.dark) .text-green-200,
-html:not(.dark) .text-green-300,
-html:not(.dark) .text-green-400,
-html:not(.dark) .text-green-500 {
+:where(html:not(.dark)) .text-green-200,
+:where(html:not(.dark)) .text-green-300,
+:where(html:not(.dark)) .text-green-400,
+:where(html:not(.dark)) .text-green-500 {
   color: var(--light-text-green);
 }
 
-html:not(.dark) .text-indigo-200,
-html:not(.dark) .text-indigo-300,
-html:not(.dark) .text-indigo-400 {
+:where(html:not(.dark)) .text-indigo-200,
+:where(html:not(.dark)) .text-indigo-300,
+:where(html:not(.dark)) .text-indigo-400 {
   color: var(--light-text-indigo);
 }
 
-html:not(.dark) .text-orange-400 {
+:where(html:not(.dark)) .text-orange-400 {
   color: var(--light-text-orange);
 }
 
-html:not(.dark) .text-pink-400 {
+:where(html:not(.dark)) .text-pink-400 {
   color: var(--light-text-pink);
 }
 
-html:not(.dark) .text-purple-200,
-html:not(.dark) .text-purple-300,
-html:not(.dark) .text-purple-400,
-html:not(.dark) .text-purple-500 {
+:where(html:not(.dark)) .text-purple-200,
+:where(html:not(.dark)) .text-purple-300,
+:where(html:not(.dark)) .text-purple-400,
+:where(html:not(.dark)) .text-purple-500 {
   color: var(--light-text-purple);
 }
 
-html:not(.dark) .text-red-200,
-html:not(.dark) .text-red-300,
-html:not(.dark) .text-red-400 {
+:where(html:not(.dark)) .text-red-200,
+:where(html:not(.dark)) .text-red-300,
+:where(html:not(.dark)) .text-red-400 {
   color: var(--light-text-red);
 }
 
-html:not(.dark) .text-teal-400 {
+:where(html:not(.dark)) .text-teal-400 {
   color: var(--light-text-teal);
 }
 
-html:not(.dark) .text-violet-200,
-html:not(.dark) .text-violet-300,
-html:not(.dark) .text-violet-400 {
+:where(html:not(.dark)) .text-violet-200,
+:where(html:not(.dark)) .text-violet-300,
+:where(html:not(.dark)) .text-violet-400 {
   color: var(--light-text-violet);
 }
 
-html:not(.dark) .text-yellow-300,
-html:not(.dark) .text-yellow-400,
-html:not(.dark) .text-amber-200,
-html:not(.dark) .text-amber-300,
-html:not(.dark) .text-amber-400 {
+:where(html:not(.dark)) .text-yellow-300,
+:where(html:not(.dark)) .text-yellow-400,
+:where(html:not(.dark)) .text-amber-200,
+:where(html:not(.dark)) .text-amber-300,
+:where(html:not(.dark)) .text-amber-400 {
   color: var(--light-text-yellow);
 }
 
