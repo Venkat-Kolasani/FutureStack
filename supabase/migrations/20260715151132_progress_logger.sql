@@ -21,7 +21,8 @@ CREATE TABLE IF NOT EXISTS progress_tracks (
     template_type IN ('leetcode', 'dev', 'system_design', 'mock', 'reading', 'custom')
   ),
   is_active BOOLEAN NOT NULL DEFAULT true,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT progress_tracks_id_user_id_key UNIQUE (id, user_id)
 );
 
 -- =============================================================================
@@ -30,7 +31,7 @@ CREATE TABLE IF NOT EXISTS progress_tracks (
 
 CREATE TABLE IF NOT EXISTS progress_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  track_id UUID NOT NULL REFERENCES progress_tracks(id) ON DELETE CASCADE,
+  track_id UUID NOT NULL,
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   log_date DATE NOT NULL DEFAULT CURRENT_DATE,
   did_log BOOLEAN NOT NULL DEFAULT false,
@@ -39,7 +40,11 @@ CREATE TABLE IF NOT EXISTS progress_logs (
   metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
   mood TEXT CHECK (mood IN ('easy', 'moderate', 'hard')),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  UNIQUE(track_id, log_date)
+  UNIQUE(track_id, log_date),
+  CONSTRAINT progress_logs_track_user_fkey
+    FOREIGN KEY (track_id, user_id)
+    REFERENCES progress_tracks(id, user_id)
+    ON DELETE CASCADE
 );
 
 -- The heatmap reads a user's logs by day; track history reads logs by track.
