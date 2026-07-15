@@ -29,6 +29,11 @@ Server runs at `http://localhost:3001` by default.
 | `CLERK_JWT_PUBLIC_KEY` | JWT public key for local verification (recommended for production) | Clerk Dashboard > API Keys > Show JWT Public Key |
 | `SUPABASE_URL` | Supabase project URL | [Supabase Dashboard](https://supabase.com) > Settings > API |
 | `SUPABASE_SERVICE_ROLE_KEY` | Service role key (secret!) | Supabase Dashboard > Settings > API |
+| `SHARE_LINK_ENCRYPTION_KEY` | 32-byte secret used to encrypt recoverable share tokens | Generate locally with `openssl rand -base64 32` |
+| `RESUME_AI_ENABLED` | Enables or disables AI-check requests | `true` or `false` |
+| `LLM_PROVIDER` / `LLM_MODEL` | AI provider and model when the pipeline is enabled | `gemini` or `ollama` |
+| `GEMINI_API_KEY` | Server-side Gemini key, when using Gemini | Google AI Studio |
+| `AI_KEY_ENCRYPTION_KEY` | Optional dedicated encryption key for user BYOK settings | Generate locally with `openssl rand -base64 32` |
 
 ### CLERK_JWT_PUBLIC_KEY (Production)
 
@@ -101,7 +106,7 @@ See [`../docs/documents-and-ats.md`](../docs/documents-and-ats.md).
 | POST | `/api/documents/:id/assign` | Link to opportunity |
 | DELETE | `/api/documents/:id/unassign/:opportunityId` | Unlink |
 
-### AI Resume Checker
+### AI Resume Checker and provider settings
 
 See [`../docs/ai-resume-checker.md`](../docs/ai-resume-checker.md).
 Rate-limited on **POST** only (see `middleware/aiLimiter.js`). GET is unlimited.
@@ -111,11 +116,29 @@ Rate-limited on **POST** only (see `middleware/aiLimiter.js`). GET is unlimited.
 | POST | `/api/documents/:id/ai-check` | Run AI resume check pipeline |
 | GET  | `/api/documents/:id/ai-check` | Fetch latest AI check result |
 
-Requires `GEMINI_API_KEY` (or `LLM_PROVIDER=ollama`). Set `RESUME_AI_ENABLED=false` to disable.
+Requires `GEMINI_API_KEY` (or `LLM_PROVIDER=ollama`). Set `RESUME_AI_ENABLED=false` to reject analysis requests. The frontend currently keeps its AI controls behind a separate feature flag; see [`../docs/PROJECT_STATUS.md`](../docs/PROJECT_STATUS.md).
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/ai-settings` | Read the authenticated user's safe provider-setting metadata |
+| PUT | `/api/ai-settings` | Save encrypted user-managed provider settings |
+| DELETE | `/api/ai-settings` | Remove user-managed settings |
+
+### Share links
+
+Authenticated owners manage links through `/api/share-links`; viewers use the public routes without a Clerk session.
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/share-links` | List the current user's share metadata |
+| POST | `/api/share-links` | Create a read-only, optional-passcode share |
+| DELETE | `/api/share-links/:id` | Revoke a share |
+| GET | `/api/public/share-links/:token` | Read public snapshot or passcode-required state |
+| POST | `/api/public/share-links/:token/verify` | Verify passcode and read snapshot |
 
 ### Hackathons
 
-Team collaboration workspace. See [`../docs/DOCUMENTATION.md`](../docs/DOCUMENTATION.md#hackathon-team-collaboration-new).
+Team collaboration workspace. Its UI lives in `src/pages/HackathonDetail.jsx` and `src/components/hackathons/`; apply [`../docs/hackathon-collaboration-migration.sql`](../docs/hackathon-collaboration-migration.sql) before using it against a new database.
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -199,6 +222,9 @@ backend/
 │   │   ├── interview-prep.js
 │   │   ├── documents.js
 │   │   ├── resume-checker.js  # AI resume check routes
+│   │   ├── ai-settings.js     # Encrypted user-provider settings
+│   │   ├── share-links.js     # Authenticated share management
+│   │   ├── public-share-links.js
 │   │   ├── hackathons.js
 │   │   └── analytics.js
 │   └── validation/            # Schemas per route module

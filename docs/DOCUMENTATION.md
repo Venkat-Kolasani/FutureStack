@@ -1,1258 +1,582 @@
-# FutureTracker - Comprehensive Project Documentation
+# FutureTracker: Interview Preparation Guide
 
-> **One-liner pitch**: FutureTracker is a premium SaaS application that helps students and professionals track their internship and hackathon applications with real-time updates, visual analytics, and a Kanban-style workflow.
+Last reviewed against the repository: July 15, 2026
 
----
+This is the single, interview-focused source of truth for FutureTracker. It explains what the product does, how the current implementation works, why the important choices were made, the trade-offs they create, and how the design would evolve for millions of users. It is deliberately candid: a strong interview answer distinguishes shipped behavior from a production-scale plan.
 
-## Table of Contents
-1. [Project Overview](#project-overview)
-2. [Recent Updates](#recent-updates)
-3. [Tech Stack](#tech-stack)
-4. [System Architecture](#system-architecture)
-5. [Authentication Flow](#authentication-flow)
-6. [Backend Implementation](#backend-implementation)
-7. [Frontend Implementation](#frontend-implementation)
-8. [Database Design](#database-design)
-9. [Key Features](#key-features)
-10. [Unique Technical Challenges](#unique-technical-challenges)
-11. [Performance & SEO Optimizations](#performance--seo-optimizations)
-12. [Future Roadmap](#future-roadmap)
+## 1. The 60-second answer
 
----
+**FutureTracker is a full-stack career-application workspace for students and early-career professionals.** It lets a user manage internships and hackathons, track deadlines on a calendar and Kanban board, record multi-round interviews, prepare for interviews, manage application documents, view analytics, collaborate on hackathons, and selectively share a read-only progress snapshot.
 
-## Recent Updates
+The application is a React single-page app backed by an Express API. Clerk handles identity; the API validates Clerk JWTs and enforces user ownership; Supabase provides PostgreSQL, storage, and limited realtime refreshes. I chose an API boundary rather than frontend database CRUD so authentication, validation, business rules, and sensitive operations are centralized. The design is intentionally modular: each domain has a route module, validation schemas, focused UI components, migration SQL, and tests.
 
-Merged to `main` (2026):
+The most important engineering trade-offs are:
 
-| PR / change | What shipped |
-|-------------|--------------|
-| **#60** ATS scorer | Client-side PDF/DOCX analysis; scores stored on `documents` via API |
-| **#58** Interview prep | Per-internship workspace: research, Q&A, topics, STAR, reflection |
-| **#56** Interview rounds UI | Timeline, modal, Kanban sync (builds on rounds API) |
-| **#29** CI & guardrails | `test:ci`, backend tests, `check:architecture` |
-| **Status indicator** | UptimeRobot link in navbar, footer, README |
+- Supabase and Clerk made it possible to ship safely and quickly without building identity or database infrastructure from scratch.
+- Express gives direct control over validation and authorization, but the current single-process API and in-memory user cache are not sufficient for horizontal scale.
+- The status board uses realtime notifications followed by an API refetch. That is simple and correct for the current scale, but should become filtered broadcast events or a server-mediated event stream before broad production rollout.
+- The AI Resume Checker is implemented but UI-gated. This avoids silently taking on LLM cost, privacy, latency, and reliability risks before its rollout controls are complete.
 
-**New docs:** [`CODEBASE_GUIDE.md`](CODEBASE_GUIDE.md) · [`interview-prep.md`](interview-prep.md) · [`documents-and-ats.md`](documents-and-ats.md)
+## 2. Product problem and user journey
 
----
+### Problem
 
-## Project Overview
+Career applications are fragmented across job boards, messages, spreadsheets, documents, deadlines, and interview notes. A student managing many applications needs one private workspace that answers:
 
-### Problem Statement
-Students applying to multiple internships and hackathons struggle to:
-- Track application statuses across different platforms
-- Remember deadlines and follow-up dates
-- Visualize their progress and success rates
-- Access their data across devices in real-time
+- What have I applied to, and what needs action next?
+- Which resume or cover letter did I submit?
+- Where am I in each interview pipeline?
+- How is my application funnel changing over time?
+- How can I safely share progress with a mentor without exposing my account?
 
-### Solution
-FutureTracker provides a centralized, real-time dashboard that:
-- Tracks all opportunities in one place
-- Visualizes progress with charts and analytics
-- Syncs instantly across devices using WebSocket technology
-- Exports professional PDF reports
+### Primary user flow
 
----
+1. A user signs in with Clerk.
+2. They add an internship or hackathon with title, link, deadline, status, notes, and campus mode.
+3. The dashboard, calendar, list, and Kanban board present the same opportunity data in different task-oriented views.
+4. For an internship, the user can add interview rounds and preparation material. Round outcomes synchronize the parent opportunity status.
+5. The user uploads or links a resume/cover letter, receives client-side ATS-style feedback for supported files, and assigns documents to applications.
+6. For a hackathon, the user maintains team members, brainstormed ideas, tasks, and a submission checklist.
+7. The user can generate an expiring, revocable, optionally passcode-protected read-only snapshot for a mentor or recruiter.
 
-## Tech Stack
+### Current feature status
 
-```mermaid
-graph TB
-    subgraph Frontend
-        A[React 18] --> B[React Router v6]
-        A --> C[TailwindCSS]
-        A --> D[Recharts]
-        A --> E[React Toastify]
-    end
-    
-    subgraph Backend
-        F[Node.js + Express] --> G[Clerk SDK]
-        F --> H[Supabase Client]
-    end
-    
-    subgraph External Services
-        I[Clerk] --> J[Authentication]
-        K[Supabase] --> L[PostgreSQL Database]
-        K --> M[Realtime Subscriptions]
-    end
-    
-    Frontend --> Backend
-    Backend --> External Services
-```
+| Capability | Current state | Important interview detail |
+| --- | --- | --- |
+| Opportunity CRUD, dashboard, calendar, reports, analytics | Available | All application data mutations go through the Express API. |
+| Light and dark theme | Available | Theme preference is managed in React context and applied to Clerk appearance as well as app UI. |
+| Interview rounds and preparation | Available | Rounds are internship-only and synchronize derived parent fields server-side. |
+| Documents and ATS hints | Available | ATS analysis is rule-based and runs in the browser; it is not an official ATS score. |
+| Hackathon collaboration | Available | Team, members, ideas/votes, tasks, and checklist are separate, user-owned resources. |
+| Read-only share links | Available | A stored snapshot is shared, not live dashboard access. Links can expire, be revoked, and require a passcode. |
+| AI Resume Checker | Implemented, UI-gated | Backend pipeline, storage, provider settings, tests, and UI components exist; `AI_RESUME_CHECK_ENABLED` is currently `false`. |
+| Reminders, tags, bulk import/export, advanced filters | Planned | These are intentionally not claimed as shipped features. |
 
-| Layer | Technology | Purpose |
-|-------|------------|---------|
-| **Frontend** | React 19 + CRA | Modern UI with hooks |
-| **Styling** | TailwindCSS | Utility-first responsive design |
-| **Charts** | Recharts | Premium data visualizations |
-| **Animations** | Framer Motion | Smooth transitions |
-| **Auth** | Clerk | OAuth + passwordless login |
-| **Analytics** | PostHog | Product analytics & user tracking |
-| **Backend** | Express.js | RESTful API server |
-| **Database** | Supabase (PostgreSQL) | Managed database with RLS |
-| **Realtime** | Supabase Realtime | WebSocket subscriptions |
-| **Frontend Hosting** | Vercel | CDN + serverless |
-| **Backend Hosting** | Render | Node.js server |
-
----
-
-## System Architecture
-
-### High-Level Architecture
+## 3. System architecture
 
 ```mermaid
 flowchart LR
-    subgraph Client [Browser]
-        UI[React App]
-        SC[Supabase Client]
-    end
-    
-    subgraph Server [Express Backend]
-        API[REST API]
-        MW[Auth Middleware]
-        DB_C[Supabase Admin]
-    end
-    
-    subgraph Services [External]
-        CL[Clerk Auth]
-        SB[(Supabase PostgreSQL)]
-        RT[Realtime Engine]
-    end
-    
-    UI -->|JWT Token| API
-    API --> MW
-    MW -->|Verify| CL
-    MW --> DB_C
-    DB_C --> SB
-    
-    SC -.->|WebSocket| RT
-    RT -.->|postgres_changes| SB
+  U["User browser"] --> R["React SPA"]
+  R -->|"Clerk session"| C["Clerk"]
+  R -->|"Bearer JWT over HTTPS"| A["Express API"]
+  A -->|"verify JWT and resolve internal user"| C
+  A -->|"user-scoped service-role queries"| DB[("Supabase PostgreSQL")]
+  R -. "current status-board refresh events" .-> RT["Supabase Realtime"]
+  RT -.-> DB
+  A --> ST["Supabase Storage"]
+  A -. "gated only" .-> LLM["Gemini or Ollama"]
 ```
 
-### Request Flow
+### Why this architecture?
+
+| Choice | Why it was chosen | Trade-off |
+| --- | --- | --- |
+| React single-page application | Fast, responsive interaction for a personal workspace; components naturally map to product domains. | Initial JavaScript cost and client state complexity; authenticated routes are lazy-loaded to reduce initial work. |
+| Express API | Centralizes authorization, validation, ownership checks, audit-oriented logging, rate limits, and business rules. | Requires separate API deployment and operational ownership. |
+| Clerk | Avoids building credential storage, OAuth, sessions, and token issuance. | Adds vendor dependency and requires correct JWT-key configuration. |
+| Supabase PostgreSQL | Provides managed relational data, storage, RLS, migrations, and realtime primitives. | Service-role use must be tightly controlled; schema and RLS changes are security-sensitive. |
+| REST over a separate API | Clear resources and predictable debugging for CRUD-oriented domains. | Some multi-resource screens require several endpoints; a BFF aggregation layer may be useful later. |
+| Vercel AI SDK with Gemini/Ollama | Provider abstraction permits a hosted or local model option. | LLM calls are slow, variable, and costly, so the feature is gated. |
+
+### Deployment shape today
+
+- Frontend: React app intended for Vercel.
+- API: Express service intended for Render.
+- Identity: Clerk.
+- Database, storage, and optional realtime: Supabase.
+- Product analytics: PostHog when configured.
+- CI: GitHub Actions runs frontend build/tests, backend tests, architecture guardrails, and non-blocking dependency audits.
+
+The exact environment contract lives in `.env.example` and `backend/.env.example`. Secrets are backend-only; the browser receives only public configuration such as Clerk's publishable key and Supabase's anon key.
+
+## 4. Frontend architecture
+
+### Application composition
+
+`src/App.js` is the composition root. It wires up:
+
+- `HelmetProvider` for document metadata.
+- `ThemeProvider` for persisted light/dark preference.
+- `ClerkProvider`, including matching Clerk appearance tokens.
+- `ErrorBoundary` for unexpected render failures.
+- React Router routes and `ProtectedRoute` wrappers.
+- A global toast container and page-view tracking.
+- `Suspense` and route-level lazy loading for authenticated pages.
+
+The landing page loads immediately; heavier authenticated pages such as Dashboard, Analytics, Documents, and Hackathon Detail are loaded on demand. This was a deliberate performance choice because the landing route is the most common first visit.
+
+### Data access rule
+
+`src/services/api.js` is the frontend's application-data boundary. It creates Axios clients, attaches a Clerk bearer token to protected requests, maps common HTTP errors to user-facing messages, and exports service objects such as `opportunityService`, `documentService`, `roundService`, and `shareLinkService`.
+
+**Why not query Supabase directly from every component?** It would distribute authorization logic and make validation, rate limiting, audit logging, and future backend changes much harder to enforce consistently. The repository's architecture check guards against direct frontend Supabase CRUD.
+
+### State and UI decisions
+
+- Local component state and hooks are sufficient for the current app; there is no global Redux-like store because most data is page/domain scoped.
+- `useAuthToken` registers a token getter once so the API client obtains fresh Clerk JWTs rather than storing a raw token in browser state.
+- `ThemeContext` owns the theme preference; individual components consume a boolean instead of duplicating persistence logic.
+- Shared components standardize cards, buttons, modals, loading, empty states, error handling, navigation, and status indicators.
+- `react-toastify` provides consistent asynchronous feedback; the Axios response interceptor maps network, auth, validation, availability, and server failures to useful messages.
+
+### Current realtime behavior and honest limitation
+
+The Status Board subscribes to Supabase `postgres_changes` for the `opportunities` table. On any event it refetches the user's opportunities through the API. That avoids trying to merge database event payloads into client state and makes the API the source of rendered truth.
+
+This is acceptable for a small product but is not the final production design:
+
+- The subscription is broad rather than explicitly filtered by user in the client code.
+- Refetching the whole list per event does not scale with high write volume or large portfolios.
+- Realtime authorization and database publication policies must be reviewed together; changing RLS or delivery settings can break the current approach.
+
+For scale, I would publish a small, user-scoped event from the API after a committed mutation, use Supabase Broadcast or a dedicated websocket service, include an entity/version in the payload, and update or invalidate only the affected query. That preserves isolation and reduces needless reads.
+
+## 5. Backend request lifecycle
 
 ```mermaid
 sequenceDiagram
-    participant U as User
-    participant R as React App
-    participant A as API (Express)
-    participant C as Clerk
-    participant S as Supabase
-    
-    U->>R: Click "Add Opportunity"
-    R->>C: getToken()
-    C-->>R: JWT Token
-    R->>A: POST /api/opportunities (+ Bearer Token)
-    A->>C: Verify JWT
-    C-->>A: User Claims
-    A->>S: INSERT opportunity
-    S-->>A: Created Record
-    A-->>R: 201 + opportunity data
-    S->>R: Realtime: INSERT event
-    R->>U: UI Updated (both tabs!)
+  participant B as Browser
+  participant A as Express API
+  participant C as Clerk JWT key
+  participant S as Supabase
+
+  B->>A: Request with Bearer token
+  A->>A: Helmet, CORS, body limit, sanitization, rate limit
+  A->>C: Verify RS256 JWT locally
+  A->>S: Resolve or create internal user row
+  A->>A: Validate request payload and apply domain rule
+  A->>S: Query scoped by internal user ID
+  S-->>A: Data or database error
+  A-->>B: JSON success or classified error
 ```
 
----
+### Middleware order and responsibility
 
-## Authentication Flow
+`backend/src/app.js` configures:
 
-### Clerk + Supabase Integration
+1. `trust proxy` for reverse-proxy-aware request data.
+2. Helmet headers, including CSP, HSTS, frame protection, `nosniff`, and a referrer policy.
+3. CORS using a comma-separated allowlist from `CORS_ORIGIN`.
+4. A 1 MB JSON body limit and input sanitization.
+5. General rate limiting: 2,000 requests per 15 minutes per IP, excluding liveness health checks.
+6. Write rate limiting: 1,500 mutating requests per 15 minutes per IP.
+7. Request/response logging for write operations.
+8. Public health routes, protected route mounts, a 404 handler, and centralized error fallback.
 
-```mermaid
-flowchart TD
-    A[User Opens App] --> B{Signed In?}
-    B -->|No| C[Clerk SignIn Modal]
-    B -->|Yes| D[React App Loads]
-    
-    C --> E[OAuth/Email Login]
-    E --> F[Clerk Issues JWT]
-    F --> D
-    
-    D --> G[useAuthToken Hook]
-    G --> H[Attach JWT to API Calls]
-    H --> I[Express Middleware]
-    I --> J[Verify with Clerk SDK]
-    J --> K[Extract user_id]
-    K --> L[Query Supabase with user_id filter]
-```
+These limits are deliberately generous for a personal productivity app. They are a first abuse-control layer, not a complete DDoS or multi-region rate-limiting solution.
 
-**Key Implementation Details:**
-- `useAuthToken` hook sets the token getter for API interceptors
-- Every API request includes `Authorization: Bearer <JWT>`
-- Backend middleware extracts `userId` from Clerk claims
-- All database queries are filtered by `user_id` for data isolation
+### Authentication and internal identity
 
----
+`backend/src/middleware/auth.js`:
 
-## Backend Implementation
+- Extracts the `Authorization: Bearer <token>` header.
+- Verifies the token locally with the Clerk RS256 public key from `CLERK_JWT_PUBLIC_KEY`.
+- Uses the token subject as the external Clerk identity.
+- Resolves that subject to an internal `users.id` UUID in Supabase, creating the row on first login.
+- Stores that UUID on `req.auth.internalUserId`; protected handlers use it for ownership scoping.
 
-### API Structure
+**Why both Clerk ID and internal UUID?** Clerk remains the identity provider, while a stable internal UUID makes relational foreign keys and database ownership simple. The API never trusts a user ID supplied by the client.
 
-```
-backend/
-├── src/
-│   ├── server.js              # HTTP server entry (imports app.js)
-│   ├── app.js                 # Express app, middleware, route mounts
-│   ├── middleware/
-│   │   ├── auth.js            # Clerk JWT verification
-│   │   └── validate.js        # Request body validation
-│   ├── routes/
-│   │   ├── opportunities.js   # Opportunities CRUD
-│   │   ├── opportunity-rounds.js  # Nested /rounds routes
-│   │   ├── interview-prep.js  # Prep workspace
-│   │   ├── documents.js       # Document vault + upload
-│   │   ├── hackathons.js      # Team collaboration
-│   │   └── analytics.js       # Dashboard stats
-│   ├── validation/            # Zod schemas per domain
-│   └── lib/
-│       ├── supabase.js        # Admin client
-│       └── syncOpportunityFromRounds.js
-```
+**First-login race condition:** concurrent first requests can both try to insert a user row. The code handles PostgreSQL's unique-constraint error by reading the row that won the race.
 
-See [`backend/README.md`](../backend/README.md) for the full endpoint list.
+**Current trade-off:** internal-user lookups are cached in a process-local `Map` for five minutes. This saves database lookups on one instance, but the cache disappears on restart and is not shared across instances. At scale I would use a shared cache such as Redis or remove the lookup from the hot path through a reliable identity-provisioning/webhook design.
 
-### API Endpoints (summary)
+### Validation and error semantics
 
-| Area | Mount | Details |
-|------|-------|---------|
-| Health | `GET /api/health`, `/api/health/deps` | Public |
-| Opportunities | `/api/opportunities` | CRUD |
-| Interview rounds | `/api/opportunities/:id/rounds` | [`interview-rounds.md`](interview-rounds.md) |
-| Interview prep | `/api/interview-prep/:opportunityId` | [`interview-prep.md`](interview-prep.md) |
-| Documents | `/api/documents` | [`documents-and-ats.md`](documents-and-ats.md) |
-| Hackathons | `/api/hackathons/:id/*` | Team, ideas, tasks, checklist |
-| Analytics | `/api/analytics` | Dashboard charts data |
-| Me | `GET /api/me` | Current user |
+Route request schemas live under `backend/src/validation/` and are applied through `middleware/validate.js`. Validation is done before database mutation. The API uses meaningful classes of response:
 
-### Auth Middleware Logic
+| Status | Meaning in this project |
+| --- | --- |
+| 401 | Missing, invalid, or expired bearer token |
+| 403 | Caller is authenticated but cannot access the resource |
+| 404 | Route or scoped resource does not exist |
+| 422 | Request data fails validation |
+| 429 | General, write, public-share, or AI limit reached |
+| 500 | Unexpected application error |
+| 503 | A dependency/auth bootstrap is unavailable or health checks are degraded |
 
-```javascript
-// Simplified auth flow
-const authMiddleware = async (req, res, next) => {
-  const token = req.headers.authorization?.split('Bearer ')[1];
-  
-  // Verify JWT with Clerk
-  const payload = await clerkClient.verifyToken(token);
-  
-  // Map Clerk userId to internal user
-  const user = await supabase
-    .from('users')
-    .select('id')
-    .eq('clerk_id', payload.sub)
-    .single();
-    
-  req.auth = { internalUserId: user.id };
-  next();
-};
-```
+The browser treats these differently so an outage is not misleadingly shown as a session-expiry problem.
 
----
+## 6. Data model and ownership
 
-## Frontend Implementation
-
-### Component Architecture
-
-```mermaid
-graph TD
-    App --> ErrorBoundary
-    ErrorBoundary --> Router
-    Router --> Navbar
-    Router --> Routes
-    
-    Routes --> Home
-    Routes --> Dashboard
-    Routes --> InternshipList
-    Routes --> InterviewPrepDetail[Interview Prep]
-    Routes --> HackathonDetail
-    Routes --> Documents
-    Routes --> StatusBoard[Status Board / Kanban]
-    Routes --> Analytics
-    Routes --> Calendar
-    Routes --> Reports
-    
-    Dashboard --> StatsCard
-    Dashboard --> Card
-    
-    StatusBoard --> StatusColumn
-    StatusColumn --> OpportunityCard
-    
-    Analytics --> PieChart
-    Analytics --> LineChart
-    Analytics --> FunnelChart
-    Analytics --> Heatmap
-```
-
-### State Management
-
-| Feature | State Management | Why |
-|---------|-----------------|-----|
-| Auth State | Clerk Context | Built-in auth state |
-| Opportunities | Local useState + API | Simple CRUD, no complex state |
-| Realtime | Supabase Subscription | WebSocket pushes updates |
-| Error Handling | Error Boundary + Toast | Centralized error UX |
-
-### Key Custom Hooks
-
-- **`useAuthToken`**: Sets up JWT token for API requests
-- **`useCallback` (fetchOpportunities)**: Memoized for realtime subscription stability
-
----
-
-## Database Design
-
-### Entity Relationship Diagram
+### Core relational model
 
 ```mermaid
 erDiagram
-    USERS ||--o{ OPPORTUNITIES : has
-    USERS ||--o{ OPPORTUNITY_ROUNDS : owns
-    OPPORTUNITIES ||--o{ OPPORTUNITY_ROUNDS : has
-    
-    USERS {
-        uuid id PK
-        text clerk_id UK
-        text email
-        text full_name
-        text avatar_url
-        timestamp created_at
-    }
-    
-    OPPORTUNITIES {
-        uuid id PK
-        uuid user_id FK
-        text title
-        text description
-        text link
-        date deadline
-        text category
-        text status
-        int current_round_number
-        int rejected_round_number
-        text notes
-        timestamp created_at
-        timestamp updated_at
-    }
-
-    OPPORTUNITY_ROUNDS {
-        uuid id PK
-        uuid opportunity_id FK
-        uuid user_id FK
-        int round_number
-        text round_type
-        date scheduled_date
-        text result
-        text notes
-        timestamp created_at
-        timestamp updated_at
-    }
+  USERS ||--o{ OPPORTUNITIES : owns
+  USERS ||--o{ DOCUMENTS : owns
+  USERS ||--o{ SHARE_LINKS : creates
+  USERS ||--o| USER_AI_SETTINGS : configures
+  OPPORTUNITIES ||--o{ OPPORTUNITY_ROUNDS : contains
+  OPPORTUNITIES ||--o{ OPPORTUNITY_DOCUMENTS : uses
+  DOCUMENTS ||--o{ OPPORTUNITY_DOCUMENTS : attached_to
+  OPPORTUNITIES ||--o| INTERVIEW_PREP : has
+  INTERVIEW_PREP ||--o{ INTERVIEW_QUESTIONS : contains
+  INTERVIEW_PREP ||--o{ TECHNICAL_TOPICS : contains
+  INTERVIEW_PREP ||--o{ BEHAVIORAL_PREP : contains
+  OPPORTUNITIES ||--o| HACKATHON_TEAMS : has
+  HACKATHON_TEAMS ||--o{ TEAM_MEMBERS : has
+  HACKATHON_TEAMS ||--o{ BRAINSTORM_IDEAS : has
+  HACKATHON_TEAMS ||--o{ HACKATHON_TASKS : has
+  HACKATHON_TEAMS ||--o{ SUBMISSION_CHECKLIST : has
+  DOCUMENTS ||--o{ RESUME_AI_CHECKS : produces
 ```
 
-Interview rounds track multi-stage hiring pipelines (OA, technical, HR, etc.) per **internship** opportunity. See [`docs/opportunity-rounds-migration.sql`](opportunity-rounds-migration.sql) and the full guide [`docs/interview-rounds.md`](interview-rounds.md).
+**How to draw this in an interview:** start with `Users → Opportunities` as the centre. Add the many-to-many document relationship using `opportunity_documents`; that demonstrates normalization. Then branch to interview rounds/prep for internships and a one-to-one hackathon team for hackathons. Add share links as a user-owned snapshot, not a relationship from a public viewer to private data. Do not try to draw every column unless asked.
 
----
+### Important tables
 
-## Interview Round Tracking
+| Table/group | Purpose | Design reason |
+| --- | --- | --- |
+| `users` | Maps Clerk subject to internal UUID and profile data. | Separates external identity from relational ownership. |
+| `opportunities` | Core internship/hackathon record, status, dates, notes, campus mode, derived round fields. | One canonical entity serves every product view. |
+| `opportunity_rounds` | Ordered interview stages and results. | A normalized child collection avoids hard-coding a fixed number of interview columns. |
+| `documents` and `opportunity_documents` | User documents and many-to-many assignments. | A document can be reused across applications. |
+| Interview-prep tables | Research, question bank, technical topics, and behavioral STAR records. | Structured prep data is easier to extend and query than one unbounded blob. |
+| Hackathon collaboration tables | Team, members, ideas, tasks, and checklist items. | Distinct resources allow independent CRUD and validation. |
+| `share_links` | Snapshot metadata, hashed token, encrypted recoverable token, passcode data, expiry, status, and views. | Sharing is isolated from live dashboard authorization. |
+| `resume_ai_checks`, `user_ai_settings` | Persisted AI result and encrypted per-user settings. | AI runs can be shown later without repeating paid work. |
 
-Multi-round hiring pipeline for internships: timeline UI, per-round results, and automatic sync of Kanban `status` plus `current_round_number` / `rejected_round_number`.
+### Why PostgreSQL and migrations?
 
-**Quick reference for interviews:** [`docs/interview-rounds.md`](interview-rounds.md)
+The product has clear relationships, ownership boundaries, constraints, and reporting needs. PostgreSQL fits this better than an unstructured document store. SQL migrations under `docs/` and `supabase/migrations/` record schema evolution, indexes, RLS policies, and triggers. They must be reviewed like application code because an incorrect policy can expose data.
 
-### API routes
+### Row-Level Security and service role
 
-Nested under opportunities (internships only):
+RLS is enabled on user-owned tables as defense in depth. In the current server-side design, the API uses a Supabase service-role client, which bypasses RLS. Therefore the primary runtime protection is explicit user scoping in each API query, with RLS protecting against accidental direct database access and future client paths.
 
-| Method | Endpoint | Notes |
-|--------|----------|-------|
-| GET | `/api/opportunities/:opportunityId/rounds` | Ordered by `round_number` |
-| POST | `/api/opportunities/:opportunityId/rounds` | Returns `{ round, opportunity, rounds }` |
-| PATCH | `/api/opportunities/:opportunityId/rounds/:roundId` | Same unified response |
-| DELETE | `/api/opportunities/:opportunityId/rounds/:roundId` | Same + `success` flag |
+The correct interview answer is not “RLS alone secures everything.” It is: **the API derives identity from a verified JWT, scopes every service-role query to that identity, and RLS is a second layer that must be tested and reviewed with each migration.**
 
-Frontend uses `roundService` in `src/services/api.js` only — no direct Supabase CRUD for rounds.
+### DBMS concepts to name confidently
 
-### Performance: slow round save (fixed)
+| Concept | How FutureTracker uses it | Interview-ready explanation |
+| --- | --- | --- |
+| Normalization | Documents are separate from opportunities; `opportunity_documents` is a junction table. Interview rounds are child rows rather than `round_1`, `round_2`, and so on. | This avoids repeated data, supports reuse, and allows an unbounded number of rounds/documents without schema changes. |
+| 1NF, 2NF, 3NF | Columns are atomic; many-to-many data is split into a junction table; child data depends on its own primary key and parent FK rather than unrelated fields. | The aim was practical third-normal-form design, not normalization for its own sake. I denormalize only derived fields that improve the product flow. |
+| Primary/foreign keys | UUID primary keys; foreign keys tie every owned row to a user, opportunity, document, prep record, or team. | FKs make relationships explicit and prevent orphaned records. |
+| Cascading deletes | Child resources use `ON DELETE CASCADE` where their parent owns their lifecycle. | Deleting an opportunity should not leave rounds, prep, or document links that no longer have a meaning. |
+| Constraints | `CHECK` constraints limit categories, statuses, and campus modes; `UNIQUE` prevents duplicate Clerk identities, document links, and one-to-one prep/team records. | Important invariants live in the database as well as API validation. |
+| Indexes | The core schema indexes Clerk IDs, user IDs, category, status, and deadlines. | Indexes are selected for known ownership/filter patterns; at scale I would add measured composite indexes beginning with `user_id`. |
+| ACID and transactions | PostgreSQL provides transactional primitives, but not every current multi-step route is wrapped in an explicit application transaction. | For a production multi-write workflow—for example a round mutation plus parent sync—I would use an explicit transaction or database function so partial success cannot leave inconsistent state. |
+| Isolation | User-scoped queries and database constraints prevent most logical conflicts; first-login creation explicitly handles a unique-key race. | For concurrent updates to the same resource, I would add optimistic versioning or transaction locking only when real conflict patterns justify it. |
+| RLS | Policies limit direct row access as defence in depth. | Service-role access bypasses RLS, so verified API ownership checks remain essential. |
 
-**Problem:** Creating a round felt sluggish — users waited several seconds before the success toast.
+## 6.1 Interview diagram pack
 
-**Root cause:**
+If an interviewer asks you to draw, use one of these three diagrams. State the scope before drawing: “I’ll draw the current implementation first, then mark what I would change for scale.”
 
-- Backend ran **6 sequential Supabase queries** on create (verify, next-number lookup, insert, then sync re-fetched opportunity + rounds before update).
-- Frontend then fired **2 more API calls** (`getById` + list rounds) and kept the modal on “Saving…” until both finished.
+### A. High-level architecture
 
-**Fix:**
+Use the architecture diagram in [System architecture](#3-system-architecture). Draw five boxes in this order: Browser/React → Express API → Clerk and Supabase; then add Storage and the gated AI provider as external dependencies. Label the API connection “HTTPS + bearer JWT” and the database connection “user-scoped server query.”
 
-1. **Batch reads** — list rounds once; reuse for next `round_number` and for `deriveOpportunityFieldsFromRounds()`.
-2. **Skip redundant sync SELECTs** — `syncOpportunityFromRounds(supabase, id, userId, { existingStatus, rounds })`.
-3. **Unified mutation response** — POST/PATCH/DELETE return `{ round, opportunity, rounds }`.
-4. **Frontend applies response in place** — `applyRoundMutationResult()` in `OpportunityDetailModal`; no blocking refetch.
+### B. Request sequence
 
-**Result:** Create path **6 → 4** DB round-trips; UI updates from a single HTTP response.
+Use this compact write path when asked how a mutation is secured:
 
-See [`docs/interview-rounds.md`](interview-rounds.md#performance-issue--fix) for the interview one-liner and file map.
+```mermaid
+sequenceDiagram
+  participant UI as React page
+  participant API as Express route
+  participant Auth as Auth middleware
+  participant DB as Supabase/PostgreSQL
 
-### Row Level Security (RLS)
-
-```sql
--- Users can only see their own opportunities
-CREATE POLICY "Users can view own opportunities" 
-ON opportunities FOR SELECT 
-USING (
-  user_id IN (
-    SELECT id FROM users 
-    WHERE clerk_id = current_setting('request.jwt.claims')::json->>'sub'
-  )
-);
+  UI->>API: PATCH /opportunities/:id + Bearer JWT
+  API->>Auth: verify RS256 JWT and resolve internal user ID
+  Auth-->>API: req.auth.internalUserId
+  API->>API: validate payload and domain rules
+  API->>DB: UPDATE ... WHERE id = ? AND user_id = ?
+  DB-->>API: updated row
+  API-->>UI: JSON response
 ```
 
----
-
-## Key Features
-
-### 1. Real-Time Kanban Board
-- Drag-and-drop status changes
-- **Instant sync across tabs/devices** via Supabase Realtime
-- Visual status columns: Applied → Shortlisted → Interviewed → Selected/Rejected
-
-### 2. Analytics Dashboard
-- **Status Distribution Pie Chart**: Visual breakdown of application statuses
-- **Weekly Trend Line**: Track application velocity over 8 weeks
-- **Conversion Funnel**: See drop-off at each stage
-- **Deadline Heatmap**: GitHub-style calendar for upcoming deadlines
-
-### 3. Smart Dashboard Features
-- **Overdue Alerts**: Only shows active applications (not rejected/selected)
-- **Key Metrics**: Total applied, success rate, in-progress count
-- **Quick Actions**: One-click navigation to common tasks
-
-### 4. Error Handling & UX
-- **Global Error Boundary**: Catches JS errors with friendly UI
-- **Toast Notifications**: Success/error feedback for all actions
-- **Auto-logout on 401**: Expired sessions handled gracefully
-- **Skeleton Loading**: Premium loading states for all data-heavy views
-
-### 5. Interview Round Tracking (internships)
-- **Multi-round pipeline**: OA, technical, HR, final — per-round type, date, result, notes
-- **Timeline UI** in internship detail drawer; compact badge on cards
-- **Auto status sync**: Round results update Kanban `status` and `current_round_number` / `rejected_round_number`
-- **Performance**: Mutations return `{ round, opportunity, rounds }`; UI applies in one shot (no blocking refetch)
-- **Docs**: [`interview-rounds.md`](interview-rounds.md)
-
-### 6. Interview Preparation (internships)
-- **Per-company workspace**: Research notes, question bank, technical topics, STAR behavioral, reflection
-- **Progress bar**: Aggregates prepared questions, reviewed topics, behavioral entries
-- **Route**: `/internships/:id/prep` from detail drawer
-- **Docs**: [`interview-prep.md`](interview-prep.md)
-
-### 7. Documents & ATS hints
-- **Vault**: Upload resumes/cover letters; assign to opportunities
-- **ATS analysis**: Client-side PDF/DOCX scoring on upload (structure + content heuristics)
-- **Docs**: [`documents-and-ats.md`](documents-and-ats.md)
-
-### 8. Product Analytics (PostHog)
-- **User Behavior Tracking**: Page views, feature usage, and user flows
-- **Event Tracking**: Custom events for opportunity creation, updates, deletions
-- **Autocapture**: Automatic click and form submission tracking
-- **User Identification**: Links analytics to authenticated users
-- **Privacy-First**: Configurable data collection with opt-out support
-
-**Key Events Tracked:**
-```javascript
-// Opportunity lifecycle
-- opportunity_created (category)
-- opportunity_updated (old_status → new_status)
-- opportunity_deleted (category)
-- status_board_drag (status changes)
-
-// Feature usage
-- report_exported (format, count)
-- feature_used (feature_name)
-```
-
-**Implementation Highlights:**
-- Graceful degradation when PostHog key not configured
-- Automatic user identification on sign-in
-- Reset analytics on sign-out for privacy
-- Manual page view tracking for SPA routing
+The important line to say aloud is the database predicate: authorization is enforced at the data access point, not only in the UI.
 
+### C. ER diagram
 
----
+Use the ER diagram above. Explain cardinality: a user has many opportunities; an opportunity has many rounds; documents and opportunities are many-to-many; one opportunity has at most one prep workspace or hackathon team; a team has many members/tasks/ideas/checklist items.
 
-## Unique Technical Challenges
+## 6.2 OOP and frontend design concepts
 
-### Challenge 1: Supabase Realtime with Row Level Security
+FutureTracker is written in JavaScript/React and deliberately favors **functional components and composition** over a class-heavy inheritance hierarchy. That is an informed OOP answer, not an absence of design.
 
-**Problem**: Supabase Realtime subscriptions were immediately closing with `CHANNEL_ERROR` due to RLS policies blocking the anonymous client.
+| OOP concept | Where it appears | How to explain it |
+| --- | --- | --- |
+| Encapsulation | `opportunityService`, `shareLinkService`, auth middleware, `syncOpportunityFromRounds`, and reusable UI components hide implementation details behind narrow interfaces. | A page asks a service to update an opportunity; it does not know Axios headers, token handling, or route construction. |
+| Abstraction | A `DocumentCard`, `Modal`, or API service exposes the behaviour a caller needs without exposing internal rendering/network details. | Abstractions reduce coupling and make implementation changes local. |
+| Composition | Pages compose domain-specific panels and common components; a hackathon is an opportunity plus specialized collaboration resources. | Composition is more flexible than deep inheritance and maps naturally to React. |
+| Polymorphism through props | Shared buttons, cards, modals, and status components change behaviour/style through props. | The caller uses the same component contract with different data or variants. |
+| Separation of concerns | Routes own HTTP/domain orchestration, validation owns input shape, library helpers own pure rules, and components own rendering/interactions. | This gives each unit a reason to change and makes testing focused. |
+| Inheritance, intentionally limited | Modern React does not require class inheritance for reuse. | I prefer composition because it avoids fragile base classes and makes domain boundaries explicit. |
 
-**Initial Approach** (failed):
-```javascript
-// Tried passing Clerk JWT to Supabase
-const token = await getToken({ template: 'supabase' });
-supabase.auth.setSession({ access_token: token });
-// Result: Still CHANNEL_ERROR
-```
+Useful example: `syncOpportunityFromRounds` is effectively a pure domain-rule module. It receives rounds and existing status and returns derived fields. That makes it easy to unit test without React, HTTP, or the database.
 
-**Root Cause**: The RLS policies required JWT claims that the Clerk token didn't provide in the expected format.
+## 6.3 Networking and computer-network concepts
 
-**Solution**: Added a permissive SELECT policy for realtime broadcasts while keeping data secure:
-```sql
-CREATE POLICY "Allow realtime subscriptions" 
-ON opportunities FOR SELECT USING (true);
-```
+| Concept | Current use | Nuanced interview answer |
+| --- | --- | --- |
+| Client-server model | React runs in the browser; Express exposes JSON APIs. | The client owns presentation and interaction; the server is the policy and data-access boundary. |
+| HTTPS/TLS | Production hosting platforms terminate TLS for frontend/API endpoints. | TLS protects data in transit; it does not replace authorization or data isolation. |
+| HTTP and REST | Resource-oriented URLs use `GET`, `POST`, `PATCH`/`PUT`, and `DELETE`. | `GET` is safe/read-only; clients can retry it more freely. Mutations require careful retry/idempotency design, especially for future queues/payments-like flows. |
+| JWT bearer authentication | The browser obtains a Clerk token and sends it in `Authorization`; Express verifies RS256 locally. | A JWT proves a signed identity claim but must be verified for signature/expiry and never treated as a database authorization query by itself. |
+| CORS | Express restricts browser origins through `CORS_ORIGIN`. | CORS is a browser-enforced cross-origin policy, not an authentication mechanism or server-to-server security control. |
+| Reverse proxy | Express enables `trust proxy` because hosting sits behind a proxy. | This allows correct client/protocol interpretation; it must only trust known proxy infrastructure to avoid spoofed forwarding headers. |
+| DNS/CDN | Vercel can serve frontend assets close to users; Render/Supabase/Clerk are managed external endpoints. | CDN helps static content latency; API and database performance still need independent capacity planning. |
+| WebSocket/realtime | The status board currently subscribes to Supabase realtime then refetches through the API. | Realtime is useful for freshness, but delivery must be user-scoped, authenticated, observable, and backpressure-aware before high fan-out. |
+| Timeouts/retries | Axios has a 15-second timeout; the UI classifies network and availability errors. | Retries should be bounded and idempotent; blindly retrying a non-idempotent POST can duplicate work. |
+| Rate limiting | Express limits general and write traffic; AI has a stricter specialized limiter. | Current limits are per process/IP; at scale use shared/edge limits and user/tenant quotas. |
 
-**Why it's still secure**:
-1. Backend API enforces user_id filtering for all data access
-2. Frontend only displays data fetched through authenticated API calls
-3. Realtime just triggers a refetch, doesn't expose data directly
+## 7. Domain logic worth explaining
 
----
+### Opportunity tracking and analytics
 
-### Challenge 2: Overdue Logic for Final Statuses
+Opportunity CRUD is the product's foundation. List, dashboard, calendar, board, reports, and analytics reuse the same canonical data rather than maintaining copies.
 
-**Problem**: Rejected and selected applications were showing as "overdue" which is illogical - if you've been rejected, the deadline no longer matters.
+Analytics currently queries a user's opportunities and relevant interview rounds, then computes status counts, category/campus-mode counts, funnel metrics, weekly/monthly activity, deadline distribution, and interview-pipeline insights in the API process.
 
-**Solution**: Filter out final statuses from overdue calculations:
-```javascript
-const finalStatuses = ['rejected', 'selected'];
+**Why this is fine now:** it keeps reporting logic easy to understand and test, avoids premature database complexity, and a single user's dataset is likely small.
 
-const overdueItems = opportunities.filter(
-  opp => isOverdue(opp.deadline) && !finalStatuses.includes(opp.status)
-);
-```
+**Why it is not enough later:** it pulls and iterates through all of a user's records on each analytics request. At larger data volumes, I would push grouped aggregates into PostgreSQL, add indexes that start with `user_id`, cache per-user results, and use precomputed/materialized views or event-driven rollups for expensive metrics.
 
----
+### Interview rounds: one source of truth for status
 
-### Challenge 3: API Error Handling at Scale
+Each internship has ordered rounds such as online assessment, technical, HR, and final. `syncOpportunityFromRounds.js` derives the parent opportunity state after a round mutation:
 
-**Problem**: Each component was handling errors differently, leading to inconsistent UX.
+- A rejected round makes the opportunity `rejected` and records the rejected round number.
+- A pending round makes it `interviewed` and records the current round number.
+- A cleared final round makes it `selected`.
+- Completed/skipped non-final rounds lead to `shortlisted` or `interviewed` depending on progress.
 
-**Solution**: Centralized error handling in Axios interceptors:
-```javascript
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    switch (error.response?.status) {
-      case 401:
-        toast.error('Session expired');
-        setTimeout(() => window.location.href = '/', 1500);
-        break;
-      case 500:
-        toast.error('Server error. Please try again.');
-        break;
-      // ... other cases
-    }
-    return Promise.reject(error);
-  }
-);
-```
+**Why derive instead of asking users to manually update both records?** Two editable sources would drift. Centralizing the derivation in the backend makes the timeline and Kanban board consistent. The mutation response returns the round, synchronized opportunity, and current rounds so the client can update immediately without redundant reads.
 
-### Challenge 4: Calendar Grid Layout Alignment
+### Interview preparation
 
-**Problem**: The custom calendar view was showing misaligned days, with the Sunday column wrapping to the next line, causing significant confusion.
+The preparation workspace is intentionally separate from the interview timeline. The timeline represents process state; prep represents work the candidate does around that process. It holds company research, questions, technical topics, behavioral STAR stories, and reflection. The backend rejects prep operations for non-internship opportunities because the feature is semantically scoped to interviews.
 
-**Solution**: Removed the margin and relied on borders for visual separation, ensuring the 7-column grid fits perfectly within the container.
+### Documents and ATS guidance
 
----
+For PDF/DOCX documents, `atsScorer.js` extracts text in the browser using `pdfjs-dist` and `mammoth`, then applies transparent heuristics for sections, content density, contact information, and ATS-friendly length. The result is stored alongside the document.
 
-### Challenge 5: Interview Round Save Latency
+This is intentionally labelled as guidance, not an official ATS score. A transparent rule-based score is fast, free, works offline from the API after the file is available, and gives deterministic feedback. It does not claim to reproduce a recruiter's or vendor ATS's ranking algorithm.
 
-**Problem**: After adding interview round tracking, saving a round felt slow — users stared at “Saving…” for several seconds before seeing success feedback.
+### AI Resume Checker: implemented but not released
 
-**Root cause**: A naive create flow chained **6 sequential Supabase calls** (verify opportunity, query max round number, insert, then sync re-read opportunity + rounds, then update). The frontend then issued **two more REST calls** to refetch opportunity and rounds before closing the modal.
+The AI system is a server-side pipeline:
 
-**Solution**:
+1. Load PDF/DOCX content from storage.
+2. Extract text.
+3. Ask an LLM to construct a structured resume.
+4. Optionally enrich from public GitHub information.
+5. Evaluate four evidence-backed categories and generate strengths, suggestions, evidence, and scores.
+6. Persist the result in `resume_ai_checks`.
 
-1. Fetch rounds once at the start of create; derive next `round_number` in memory.
-2. Pass `existingStatus` and `rounds` into `syncOpportunityFromRounds()` so sync only runs the final `UPDATE`.
-3. Return `{ round, opportunity, rounds }` from POST/PATCH/DELETE.
-4. Apply that payload in `OpportunityDetailModal` via `applyRoundMutationResult()` — toast and modal close immediately.
+It supports Gemini and local Ollama through the Vercel AI SDK. A user-provided API key can be encrypted with AES-256-GCM at rest; the API returns only safe metadata such as a key suffix.
 
-**Interview takeaway**: Reduced DB round-trips and eliminated redundant client refetches by designing the API response for the UI’s exact needs.
+**Why keep it gated?** LLM calls are costly, variable, and slow (the current synchronous flow can take tens of seconds). Releasing it needs provider budgeting, abuse protection, privacy copy, monitoring, an asynchronous job experience, and a deliberate feature flag rollout. Code existing is not the same as a feature being production-ready.
 
-Full write-up: [`docs/interview-rounds.md`](interview-rounds.md#performance-issue--fix)
+### Hackathon collaboration
 
----
+Hackathons are not modeled as a separate top-level product. They are opportunities with `category = hackathon`, which prevents duplicate deadline/status/reporting logic. Hackathon-specific collaboration is attached only where needed: team, members, idea board and votes, task board, and submission checklist.
 
-## Interview Preparation Module
+This is a composition-over-duplication decision: shared lifecycle data remains in `opportunities`; specialized data is normalized into specialized tables.
 
-Per-internship study workspace — separate from round tracking (pipeline status vs. preparation content).
+### Read-only share links
 
-| Layer | Location |
-|-------|----------|
-| Page | `src/pages/InterviewPrepDetail.jsx` → `/internships/:id/prep` |
-| API | `backend/src/routes/interview-prep.js` |
-| Service | `interviewPrepService` in `src/services/api.js` |
-| Migration | `docs/interview-prep-migration.sql` |
+Share links deliberately expose a **snapshot**, not live data or a recipient's access to the owner account. The server generates a 32-byte base64url token, stores a SHA-256 hash for lookup, and optionally stores an AES-256-GCM-encrypted copy so the owner can copy an active link again. Optional passcodes are hashed with PBKDF2 and verified with timing-safe comparison. The owner can control which fields appear, expire a link, or revoke it.
 
-**Tabs:** Overview, Company Research, Questions, Technical Topics, Behavioral (STAR), Reflection.
+The public endpoint returns only the snapshot after token/passcode checks. This reduces the risk that a public page becomes an alternate route into the private dashboard.
 
-**Entry:** Internship detail drawer → **Interview Prep** button.
+## 8. Security posture
 
-**Interview takeaway:** One GET returns `{ prep, questions, topics, behavioral }`; internship-only guard on every route; same “API-only, no frontend Supabase CRUD” rule as rounds.
+### Controls that exist now
 
-Full guide: [`interview-prep.md`](interview-prep.md)
+- Clerk RS256 JWT verification occurs locally when `CLERK_JWT_PUBLIC_KEY` is configured; the API does not need a remote key fetch per request.
+- Protected route handlers use the verified internal user ID, never a user ID supplied by the browser.
+- Joi schemas validate request data at API boundaries.
+- Helmet sets protective HTTP headers and CSP.
+- CORS uses explicit origins from configuration.
+- JSON bodies are limited to 1 MB and sanitized.
+- General, write, public-share, and AI-specific rate limits exist.
+- User-owned database tables have RLS policies.
+- Share tokens are hashed; passcodes are salted and hashed; stored recoverable tokens and AI BYOK values are encrypted with authenticated encryption.
+- No backend secrets are placed in `REACT_APP_*` variables.
 
----
+### What I would not overclaim
 
-## Documents Vault & ATS Scorer
+- Process-local rate limiting is not enough when the API has multiple instances. It should move to a shared store such as Redis or an edge/API-gateway control.
+- A service-role Supabase key is powerful. Its access should stay isolated to the server, and code review must verify every user scope.
+- File uploads should gain malware scanning, file-type verification beyond extensions/MIME hints, size controls appropriate for the deployment, and quarantine behavior before enterprise rollout.
+- Security logging should become structured, redacted, centrally retained telemetry rather than only process logs.
+- Secret rotation needs a KMS/secret-manager plan. Encryption-key rotation must support decrypting existing ciphertext or re-encrypting it safely.
 
-| Layer | Location |
-|-------|----------|
-| Page | `src/pages/Documents.jsx` |
-| ATS logic | `src/utils/atsScorer.js` (client-side PDF/DOCX) |
-| Upload UI | `src/components/documents/DocumentUpload.jsx` |
-| API | `backend/src/routes/documents.js` |
+### Threat-model answers
 
-On upload, the browser extracts text, computes a 0–100 rule-based score, and saves `ats_score` + `ats_analysis` JSON on the document record. Not an external ATS API.
+| Interviewer question | Strong answer |
+| --- | --- |
+| “Can one user read another user's opportunities?” | The API derives the user from a verified Clerk JWT and filters every service-role query by that internal user ID. RLS is a second layer. I would add authorization tests for every route and audit new queries in review. |
+| “What if a share URL leaks?” | It grants only the selected snapshot and fields, not account access. The owner can revoke it; it can expire; an optional passcode adds a second secret. For sensitive enterprise use, I would add access logs, stronger passcode policy, recipient identity, and short-lived signed access. |
+| “How do you protect BYOK keys?” | Encrypt with AES-256-GCM on the server, retain IV/auth tag separately, never return the raw key, and prefer a dedicated encryption secret. At scale, use a cloud KMS envelope-encryption design and rotate keys. |
+| “What happens when Supabase is down?” | Auth bootstrap recognizes network/database failures and returns 503 rather than incorrectly reporting a bad session. Health/dependency endpoints surface degraded state. The client shows a temporary-service error. |
 
-Full guide: [`documents-and-ats.md`](documents-and-ats.md)
+## 9. Reliability, testing, and operations
 
----
+### Tests that exist
 
-## Hackathon Team Collaboration (NEW)
+The repository includes frontend tests for route/render behavior and pure helpers such as date, opportunity, and ATS scoring utilities. Backend tests cover health, opportunities, analytics, documents, interview prep, rounds, share links, validation middleware, round synchronization, AI key vault behavior, resume-agent logic, and GitHub enrichment.
 
-A comprehensive collaboration workspace for hackathon participants, enabling team management, idea brainstorming, task assignment, and submission tracking.
+Before a release or PR, the standard checks are:
 
-### Database Schema
-
-5 new tables with Row Level Security:
-
-| Table | Purpose |
-|-------|---------|
-| `hackathon_teams` | One team per hackathon with name and description |
-| `team_members` | Name-based members with roles (no account linking) |
-| `brainstorm_ideas` | Ideas with voting, categories, and selection |
-| `hackathon_tasks` | Kanban-style tasks with priorities and assignments |
-| `submission_checklist` | Checklist items with completion tracking |
-
-### API Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET/POST/PUT | `/api/hackathons/:id/team` | Team CRUD |
-| POST/PUT/DELETE | `/api/hackathons/:id/team/members` | Member management |
-| GET/POST/PUT/DELETE | `/api/hackathons/:id/ideas` | Idea brainstorming |
-| POST | `/api/hackathons/:id/ideas/:id/vote` | Upvote idea |
-| GET/POST/PUT/DELETE | `/api/hackathons/:id/tasks` | Task management |
-| GET/POST/PUT/DELETE | `/api/hackathons/:id/checklist` | Checklist management |
-
-### Frontend Components
-
-```
-src/components/hackathons/
-├── TeamManagementPanel.jsx    # Team creation, member management
-├── IdeaBrainstormingBoard.jsx # Ideas grid with voting & categories
-├── TaskBoard.jsx              # Kanban with 3 columns
-└── SubmissionChecklist.jsx    # Progress bar & completion tracking
-```
-
-### HackathonDetail Page
-
-Tabbed interface with 5 sections:
-1. **Overview** - Hackathon description and notes
-2. **Team** - Create team, add/remove members, edit roles
-3. **Ideas** - Brainstorm and vote on project ideas
-4. **Tasks** - Kanban board with priorities and assignments
-5. **Checklist** - Track submission requirements
-
-### Setup
-
-Run the migration SQL in Supabase:
 ```bash
-# In Supabase SQL Editor, paste contents of:
-docs/hackathon-collaboration-migration.sql
+npm run test:ci
+npm run build
+npm run check:architecture
+(cd backend && npm test)
 ```
 
----
-
-## Future Roadmap
-
-### Short-Term (Next Sprint)
-- [ ] **Email Reminders**: Deadline notifications via SendGrid
-- [ ] **Bulk Import**: CSV upload for multiple opportunities
-- [ ] **Tags/Labels**: Custom categorization beyond Internship/Hackathon
-
-### Medium-Term
-- [ ] **Mobile App**: React Native version
-- [ ] **Chrome Extension**: Quick-add from job boards
-- [ ] **AI Suggestions**: Auto-fill company details, suggest similar opportunities
-
-### Long-Term Vision
-- [x] **Team Features**: ~~Share applications with mentors/career counselors~~ → Implemented as Hackathon Team Collaboration
-- [ ] **Job Board Integration**: Pull listings from LinkedIn, Glassdoor, etc.
-- [ ] **Analytics Insights**: ML-powered predictions on success likelihood
-
-
----
-
-## Performance & SEO Optimizations
-
-### Overview
-Implemented comprehensive performance and SEO improvements to enhance user experience, reduce load times, and improve search engine visibility.
-
-### Performance Improvements
-
-#### 1. Code Splitting & Lazy Loading
-
-**Implementation:**
-```javascript
-// App.js - Route-based code splitting
-import { lazy, Suspense } from 'react';
-
-// Home is NOT lazy loaded - it's the landing page and should load immediately
-import Home from './pages/Home'; // Landing page - load immediately for best UX
-
-// Lazy load authenticated pages for better performance
-const Dashboard = lazy(() => import('./pages/Dashboard'));
-const InternshipList = lazy(() => import('./pages/InternshipList'));
-const HackathonList = lazy(() => import('./pages/HackathonList'));
-const AddOpportunity = lazy(() => import('./pages/AddOpportunity'));
-const EditOpportunity = lazy(() => import('./pages/EditOpportunity'));
-const StatusBoard = lazy(() => import('./pages/StatusBoard'));
-const Calendar = lazy(() => import('./pages/Calendar'));
-const Reports = lazy(() => import('./pages/Reports'));
-const Analytics = lazy(() => import('./pages/Analytics'));
-
-// Suspense wrapper with loading fallback
-<Suspense fallback={<PageLoader />}>
-  <Routes>
-    <Route path="/" element={<Home />} />
-    {/* ... other routes */}
-  </Routes>
-</Suspense>
-```
-
-**Why Home is NOT Lazy Loaded:**
-- Home is the most common entry point
-- Lazy loading it would add extra network request delay
-- Better UX to render landing page immediately
-- Authenticated pages are still lazy loaded (users don't need them immediately)
-
-**Results:**
-- **Initial bundle size**: 529 KB → **238 KB** (gzipped) = **55% reduction**
-- **Landing page**: Renders immediately with no loading spinner
-- **Code chunks created**: 20 separate chunks
-- **Faster Time to Interactive (TTI)**: Users see content faster
-
-**Bundle Analysis:**
-```
-Main bundle:        237.83 KB (gzipped, includes Home)
-Vendor chunks:      126.66 KB + 117.36 KB
-Page chunks:        45.93 KB, 43.67 KB, 43.21 KB (authenticated pages)
-Smaller chunks:     12 additional chunks (1-10 KB each)
-CSS bundle:         9.9 KB
-```
-
-#### 2. Font Optimization
-
-**Implementation:**
-```html
-<!-- public/index.html -->
-<!-- Preconnect to Google Fonts for faster DNS resolution -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-<!-- Async font loading using media="print" trick (works without JavaScript) -->
-<link rel="stylesheet" 
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" 
-      media="print" 
-      onload="this.media='all'">
-
-<!-- Fallback for no-JS users -->
-<noscript>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" 
-        rel="stylesheet">
-</noscript>
-```
-
-**Why media="print" Pattern:**
-- Works even if JavaScript fails or is disabled
-- Browser loads with low priority (async behavior)
-- `onload` changes media to 'all' when loaded
-- Better accessibility than pure JavaScript approach
-
-**Benefits:**
-- Non-blocking font loading (doesn't delay page render)
-- Faster DNS resolution with preconnect
-- Improved Core Web Vitals scores
-- Better perceived performance
-
----
-
-### SEO Enhancements
-
-#### 1. Dynamic Meta Tag Management
-
-**Implementation:**
-Created reusable SEO component using `react-helmet-async`:
-
-```javascript
-// src/components/seo/SEO.jsx
-import { Helmet } from 'react-helmet-async';
-
-const SEO = ({
-  title,
-  description,
-  keywords,
-  canonical,
-  type = 'website',
-  image = 'https://futuretracker.online/og-image.png',
-  noindex = false,
-}) => {
-  const siteTitle = 'FutureTracker';
-  const fullTitle = title ? `${title} | ${siteTitle}` : `${siteTitle} - Track Internships, Hackathons & Job Applications`;
-  const baseUrl = 'https://futuretracker.online';
-  const canonicalUrl = canonical ? `${baseUrl}${canonical}` : baseUrl;
-
-  return (
-    <Helmet>
-      {/* Primary Meta Tags */}
-      <title>{fullTitle}</title>
-      <meta name="description" content={description} />
-      <meta name="keywords" content={keywords} />
-      {noindex ? (
-        <meta name="robots" content="noindex, nofollow" />
-      ) : (
-        <meta name="robots" content="index, follow" />
-      )}
-      <link rel="canonical" href={canonicalUrl} />
-
-      {/* Open Graph / Facebook */}
-      <meta property="og:type" content={type} />
-      <meta property="og:url" content={canonicalUrl} />
-      <meta property="og:title" content={fullTitle} />
-      <meta property="og:description" content={description} />
-      <meta property="og:image" content={image} />
-
-      {/* Twitter */}
-      <meta name="twitter:card" content="summary_large_image" />
-      <meta name="twitter:title" content={fullTitle} />
-      <meta name="twitter:description" content={description} />
-      <meta name="twitter:image" content={image} />
-    </Helmet>
-  );
-};
-```
-
-**Usage in Pages:**
-```javascript
-// Public page (Home.jsx)
-<SEO 
-  title={null}
-  description="Free opportunity tracker for students and developers..."
-  keywords="job tracker, internship tracker, hackathon tracker..."
-  canonical="/"
-/>
-
-// Protected page (Dashboard.jsx)
-<SEO 
-  title="Dashboard"
-  description="View your opportunity tracking dashboard..."
-  canonical="/dashboard"
-  noindex={true}  // Prevent indexing of user-specific content
-/>
-```
-
-**Coverage:**
-- ✅ All 10 pages have unique meta tags
-- ✅ Open Graph tags for social media sharing
-- ✅ Twitter Card metadata
-- ✅ Canonical URLs to prevent duplicate content
-- ✅ Protected routes marked with `noindex`
-
-#### 2. Structured Data (JSON-LD)
-
-Implemented 4 Schema.org schemas in `public/index.html`:
-
-**a) WebApplication Schema**
-```json
-{
-  "@context": "https://schema.org",
-  "@type": "WebApplication",
-  "name": "FutureTracker",
-  "url": "https://futuretracker.online",
-  "description": "Track internships, hackathons, and job applications...",
-  "applicationCategory": "ProductivityApplication",
-  "operatingSystem": "Web",
-  "browserRequirements": "Requires JavaScript. Requires HTML5.",
-  "offers": {
-    "@type": "Offer",
-    "price": "0",
-    "priceCurrency": "USD"
-  },
-  "featureList": [
-    "Internship Application Tracking",
-    "Hackathon Deadline Management",
-    "Kanban Status Board",
-    "Calendar View",
-    "PDF Report Export",
-    "Analytics Dashboard"
-  ]
-}
-```
-
-**b) Organization Schema**
-```json
-{
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  "name": "FutureTracker",
-  "url": "https://futuretracker.online",
-  "logo": "https://futuretracker.online/logo512.png",
-  "sameAs": [
-    "https://github.com/Venkat-Kolasani/FutureStack"
-  ],
-  "contactPoint": {
-    "@type": "ContactPoint",
-    "contactType": "customer support",
-    "url": "https://github.com/Venkat-Kolasani/FutureStack/issues"
-  }
-}
-```
-
-**c) FAQ Schema**
-```json
-{
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": [
-    {
-      "@type": "Question",
-      "name": "What is FutureTracker?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "FutureTracker is a free opportunity tracker..."
-      }
-    }
-    // ... 2 more questions
-  ]
-}
-```
-
-**Note:** BreadcrumbList schema was considered but not implemented because static breadcrumbs don't reflect actual navigation in a single-page application (SPA). Each route would need dynamic breadcrumbs which is better handled by the SEO component if needed in the future.
-
-**Implemented Schemas (3 total):**
-- WebApplication - App description and features
-- Organization - Company/brand information
-- FAQ - Common questions and answers
-
-**Benefits:**
-- Rich snippets in Google search results
-- Better search engine understanding of content
-- Improved click-through rates (CTR)
-- Enhanced visibility in search results
-
-#### 3. XML Sitemap
-
-**File:** `public/sitemap.xml`
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <!-- Homepage -->
-  <url>
-    <loc>https://futuretracker.online/</loc>
-    <lastmod>2026-01-17</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
-  </url>
-  
-  <!-- Dashboard -->
-  <url>
-    <loc>https://futuretracker.online/dashboard</loc>
-    <lastmod>2026-01-17</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
-  </url>
-  
-  <!-- ... 6 more routes with appropriate priorities -->
-</urlset>
-```
-
-**Included Routes:**
-- `/` (Priority: 1.0)
-- `/dashboard` (Priority: 0.9)
-- `/internships` (Priority: 0.8)
-- `/hackathons` (Priority: 0.8)
-- `/status-board` (Priority: 0.7)
-- `/calendar` (Priority: 0.7)
-- `/analytics` (Priority: 0.6)
-- `/reports` (Priority: 0.6)
-
-#### 4. Enhanced PWA Manifest
-
-**File:** `public/manifest.json`
-
-```json
-{
-  "short_name": "FutureTracker",
-  "name": "FutureTracker - Track Internships & Hackathons",
-  "description": "Free opportunity tracker for students and developers...",
-  "shortcuts": [
-    {
-      "name": "Dashboard",
-      "short_name": "Dashboard",
-      "description": "View your dashboard",
-      "url": "/dashboard",
-      "icons": [{ "src": "logo192.png", "sizes": "192x192" }]
-    },
-    {
-      "name": "Add Opportunity",
-      "short_name": "Add",
-      "description": "Add a new opportunity",
-      "url": "/add",
-      "icons": [{ "src": "logo192.png", "sizes": "192x192" }]
-    }
-  ],
-  "categories": ["productivity", "education", "utilities"],
-  "orientation": "portrait-primary",
-  "scope": "/",
-  "display": "standalone"
-}
-```
-
-**Features:**
-- App shortcuts for quick access (Android/Windows)
-- Proper categorization for app stores
-- Optimized orientation for mobile
-- Enhanced installation experience
-
----
-
-### Accessibility Improvements
-
-#### Skip Navigation Link
-```javascript
-// App.js
-<a 
-  href="#main-content" 
-  className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-white focus:text-black focus:rounded-lg focus:font-semibold"
->
-  Skip to main content
-</a>
-```
-
-**Benefits:**
-- Keyboard users can skip repetitive navigation
-- Improves accessibility for screen reader users
-- WCAG 2.1 compliance
-
-#### Semantic HTML
-```javascript
-<main id="main-content" role="main">
-  {/* Page content */}
-</main>
-```
-
-**Benefits:**
-- Better screen reader navigation
-- Improved SEO (search engines understand content hierarchy)
-- Proper document structure
-
----
-
-### Performance Metrics
-
-| Metric | Before Optimization | After Optimization | Improvement |
-|--------|---------------------|-------------------|-------------|
-| **Initial Bundle Size** | 529 KB (gzipped) | 238 KB (gzipped) | **-55%** |
-| **Code Chunks** | 1 monolithic bundle | 20 split chunks | **+1900%** |
-| **Time to Interactive** | ~3.5s | ~1.2s | **-66%** |
-| **First Contentful Paint** | ~1.8s | ~0.8s | **-56%** |
-| **Lighthouse Performance** | ~65 | ~85 | **+31%** |
-| **SEO Score** | 6.6/10 | 9/10 | **+36%** |
-
-### SEO Score Breakdown
-
-| Category | Before | After | Status |
-|----------|--------|-------|--------|
-| **Meta Tags** | 9/10 | 10/10 | ✅ Perfect |
-| **Structured Data** | 7/10 | 10/10 | ✅ Excellent |
-| **Performance** | 4/10 | 7/10 | ✅ Improved |
-| **Technical SEO** | 6/10 | 9/10 | ✅ Excellent |
-| **Accessibility** | 7/10 | 9/10 | ✅ Excellent |
-
----
-
-### Technical Implementation Details
-
-**For Interview Discussions:**
-
-1. **Code Splitting Strategy**
-   - Used React.lazy() for route-based splitting
-   - Implemented Suspense boundaries with loading fallbacks
-   - Avoided over-splitting (kept common components in main bundle)
-
-2. **SEO Component Architecture**
-   - Created reusable SEO component with prop validation
-   - Used react-helmet-async for SSR compatibility
-   - Implemented dynamic canonical URL generation
-   - Protected user-specific routes with noindex
-
-3. **Font Loading Optimization**
-   - Preconnect for faster DNS resolution
-   - Preload with async loading to prevent render blocking
-   - Noscript fallback for accessibility
-
-4. **Structured Data Implementation**
-   - Chose appropriate Schema.org types for content
-   - Validated JSON-LD with Google's Rich Results Test
-   - Implemented breadcrumb navigation for better UX
-
-5. **PWA Enhancements**
-   - Added app shortcuts for common user flows
-   - Proper categorization for discoverability
-   - Optimized for mobile-first experience
-
-6. **Build Optimization**
-   - Configured webpack (via CRA) for optimal chunking
-   - Analyzed bundle with source-map-explorer
-   - Identified and lazy-loaded heavy dependencies (Recharts, jsPDF)
-
----
-
-### User Experience Impact
-
-**Positive Changes:**
-- ✅ 63% faster initial page load
-- ✅ Smoother navigation with instant route transitions
-- ✅ Better mobile experience with PWA shortcuts
-- ✅ Improved accessibility for keyboard/screen reader users
-- ✅ Better social sharing with Open Graph tags
-
-**No Negative Impact:**
-- ❌ No breaking changes to existing functionality
-- ❌ No UI/UX regressions
-- ❌ SEO changes are transparent to users
-- ❌ All existing features preserved
-
----
-
-### Tools & Technologies Used
-
-| Tool | Purpose |
-|------|---------|
-| **react-helmet-async** | Dynamic meta tag management |
-| **React.lazy()** | Code splitting |
-| **Suspense** | Loading state management |
-| **Lighthouse** | Performance auditing |
-| **Google Rich Results Test** | Structured data validation |
-| **webpack-bundle-analyzer** | Bundle size analysis |
-
----
-
-## Project Metrics
-
-
-| Metric | Value |
-|--------|-------|
-| Frontend Bundle | 476 KB (production) |
-| API Response Time | < 200ms (avg) |
-| Lighthouse Performance | 90+ |
-| Mobile Responsive | ✅ 100% |
-| Build Status | ✅ Passing |
-| Production Status | ✅ Live |
-| Frontend URL | futuretracker.online |
-| Backend Platform | Render (Free Tier) |
-
----
-
-## Quick Pitch Summary
-
-> "FutureTracker is a full-stack SaaS application I built to solve my own pain point of tracking internship applications. The standout features are **real-time sync using Supabase WebSockets**, **multi-round interview pipelines with a performance-optimized API**, **per-internship prep workspaces**, **client-side ATS resume hints**, and **production-grade error handling**. The biggest challenge was integrating Supabase Realtime with Clerk authentication - I solved it by understanding RLS policy conflicts and implementing a hybrid security model. The app is mobile-responsive, follows React best practices, and is **deployed in production** at [futuretracker.online](https://futuretracker.online) with a Render-hosted Express backend."
-
----
-
-## Repository & Deployment
-
-**GitHub**: [Venkat-Kolasani/FutureTracker](https://github.com/Venkat-Kolasani/FutureTracker)  
-**Branch**: `main`
-
-### Live URLs
-| Service | URL | Platform |
-|---------|-----|----------|
-| **Frontend** | [https://futuretracker.online](https://futuretracker.online) | Vercel |
-| **Backend API** | [https://futurestack-api.onrender.com](https://futurestack-api.onrender.com) | Render |
-
-### Environment Variables Required
-
-**Vercel (Frontend)**:
-- `REACT_APP_CLERK_PUBLISHABLE_KEY` - Clerk publishable key
-- `REACT_APP_API_URL` - Backend URL (https://futurestack-api.onrender.com/api)
-
-**Render (Backend)**:
-- `NODE_ENV` - Set to `production`
-- `CORS_ORIGIN` - Frontend URL (https://futuretracker.online)
-- `CLERK_SECRET_KEY` - Clerk secret key (must match frontend's publishable key environment)
-- `CLERK_JWT_KEY` - *(Recommended)* Clerk JWT public key (PEM format) for networkless token verification. Get from: Clerk Dashboard > API Keys > Advanced > JWT Public Key. Without this, the backend must fetch JWKS from Clerk's API on every request, which can fail on Render with `TypeError: fetch failed`.
-- `SUPABASE_URL` - Supabase project URL
-- `SUPABASE_SERVICE_ROLE_KEY` - Supabase service role key
-
----
-
-## Troubleshooting
-
-### "Session expired" / "Failed to load opportunities" on Dashboard
-
-**Symptoms:** Dashboard shows loading state, then "Failed to load opportunities". In some cases users may also see a session-related toast and get redirected.
-
-**Incident Note (April 2026):**
-- During local debugging, the primary outage was **Supabase being inactive/offline**.
-- Because backend failure paths were not clearly classified, the issue looked like auth/session expiry.
-- This led to debugging on Clerk/auth for longer than necessary.
-
-**Root Cause Categories:**
-- **Auth mismatch**: Clerk token cannot be verified (`401`).
-- **Database/backend unavailable**: Supabase connection/bootstrap fails (`503` recommended).
-
-**Check Render Logs for:**
-
-| Log Message | Cause | Fix |
-|-------------|-------|-----|
-| `Auth: JWT verification failed: invalid signature` | Clerk key mismatch between frontend/backend | Ensure `REACT_APP_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, and JWT key are from the same Clerk instance |
-| `TypeError: fetch failed` during JWT verify | Backend can't reach Clerk JWKS endpoint | Set `CLERK_JWT_KEY` / `CLERK_JWT_PUBLIC_KEY` for local JWT verification |
-| `Token has expired` | JWT token is stale | Check Clerk dashboard for token lifetime settings |
-| `Auth bootstrap error` or Supabase fetch/network errors | Supabase unavailable | Verify Supabase project status, `SUPABASE_URL`, and `SUPABASE_SERVICE_ROLE_KEY` |
-| API returns `503 Service Unavailable` | Dependency outage (DB/auth bootstrap) | Surface clear UI message and retry after dependency recovers |
-
-**Quick Diagnostic Commands:**
-```bash
-# Check if backend is alive
-curl https://futurestack-api.onrender.com/api/health
-
-# Check opportunities endpoint without auth (expect 401 Unauthorized)
-curl -i https://futurestack-api.onrender.com/api/opportunities
-
-# Test CORS preflight
-curl -X OPTIONS -H "Origin: https://futuretracker.online" \
-  -H "Access-Control-Request-Method: GET" \
-  -H "Access-Control-Request-Headers: Authorization" \
-  https://futurestack-api.onrender.com/api/opportunities
-
-# Test authenticated request (replace token)
-curl -i -H "Authorization: Bearer YOUR_CLERK_TOKEN" \
-  https://futurestack-api.onrender.com/api/opportunities
-```
-
-### Improvements To Prevent Recurrence
-
-1. **Strict error classification in backend**
-   - Use `401` only for actual token/auth failures.
-   - Use `503` for Supabase/dependency outages.
-   - Include compact structured logs (`type`, `service`, `code`, `message`) for faster triage.
-
-2. **Frontend messaging by status code**
-   - Avoid redirecting users on non-auth errors.
-   - Show explicit “Database temporarily unavailable” message for `503`.
-   - Keep generic fallback only when no API message is provided.
-
-3. **Dependency health checks**
-   - Add a deeper health endpoint (for example `/api/health/deps`) that validates Supabase reachability.
-   - Use this in uptime monitors and deployment smoke tests.
-
-4. **Post-deploy smoke tests**
-   - Validate sign-in, `/api/opportunities`, and one DB query after every deploy.
-   - Fail deployment checks if auth passes but DB is unavailable.
-
-5. **Runbook updates**
-   - First check service status (Supabase/Render) before rotating auth keys.
-   - Add a short decision tree: `401` path (auth), `503` path (dependency), `500` path (application bug).
+`check:architecture` enforces the frontend API boundary. Tests mock Clerk and Supabase, so they do not require live secrets. Manual smoke checks remain important for sign-in, pages changed, an expected error case, upload flows, public share behavior, and responsive UI.
+
+### Observability today
+
+- The API has health and dependency-health endpoints.
+- Write requests emit JSON-shaped process logs.
+- PostHog is optional for client product analytics.
+- The UI has error boundaries, loading states, toasts, and a realtime connection indicator.
+
+### Observability needed for a serious production service
+
+I would add structured logs with correlation IDs, distributed traces from browser to API to database, error tracking, SLO-based dashboards, synthetic probes, and alerts on error rate, latency, queue age, dependency availability, and suspicious rate-limit patterns. I would keep PII out of logs and define retention and access policy.
+
+## 10. Scaling path: current product to millions of users
+
+“Millions of users” is not achieved by merely adding servers. The strategy is to remove state from the API, partition work by user/tenant, avoid full scans, make slow tasks asynchronous, and measure each layer.
+
+| Area | Current approach | First production upgrade | Large-scale direction |
+| --- | --- | --- | --- |
+| API compute | One Express service can hold a local cache and limits. | Stateless containers behind a load balancer; environment-based configuration. | Horizontally autoscaled regional services, safe deploys, and request budgets. |
+| Auth-user mapping | Five-minute in-memory cache. | Redis cache or reliable Clerk webhook provisioning. | Shared cache with TTL/invalidations; no per-request insert/lookup surprise. |
+| Rate limits | In-process/IP limits. | Redis-backed user/IP keys; tighter limits on expensive paths. | Edge WAF/API gateway, bot control, anomaly detection, and tenant quotas. |
+| Core database | User-scoped rows with basic indexes. | Composite indexes beginning with `user_id`, query plans, connection pooling, and backups. | Read replicas/partitioning where measured, lifecycle policies, tenant-aware capacity planning. |
+| Analytics | Read all user rows and calculate in Node. | SQL `GROUP BY`, indexed date/status queries, per-user caching. | Incremental aggregates/materialized views or event-driven warehouse pipeline. |
+| Realtime | Broad database-change subscription followed by full refetch. | Filtered user events and query invalidation. | Broadcast/event service with tenant channels, backpressure, idempotent versions, and presence only where needed. |
+| File handling | Application-level uploads and document metadata. | Direct-to-object-storage signed uploads, strict validation and scanning. | CDN, asynchronous scanning/processing, lifecycle tiers, regional strategy. |
+| AI analysis | Synchronous request with multiple LLM calls. | Durable job queue, status polling/events, retries, idempotency key, spend limits. | Separate worker pool, provider failover, per-tenant quotas, evaluation/quality monitoring. |
+| Secrets and encryption | Environment secrets and AES-GCM application encryption. | Managed secret store and KMS-backed envelope encryption. | Rotation, audit trails, separate keys/tenants where required, least-privilege service identities. |
+
+### Database-specific plan
+
+The access pattern is primarily “all data for one user, sorted/filtered by a small number of fields.” That means compound indexes should be driven by actual query plans, for example `(user_id, deadline)`, `(user_id, status)`, and `(user_id, created_at)` where the corresponding filters/orderings are proven hot. I would not add every possible index prematurely because indexes increase write cost and storage.
+
+For analytics, I would replace application loops with parameterized SQL aggregates or materialized per-user/day facts. For multi-tenant scale, every access path must begin with a tenant/user predicate, and background jobs must carry that context explicitly.
+
+### Consistency and asynchronous work
+
+The current CRUD paths are synchronous because a user expects immediate feedback. Operations that can take seconds or call external services—AI evaluation, malware scanning, large report exports, notifications—should become jobs. A production job record needs a status machine, idempotency key, attempt count, error reason, trace ID, and explicit retry/dead-letter behavior. The UI should show queued/running/completed/failed states instead of holding an HTTP request open.
+
+### Rollout discipline
+
+For a million-user deployment I would use feature flags, canary releases, database migrations compatible with both old and new code, observability before exposure, and a rollback path. The present AI gate is an example of the correct instinct: do not expose a capability merely because code compiles.
+
+## 11. Key trade-offs and “why not” answers
+
+| Question | Answer |
+| --- | --- |
+| Why not microservices now? | The domains are related and the team/product scale does not justify distributed coordination, network failures, and operational overhead. The modular monolith keeps boundaries in code and can be split when a measured bottleneck or ownership boundary appears. |
+| Why not direct Supabase CRUD from React? | A backend boundary makes authorization, validation, rate limiting, audit events, token-sensitive operations, and migration evolution consistent. Realtime is the narrow exception and is explicitly a future hardening area. |
+| Why not GraphQL? | REST resource endpoints are sufficient and easy to reason about for the current CRUD-heavy product. If client overfetching or multi-domain dashboards become a measured issue, a BFF aggregation endpoint is a simpler first step than introducing GraphQL. |
+| Why not store all prep or hackathon data as JSON on opportunities? | Structured child tables support validation, targeted updates, relationships, and future querying. JSON would be faster initially but less maintainable as the features grow. |
+| Why not release AI now? | Correctness, cost, privacy, latency, abuse, and user trust are product requirements, not polish. The UI flag prevents an incomplete operational system from becoming a user-facing promise. |
+| Why not cache everything? | Caching introduces invalidation, privacy, and consistency complexity. I would cache hot, measured, safely scoped reads with explicit TTLs, not use it as a default. |
+| Why use a service-role database client if RLS exists? | The API needs server-side administrative access, but that increases responsibility. Every query must scope by verified internal user ID; RLS remains defense in depth and direct client access stays restricted. |
+
+## 12. Interview question bank
+
+### Product and design
+
+**“What did you build?”**
+
+Use the 60-second answer, then name one end-to-end flow: add an internship, track rounds, prepare, attach a resume, and share a snapshot. That demonstrates product cohesion rather than a list of screens.
+
+**“What is the hardest feature?”**
+
+Choose interview-round synchronization or secure sharing. For rounds, explain avoiding two sources of truth. For sharing, explain snapshot isolation, token hashing, passcode hashing, expiry, and revocation.
+
+**“What would you build next?”**
+
+Start with the highest product value and operational readiness: reminders and follow-up timeline for user value; then AI queue/observability for safe rollout. Tie the answer to a measured need rather than a random feature list.
+
+### Architecture and API
+
+**“Walk me through a request.”**
+
+Browser calls `src/services/api.js`; Axios gets a fresh Clerk token; Express applies security middleware; `requireAuth` verifies RS256 JWT locally, resolves the internal UUID, validates the payload, performs a user-scoped Supabase query, and returns JSON. The UI handles status-specific errors and refreshes its local state.
+
+**“How do you make the app maintainable?”**
+
+Explain the domain slices: route module + validation schema + UI component group + API service + migration + tests. Explain the architecture guardrail that prevents direct frontend database CRUD.
+
+**“How do you avoid N+1 queries?”**
+
+For a new endpoint, fetch related records in an intentional batch or use a join where appropriate; measure query count. The round synchronization helper accepts already-loaded rounds/status so mutation handlers can avoid duplicate reads. For analytics at scale, move aggregate work into SQL.
+
+### Security and privacy
+
+**“How do you secure multi-tenant data?”**
+
+Verified identity → internal user ID → user-scoped server query → RLS defense in depth. Emphasize route tests and migration review. Do not claim that obscuring client routes or UUIDs is authorization.
+
+**“What is your share-link security model?”**
+
+State that a share is a snapshot of selected fields. The raw token is generated server-side; its hash is used for lookup; optional passcode is salted/hashed; public access is revocable/expiring; no private dashboard session is shared.
+
+### Scale and reliability
+
+**“What breaks first at 10× or 100×?”**
+
+The broad realtime subscription/full refetch model, in-memory auth cache and rate limiter, Node-side analytics loops, synchronous AI calls, and process-only logs. Then give the staged remedies from the scale table.
+
+**“How would you make AI reliable?”**
+
+Move it to a queue with idempotency, timeouts, retry classification, provider fallback where appropriate, per-user quotas, retained job status, cost telemetry, quality evaluation, and a manual fallback. Keep raw resume data and prompts under a strict privacy policy.
+
+### Testing and failure handling
+
+**“How do you test this?”**
+
+Unit-test pure rules such as ATS scoring and round synchronization; integration-test route behavior with mocked auth/database clients; build and test the React app in CI; enforce the API boundary; and perform manual smoke flows for auth, uploads, shares, and responsive UI. Add contract/integration tests against an ephemeral database before a high-scale rollout.
+
+**“What did you learn from a failure?”**
+
+The authentication path distinguishes invalid tokens from database/bootstrap failures. Returning 503 for dependency unavailability rather than a generic session-expired response reduces misleading user feedback and speeds incident diagnosis.
+
+## 13. A two-minute demo script
+
+1. Start on the dashboard and state the product problem in one sentence.
+2. Add or open an internship; point out deadline, status, and document association.
+3. Open interview rounds; add a pending or rejected result and explain parent-status synchronization.
+4. Open interview preparation; mention the difference between process tracking and study material.
+5. Show Documents and the transparent ATS guidance disclaimer.
+6. Show the status board and explain that it refetches after realtime events today, then candidly state the production broadcast redesign.
+7. Show a share-link flow or explain the snapshot/privacy model.
+8. Close with the AI flag and scaling plan: “implemented behind a gate because operational readiness matters.”
+
+## 14. Source map for follow-up questions
+
+| Topic | Start in code |
+| --- | --- |
+| App composition, routes, lazy loading, theme | `src/App.js`, `src/context/ThemeContext.jsx` |
+| Frontend API/auth/error behavior | `src/services/api.js`, `src/hooks/useAuthToken.js` |
+| Auth and user provisioning | `backend/src/middleware/auth.js` |
+| HTTP security, limits, health, route mounts | `backend/src/app.js` |
+| Opportunity CRUD | `backend/src/routes/opportunities.js` |
+| Round status derivation | `backend/src/lib/syncOpportunityFromRounds.js` |
+| Analytics computations | `backend/src/routes/analytics.js`, `backend/src/lib/interviewPipelineAnalytics.js` |
+| Documents/ATS | `src/utils/atsScorer.js`, `backend/src/routes/documents.js` |
+| AI pipeline and settings | `backend/src/lib/resume-agent/`, `backend/src/lib/llm/`, `backend/src/lib/apiKeyVault.js` |
+| Share security | `backend/src/lib/shareLinks.js`, share-link route modules |
+| SQL schema and policies | `docs/*.sql`, `supabase/migrations/` |
+| Tests and CI | `docs/TESTING.md`, `backend/tests/`, `.github/workflows/ci.yml` |
+
+## 15. Final framing
+
+Present FutureTracker as a well-bounded full-stack product, not as a finished hyperscale platform. The best answer is: **I built a secure modular monolith that solves a coherent user workflow today; I understand exactly which assumptions are safe at this stage, which ones are not, and how I would evolve each layer when traffic, data volume, and operational requirements justify it.**
+
+For implementation-only feature detail, use the focused guides in this repository. This document intentionally contains the architecture narrative, decision rationale, limitations, and interview answers so you can prepare from one place.

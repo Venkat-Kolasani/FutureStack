@@ -192,4 +192,3 @@ export CLERK_TOKEN="$(# browser: copy(await window.Clerk.session.getToken()))"
 - Interview prep (study workspace): [`interview-prep.md`](interview-prep.md)
 - Code orientation: [`CODEBASE_GUIDE.md`](CODEBASE_GUIDE.md)
 - Epic & PR breakdown: [`issues/interview-rounds-epic.md`](issues/interview-rounds-epic.md)
-- Full technical doc: [`DOCUMENTATION.md`](DOCUMENTATION.md#interview-round-tracking)
