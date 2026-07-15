@@ -48,13 +48,17 @@ npm run build
 4. Select the `extensions/dist` folder
 
 ### 5. Add to Clerk allowed origins
-Run this command with your Clerk Secret Key:
+
+Read your Clerk Secret Key from your `.env` file and run:
 ```bash
+CLERK_SECRET=$(grep CLERK_SECRET_KEY backend/.env | cut -d '=' -f2)
 curl -X PATCH https://api.clerk.com/v1/instance \
-  -H "Authorization: Bearer YOUR_CLERK_SECRET_KEY" \
+  -H "Authorization: Bearer $CLERK_SECRET" \
   -H "Content-type: application/json" \
   -d '{"allowed_origins": ["chrome-extension://ocadhiiiainnijhhimhmpagfdmfcnfmj"]}'
 ```
+
+> ⚠️ Never paste your secret key directly into terminal commands — it persists in shell history.
 
 ## Backend CORS Setup
 
@@ -70,16 +74,17 @@ CORS_ORIGIN=https://futuretracker.online,chrome-extension://ocadhiiiainnijhhimhm
 ## Manual Test Plan
 
 1. Sign in at [futuretracker.online](https://futuretracker.online)
-2. Visit any job listing page:
-   - Google Jobs: `https://www.google.com/search?q=software+intern`
-   - LinkedIn Jobs: `https://www.linkedin.com/jobs/`
-     (Note: LinkedIn blocks content scripts — fill title manually)
-   - Internshala: `https://internshala.com`
-3. Click the FutureTracker extension icon
-4. Review and edit the pre-filled title and description
-5. Select category and status
-6. Click **Save Opportunity**
-7. Go to [Dashboard](https://futuretracker.online/dashboard) and confirm entry appears
+2. Visit a concrete job listing page, for example:
+   - Internshala: `https://internshala.com/internship/detail/software-development-work-from-home-job-internship-at-skillible1749535640`
+   - LinkedIn: `https://www.linkedin.com/jobs/view/4415735571/`
+     (Note: LinkedIn blocks content scripts — title may need manual entry)
+3. Verify the popup pre-fills:
+   - **Title** — matches the job/internship title on the page
+   - **Description** — matches the company or role description
+   - **URL** — matches the current page URL
+4. Select category and status
+5. Click **Save Opportunity**
+6. Go to [Dashboard](https://futuretracker.online/dashboard) and confirm entry appears
 
 ## Running Tests
 ```bash
