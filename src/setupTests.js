@@ -15,6 +15,7 @@ class IntersectionObserverMock {
 }
 global.IntersectionObserver = IntersectionObserverMock;
 
+// Mock window.matchMedia (non-Jest implementation for CRA compatibility)
 Object.defineProperty(window, 'matchMedia', {
     writable: true,
     value: (query) => ({
@@ -60,32 +61,18 @@ jest.mock('./lib/analytics', () => ({
         opportunityDeleted: jest.fn(),
     },
 }));
-// Mock window.matchMedia for tests (required by ThemeContext and framer-motion)
-Object.defineProperty(window, 'matchMedia', {
-  writable: true,
-  value: jest.fn().mockImplementation(query => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: jest.fn(),
-    removeListener: jest.fn(),
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn(),
-  })),
-});
 
 // Mock framer-motion to avoid jsdom animation issues
 jest.mock('framer-motion', () => ({
-  motion: new Proxy({}, {
-    get: (_, tag) => {
-      const React = require('react');
-      return React.forwardRef(({ children, ...props }, ref) =>
-        React.createElement(tag, { ...props, ref }, children)
-      );
-    }
-  }),
-  AnimatePresence: ({ children }) => children,
-  useAnimation: () => ({ start: jest.fn(), stop: jest.fn() }),
-  useInView: () => [null, false],
+    motion: new Proxy({}, {
+        get: (_, tag) => {
+            const React = require('react');
+            return React.forwardRef(({ children, ...props }, ref) =>
+                React.createElement(tag, { ...props, ref }, children)
+            );
+        }
+    }),
+    AnimatePresence: ({ children }) => children,
+    useAnimation: () => ({ start: () => {}, stop: () => {} }),
+    useInView: () => [null, false],
 }));

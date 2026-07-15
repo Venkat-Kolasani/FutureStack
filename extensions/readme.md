@@ -2,11 +2,17 @@
 
 Save job/internship listings to FutureTracker with one click.
 
+## Extension ID
+
+The stable extension ID is: `ocadhiiiainnijhhimhmpagfdmfcnfmj`
+
+This ID is deterministic and generated from the public key in `manifest.json`. It will not change across reloads or reinstalls.
+
 ## Prerequisites
 
 Before setup, make sure these are done in your Clerk dashboard:
 - **Native API** is enabled for your Clerk application
-- **Extension origin** is added as an allowed origin (see stable ID section below)
+- **Extension origin** `chrome-extension://ocadhiiiainnijhhimhmpagfdmfcnfmj` is added as an allowed origin
 - **Bot protection** is disabled during development
 
 ## Setup
@@ -18,12 +24,14 @@ npm install
 ```
 
 ### 2. Environment variables
-Copy `.env.example` to `.env` and fill in your values:
+Copy `.env.example` to `.env` and fill in your values.
+
+**Local development:**
 VITE_CLERK_PUBLISHABLE_KEY=pk_test_your_key_here
 VITE_API_BASE=http://localhost:3001
 VITE_SYNC_HOST=http://localhost:3000
 
-For production:
+**Production:**
 VITE_CLERK_PUBLISHABLE_KEY=pk_live_your_key_here
 VITE_API_BASE=https://your-backend.onrender.com
 VITE_SYNC_HOST=https://futuretracker.online
@@ -39,30 +47,25 @@ npm run build
 3. Click **Load unpacked**
 4. Select the `extensions/dist` folder
 
-### 5. Get a stable Extension ID
-Without a stable ID, Chrome assigns a new random ID every time you reload
-the extension, which breaks Clerk's allowed origins config.
-
-1. Go to `chrome://extensions`
-2. Copy your extension ID shown under the extension name
-3. Add it to Clerk's allowed origins via:
+### 5. Add to Clerk allowed origins
+Run this command with your Clerk Secret Key:
 ```bash
 curl -X PATCH https://api.clerk.com/v1/instance \
   -H "Authorization: Bearer YOUR_CLERK_SECRET_KEY" \
   -H "Content-type: application/json" \
-  -d '{"allowed_origins": ["chrome-extension://YOUR_EXTENSION_ID"]}'
+  -d '{"allowed_origins": ["chrome-extension://ocadhiiiainnijhhimhmpagfdmfcnfmj"]}'
 ```
 
 ## Backend CORS Setup
 
 The backend reads from `CORS_ORIGIN` in `backend/.env`.
-Add your extension ID to the comma-separated list:
+Add the extension ID to the comma-separated list:
 
 **Local development:**
-CORS_ORIGIN=http://localhost:3000,chrome-extension://YOUR_EXTENSION_ID
+CORS_ORIGIN=http://localhost:3000,chrome-extension://ocadhiiiainnijhhimhmpagfdmfcnfmj
 
 **Production:**
-CORS_ORIGIN=https://futuretracker.online,chrome-extension://YOUR_EXTENSION_ID
+CORS_ORIGIN=https://futuretracker.online,chrome-extension://ocadhiiiainnijhhimhmpagfdmfcnfmj
 
 ## Manual Test Plan
 
@@ -78,6 +81,12 @@ CORS_ORIGIN=https://futuretracker.online,chrome-extension://YOUR_EXTENSION_ID
 6. Click **Save Opportunity**
 7. Go to [Dashboard](https://futuretracker.online/dashboard) and confirm entry appears
 
+## Running Tests
+```bash
+cd extensions
+npm test
+```
+
 ## Folder Structure
 extensions/
 ├── src/
@@ -91,14 +100,8 @@ extensions/
 │       ├── main.jsx      # React entry point
 │       └── popup.jsx     # Popup UI component
 ├── public/icons/         # Extension icons (16, 48, 128px)
+├── tests/
+│   └── metadata.test.js  # Unit tests for metadata extraction
 ├── manifest.json         # Chrome MV3 manifest
 ├── vite.config.js        # Vite + crxjs build config
 └── .env.example          # Environment variable template
-
-
-
-## Running Tests
-```bash
-cd extensions
-npm test
-```
