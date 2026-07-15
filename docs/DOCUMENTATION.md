@@ -50,6 +50,7 @@ Career applications are fragmented across job boards, messages, spreadsheets, do
 | Hackathon collaboration | Available | Team, members, ideas/votes, tasks, and checklist are separate, user-owned resources. |
 | Read-only share links | Available | A stored snapshot is shared, not live dashboard access. Links can expire, be revoked, and require a passcode. |
 | AI Resume Checker | Implemented, UI-gated | Backend pipeline, storage, provider settings, tests, and UI components exist; `AI_RESUME_CHECK_ENABLED` is currently `false`. |
+| Progress Logger | Schema migration ready | Tracks and daily logs, indexes, and Clerk-compatible RLS are defined; API and UI remain separate follow-on work. |
 | Reminders, tags, bulk import/export, advanced filters | Planned | These are intentionally not claimed as shipped features. |
 
 ## 3. System architecture
@@ -206,6 +207,7 @@ erDiagram
   USERS ||--o{ OPPORTUNITIES : owns
   USERS ||--o{ DOCUMENTS : owns
   USERS ||--o{ SHARE_LINKS : creates
+  USERS ||--o{ PROGRESS_TRACKS : owns
   USERS ||--o| USER_AI_SETTINGS : configures
   OPPORTUNITIES ||--o{ OPPORTUNITY_ROUNDS : contains
   OPPORTUNITIES ||--o{ OPPORTUNITY_DOCUMENTS : uses
@@ -220,6 +222,7 @@ erDiagram
   HACKATHON_TEAMS ||--o{ HACKATHON_TASKS : has
   HACKATHON_TEAMS ||--o{ SUBMISSION_CHECKLIST : has
   DOCUMENTS ||--o{ RESUME_AI_CHECKS : produces
+  PROGRESS_TRACKS ||--o{ PROGRESS_LOGS : records
 ```
 
 **How to draw this in an interview:** start with `Users → Opportunities` as the centre. Add the many-to-many document relationship using `opportunity_documents`; that demonstrates normalization. Then branch to interview rounds/prep for internships and a one-to-one hackathon team for hackathons. Add share links as a user-owned snapshot, not a relationship from a public viewer to private data. Do not try to draw every column unless asked.
@@ -236,6 +239,7 @@ erDiagram
 | Hackathon collaboration tables | Team, members, ideas, tasks, and checklist items. | Distinct resources allow independent CRUD and validation. |
 | `share_links` | Snapshot metadata, hashed token, encrypted recoverable token, passcode data, expiry, status, and views. | Sharing is isolated from live dashboard authorization. |
 | `resume_ai_checks`, `user_ai_settings` | Persisted AI result and encrypted per-user settings. | AI runs can be shown later without repeating paid work. |
+| `progress_tracks`, `progress_logs` | User-owned learning tracks and one daily log per track, with flexible track-specific JSON metadata. | The normalized track/log relationship supports history and yearly heatmaps without a table per learning template. |
 
 ### Why PostgreSQL and migrations?
 
