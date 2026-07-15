@@ -121,6 +121,58 @@ html:not(.dark) .text-amber-400 {
   color: var(--light-text-yellow);
 }
 
+html:not(.dark) :is(
+  [class~="hover:text-gray-200"],
+  [class~="hover:text-gray-300"],
+  [class~="hover:text-gray-400"],
+  [class~="hover:text-gray-500"]
+):hover {
+  color: var(--light-text-muted);
+}
+
+html:not(.dark) :is(
+  [class~="hover:text-blue-200"],
+  [class~="hover:text-blue-300"],
+  [class~="hover:text-blue-400"]
+):hover {
+  color: var(--light-text-blue);
+}
+
+html:not(.dark) :is(
+  [class~="hover:text-green-200"],
+  [class~="hover:text-green-300"],
+  [class~="hover:text-green-400"]
+):hover {
+  color: var(--light-text-green);
+}
+
+html:not(.dark) :is(
+  [class~="hover:text-red-200"],
+  [class~="hover:text-red-300"],
+  [class~="hover:text-red-400"]
+):hover {
+  color: var(--light-text-red);
+}
+
+html:not(.dark) :is(
+  [class~="hover:text-violet-200"],
+  [class~="hover:text-violet-300"],
+  [class~="hover:text-violet-400"]
+):hover {
+  color: var(--light-text-violet);
+}
+
+html:not(.dark) :is(
+  [class~="hover:text-yellow-200"],
+  [class~="hover:text-yellow-300"],
+  [class~="hover:text-yellow-400"],
+  [class~="hover:text-amber-200"],
+  [class~="hover:text-amber-300"],
+  [class~="hover:text-amber-400"]
+):hover {
+  color: var(--light-text-yellow);
+}
+
 html:not(.dark) input::placeholder,
 html:not(.dark) textarea::placeholder {
   color: var(--light-text-muted);

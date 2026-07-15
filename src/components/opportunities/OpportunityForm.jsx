@@ -265,7 +265,7 @@ const OpportunityForm = ({ initialData = {}, onSubmit, isEdit = false, opportuni
 
       {/* Submit Button */}
       <div className="flex gap-3 pt-4">
-        <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-md">
+        <Button type="submit" variant="primarySolid" className="flex-1 shadow-md">
           {isEdit ? 'Update Opportunity' : 'Create Opportunity'}
         </Button>
       </div>
