@@ -15,20 +15,21 @@ class IntersectionObserverMock {
 }
 global.IntersectionObserver = IntersectionObserverMock;
 
-// Mock window.matchMedia (non-Jest implementation for CRA compatibility)
-Object.defineProperty(window, 'matchMedia', {
-    writable: true,
-    value: (query) => ({
+// Mock window.matchMedia (required by ThemeContext and framer-motion)
+// Using global assignment instead of Object.defineProperty so CRA does not reset it
+global.matchMedia = function(query) {
+    return {
         matches: false,
         media: query,
         onchange: null,
-        addEventListener: () => {},
-        removeEventListener: () => {},
-        addListener: () => {},
-        removeListener: () => {},
-        dispatchEvent: () => false,
-    }),
-});
+        addEventListener: function() {},
+        removeEventListener: function() {},
+        addListener: function() {},
+        removeListener: function() {},
+        dispatchEvent: function() { return false; },
+    };
+};
+window.matchMedia = global.matchMedia;
 
 process.env.REACT_APP_CLERK_PUBLISHABLE_KEY =
     process.env.REACT_APP_CLERK_PUBLISHABLE_KEY || 'pk_test_ci_placeholder';
