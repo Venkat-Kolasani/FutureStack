@@ -363,7 +363,7 @@ const PublicSharePage = () => {
                           href={opportunity.applicationLink}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex w-full items-center justify-center rounded-lg border border-blue-500/30 bg-blue-500/10 px-5 py-3 font-semibold text-blue-200 transition-colors hover:bg-blue-500 hover:text-white sm:w-auto"
+                          className="inline-flex w-full items-center justify-center rounded-lg border border-blue-500/30 bg-blue-500/10 px-5 py-3 font-semibold text-blue-200 transition-colors hover:bg-blue-700 hover:text-white sm:w-auto"
                         >
                           Apply / Open opportunity
                           <FaExternalLinkAlt className="ml-2 text-xs" />
