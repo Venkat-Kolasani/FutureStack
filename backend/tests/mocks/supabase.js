@@ -15,6 +15,7 @@ function createChain(result = { data: null, error: null }) {
         order: jest.fn(() => chain),
         limit: jest.fn(() => chain),
         single: jest.fn(() => Promise.resolve(result)),
+        maybeSingle: jest.fn(() => Promise.resolve(result)),
         then: (resolve, reject) => Promise.resolve(result).then(resolve, reject),
     };
 
