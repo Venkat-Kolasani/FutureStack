@@ -1,6 +1,7 @@
 const MAX_BATCH_SIZE = 50;
 const DEFAULT_BATCH_SIZE = 10;
 const DEFAULT_LEASE_SECONDS = 300;
+const { deliverDeadlineReminderEmail } = require('./reminderEmail');
 
 function toSafeErrorMessage(error) {
     return String(error?.message || 'Unknown reminder-delivery error').slice(0, 1000);
@@ -41,6 +42,7 @@ async function dispatchReminderJobs(supabase, {
     limit = DEFAULT_BATCH_SIZE,
     leaseSeconds = DEFAULT_LEASE_SECONDS,
     now = () => new Date(),
+    emailDelivery = deliverDeadlineReminderEmail,
 } = {}) {
     const safeLimit = Math.min(Math.max(limit, 1), MAX_BATCH_SIZE);
     const { data: jobs, error: leaseError } = await supabase.rpc('lease_notification_jobs', {
@@ -62,6 +64,8 @@ async function dispatchReminderJobs(supabase, {
                 });
 
             if (notificationError) throw notificationError;
+
+            await emailDelivery(supabase, job);
 
             const completed = await updateLeasedJob(supabase, job, {
                 state: 'completed',

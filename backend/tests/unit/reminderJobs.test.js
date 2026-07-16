@@ -97,6 +97,33 @@ describe('dispatchReminderJobs', () => {
         }));
     });
 
+    it('requeues when configured email delivery fails after the in-app notification', async () => {
+        const notificationUpsert = jest.fn(() => Promise.resolve({ error: null }));
+        const jobUpdate = jest.fn(() => createUpdateChain());
+        const emailDelivery = jest.fn(() => Promise.reject(new Error('Resend unavailable')));
+        const supabase = {
+            rpc: jest.fn(() => Promise.resolve({ data: [job], error: null })),
+            from: jest.fn((table) => {
+                if (table === 'user_notifications') return { upsert: notificationUpsert };
+                if (table === 'notification_jobs') return { update: jobUpdate };
+                throw new Error(`Unexpected table: ${table}`);
+            }),
+        };
+
+        const summary = await dispatchReminderJobs(supabase, {
+            now: () => new Date('2026-07-16T00:00:00.000Z'),
+            emailDelivery,
+        });
+
+        expect(summary).toEqual({ leased: 1, completed: 0, retried: 1, dead: 0 });
+        expect(notificationUpsert).toHaveBeenCalledTimes(1);
+        expect(emailDelivery).toHaveBeenCalledWith(supabase, job);
+        expect(jobUpdate).toHaveBeenCalledWith(expect.objectContaining({
+            state: 'queued',
+            last_error: 'Resend unavailable',
+        }));
+    });
+
     it('dead-letters a final failed attempt', async () => {
         const jobUpdate = jest.fn(() => createUpdateChain());
         const terminalJob = { ...job, attempts: 3 };
