@@ -145,8 +145,8 @@ Always add new endpoints here — pages should not construct URLs manually.
 | Documents + ATS | [`documents-and-ats.md`](documents-and-ats.md) | `documents-migration.sql` |
 | AI Resume Checker (UI gated) | [`ai-resume-checker.md`](ai-resume-checker.md) | `ai-resume-check-migration.sql`, `user-ai-settings-migration.sql` |
 | Dashboard share links | [`share-links.md`](share-links.md) | `share-links-migration.sql`, `supabase/migrations/20260624163000_create_share_links.sql`, `supabase/migrations/20260624171000_add_recoverable_share_tokens.sql` |
-| Hackathon collaboration | `src/pages/HackathonDetail.jsx` and `src/components/hackathons/` | `hackathon-collaboration-migration.sql`, `20260716081332_idempotent_idea_votes.sql`, `20260716083209_team_memberships_and_invites.sql` |
-| Deadline reminders | `backend/src/lib/reminderJobs.js`, `.github/workflows/dispatch-reminders.yml` | `20260716082400_transactional_reminder_outbox.sql` |
+| Hackathon collaboration | `src/pages/HackathonDetail.jsx` and `src/components/hackathons/` | `hackathon-collaboration-migration.sql`, `20260716081332_idempotent_idea_votes.sql`, `20260716083209_team_memberships_and_invites.sql`, `20260716100000_review_hardening.sql` |
+| Deadline reminders | `backend/src/lib/reminderJobs.js`, `.github/workflows/dispatch-reminders.yml` | `20260716082400_transactional_reminder_outbox.sql`, `20260716100000_review_hardening.sql` |
 | Architecture & challenges | [`DOCUMENTATION.md`](DOCUMENTATION.md) | `supabase-schema.sql` |
 | Testing & CI | [`TESTING.md`](TESTING.md) | — |
 | Security | [`SECURITY.md`](SECURITY.md) | — |

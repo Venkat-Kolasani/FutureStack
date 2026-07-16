@@ -147,7 +147,7 @@ Authenticated owners manage links through `/api/v1/share-links`; viewers use the
 
 Team collaboration workspace. Its UI lives in `src/pages/HackathonDetail.jsx` and `src/components/hackathons/`; apply [`../docs/hackathon-collaboration-migration.sql`](../docs/hackathon-collaboration-migration.sql) before using it against a new database.
 
-Apply `20260716081332_idempotent_idea_votes.sql` and `20260716083209_team_memberships_and_invites.sql` after the base collaboration schema before deploying these routes. The second migration backfills team owners, stores only hashed invite tokens, and makes the API role checks effective.
+Apply the July 16 migrations through `20260716100000_review_hardening.sql` in timestamp order after the base collaboration schema before deploying these routes. The membership migration backfills team owners, stores only hashed invite tokens, and makes the API role checks effective; the hardening migration preserves owner roles during invite redemption and adds the final vote-count invariant.
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -176,7 +176,7 @@ Owners manage the team, roster, and invites; editors may change workspace conten
 | POST | `/api/v1/internal/jobs/dispatch` | Token-protected reminder dispatcher for GitHub Actions |
 | GET | `/api/v1/admin/jobs/dead` | Configured-admin visibility into dead-letter jobs |
 
-The dispatcher requires `JOB_DISPATCH_TOKEN`. Dead-job visibility requires `JOB_ADMIN_USER_IDS` (comma-separated internal user UUIDs). Apply `20260716082400_transactional_reminder_outbox.sql` before enabling either feature.
+The dispatcher requires `JOB_DISPATCH_TOKEN`. Dead-job visibility requires `JOB_ADMIN_USER_IDS` (comma-separated internal user UUIDs). Apply the July 16 migrations through `20260716100000_review_hardening.sql` before enabling either feature.
 
 ## Testing
 

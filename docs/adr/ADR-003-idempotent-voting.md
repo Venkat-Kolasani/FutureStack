@@ -31,4 +31,4 @@ Test parallel retries and assert one persisted vote. Revisit the derived-count s
 
 ## Deployment verification
 
-The source implementation and API contract are covered by mocked integration tests. Before production rollout, apply `20260716081332_idempotent_idea_votes.sql` to a disposable Supabase project, run the parallel-vote scenario against PostgreSQL, and record the result in `DOCUMENTATION.md`.
+The source implementation and API contract are covered by mocked integration tests. Before merging a change to this voting contract, an automated PostgreSQL-backed concurrency test is required: apply the migration-backed schema to a disposable database, issue parallel cast and remove calls, assert composite-key conflict handling, atomic count updates, and exactly one persisted vote. The repository does not yet provide that disposable database fixture, so this invariant is documented as database-enforced but not yet end-to-end concurrency-verified; do not represent it as verified until the test is wired into CI and passing.

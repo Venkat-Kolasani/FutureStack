@@ -403,11 +403,11 @@ Hackathons are not modeled as a separate top-level product. They are opportuniti
 
 This is a composition-over-duplication decision: shared lifecycle data remains in `opportunities`; specialized data is normalized into specialized tables. `team_members` remains a name-only display roster, but it is not authorization. `team_memberships` stores an account and an owner/editor/viewer role; the API checks that membership before returning or changing workspace data. Invites contain only a SHA-256 hash of an opaque token and are redeemed in a row-locked database function, so two concurrent acceptance attempts cannot make one invite valid twice.
 
-Idea voting is also enforced where concurrency exists: `idea_votes` has a `(idea_id, user_id)` primary key, while a server-only PostgreSQL function adds or removes the vote and updates `vote_count`. The database constraint is the real duplicate-vote protection; an application-level “check then insert” alone would have a time-of-check/time-of-use race. See [ADR-003](adr/ADR-003-idempotent-voting.md) and [ADR-005](adr/ADR-005-team-memberships.md).
+Idea voting is also enforced where concurrency exists: `idea_votes` has a `(idea_id, user_id)` primary key, while a server-only PostgreSQL function adds or removes the vote and updates `vote_count`. A non-negative `vote_count` check constraint and team-scoped vote deletion protect the aggregate and authorization boundary. The database constraint is the real duplicate-vote protection; an application-level “check then insert” alone would have a time-of-check/time-of-use race. See [ADR-003](adr/ADR-003-idempotent-voting.md) and [ADR-005](adr/ADR-005-team-memberships.md).
 
 ### Deadline reminders: transactional outbox
 
-An insert or deadline change on `opportunities` writes 7-day and 1-day reminder jobs in the same database transaction. A dispatcher leases due jobs with `FOR UPDATE SKIP LOCKED`, increments attempts, writes an idempotent `user_notifications` row, then marks the job completed, retryable, or dead. The unique keys on jobs and notifications make at-least-once dispatch safe for the current in-app delivery result.
+An insert or deadline change on `opportunities` writes 7-day and 1-day reminder jobs in the same database transaction. A changed deadline or owner cancels obsolete queued or leased work before replacement jobs are queued. A dispatcher leases due jobs with `FOR UPDATE SKIP LOCKED`, increments attempts, writes an idempotent `user_notifications` row, then conditionally marks the job completed, retryable, or dead; a missing conditional update is treated as a lost lease and is not counted as delivered. The unique keys on jobs and notifications make at-least-once dispatch safe for the current in-app delivery result.
 
 The free implementation deliberately separates *durable work* from *best-effort scheduling*. `.github/workflows/dispatch-reminders.yml` posts to the token-protected dispatcher every 15 minutes only when repository secrets exist. GitHub Actions can be delayed, so I would say in an interview: “That trade-off is fine for personal in-app deadline reminders; for strict timing, I would use an always-on scheduler or dedicated worker and alert on queue age.” It is not an email sender, and it does not claim an execution SLA. See [ADR-004](adr/ADR-004-transactional-outbox.md).
 
@@ -465,7 +465,7 @@ npm run check:architecture
 (cd backend && npm test)
 ```
 
-`check:architecture` enforces the frontend API boundary. Tests mock Clerk and Supabase, so they do not require live secrets. Manual smoke checks remain important for sign-in, pages changed, an expected error case, upload flows, public share behavior, and responsive UI.
+`check:architecture` enforces the frontend API boundary. Tests mock Clerk and Supabase, so they do not require live secrets. Manual smoke checks remain important for sign-in, pages changed, an expected error case, upload flows, public share behavior, and responsive UI. The repository does not yet have a disposable PostgreSQL-backed concurrency suite for the vote functions; ADR-003 defines that required release-gate coverage, so the invariant must not be described as end-to-end concurrency-tested until that fixture is added.
 
 ### Observability today
 
@@ -613,8 +613,8 @@ The authentication path distinguishes invalid tokens from database/bootstrap fai
 | Documents/ATS | `src/utils/atsScorer.js`, `backend/src/routes/documents.js` |
 | AI pipeline and settings | `backend/src/lib/resume-agent/`, `backend/src/lib/llm/`, `backend/src/lib/apiKeyVault.js` |
 | Share security | `backend/src/lib/shareLinks.js`, share-link route modules |
-| Collaboration authorization and votes | `backend/src/routes/hackathons.js`, `supabase/migrations/20260716081332_idempotent_idea_votes.sql`, `supabase/migrations/20260716083209_team_memberships_and_invites.sql` |
-| Reminder outbox | `backend/src/lib/reminderJobs.js`, `backend/src/routes/internal-jobs.js`, `.github/workflows/dispatch-reminders.yml`, `supabase/migrations/20260716082400_transactional_reminder_outbox.sql` |
+| Collaboration authorization and votes | `backend/src/routes/hackathons.js`, `supabase/migrations/20260716081332_idempotent_idea_votes.sql`, `supabase/migrations/20260716083209_team_memberships_and_invites.sql`, `supabase/migrations/20260716100000_review_hardening.sql` |
+| Reminder outbox | `backend/src/lib/reminderJobs.js`, `backend/src/routes/internal-jobs.js`, `.github/workflows/dispatch-reminders.yml`, `supabase/migrations/20260716082400_transactional_reminder_outbox.sql`, `supabase/migrations/20260716100000_review_hardening.sql` |
 | SQL schema and policies | `docs/*.sql`, `supabase/migrations/` |
 | Tests and CI | `docs/TESTING.md`, `backend/tests/`, `.github/workflows/ci.yml` |
 

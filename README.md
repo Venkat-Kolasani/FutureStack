@@ -98,7 +98,7 @@ Apply the SQL files in the following order to a new Supabase project:
 5. [`docs/interview-prep-migration.sql`](docs/interview-prep-migration.sql)
 6. [`docs/hackathon-collaboration-migration.sql`](docs/hackathon-collaboration-migration.sql)
 7. [`docs/share-links-migration.sql`](docs/share-links-migration.sql), then the SQL files in [`supabase/migrations`](supabase/migrations) in timestamp order
-8. [`supabase/migrations/20260716081332_idempotent_idea_votes.sql`](supabase/migrations/20260716081332_idempotent_idea_votes.sql), [`20260716082400_transactional_reminder_outbox.sql`](supabase/migrations/20260716082400_transactional_reminder_outbox.sql), and [`20260716083209_team_memberships_and_invites.sql`](supabase/migrations/20260716083209_team_memberships_and_invites.sql)
+8. The July 16 migrations in timestamp order: [`20260716081332_idempotent_idea_votes.sql`](supabase/migrations/20260716081332_idempotent_idea_votes.sql), [`20260716082400_transactional_reminder_outbox.sql`](supabase/migrations/20260716082400_transactional_reminder_outbox.sql), [`20260716083209_team_memberships_and_invites.sql`](supabase/migrations/20260716083209_team_memberships_and_invites.sql), and [`20260716100000_review_hardening.sql`](supabase/migrations/20260716100000_review_hardening.sql)
 9. [`docs/ai-tables-setup.sql`](docs/ai-tables-setup.sql) only when enabling the AI Resume Checker
 
 Each migration enables and scopes Row-Level Security policies. Review them before applying in a production project.
