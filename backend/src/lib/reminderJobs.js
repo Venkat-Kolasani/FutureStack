@@ -25,14 +25,16 @@ function retryDelayMs(attempt) {
 }
 
 async function updateLeasedJob(supabase, job, update) {
-    const { error } = await supabase
+    const { data, error } = await supabase
         .from('notification_jobs')
         .update(update)
         .eq('id', job.id)
         .eq('lease_token', job.lease_token)
-        .eq('state', 'processing');
+        .eq('state', 'processing')
+        .select('id');
 
     if (error) throw error;
+    return (data || []).length > 0;
 }
 
 async function dispatchReminderJobs(supabase, {
@@ -61,7 +63,7 @@ async function dispatchReminderJobs(supabase, {
 
             if (notificationError) throw notificationError;
 
-            await updateLeasedJob(supabase, job, {
+            const completed = await updateLeasedJob(supabase, job, {
                 state: 'completed',
                 completed_at: now().toISOString(),
                 lease_token: null,
@@ -69,7 +71,7 @@ async function dispatchReminderJobs(supabase, {
                 last_error: null,
                 updated_at: now().toISOString(),
             });
-            summary.completed += 1;
+            if (completed) summary.completed += 1;
         } catch (error) {
             const isTerminal = job.attempts >= job.max_attempts;
             const update = isTerminal
@@ -89,7 +91,8 @@ async function dispatchReminderJobs(supabase, {
                     updated_at: now().toISOString(),
                 };
 
-            await updateLeasedJob(supabase, job, update);
+            const rescheduled = await updateLeasedJob(supabase, job, update);
+            if (!rescheduled) continue;
             if (isTerminal) summary.dead += 1;
             else summary.retried += 1;
         }

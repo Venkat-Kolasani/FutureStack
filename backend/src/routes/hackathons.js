@@ -110,8 +110,11 @@ async function getTeamForOpportunity(opportunityId, userId, minimumRole = 'edito
         return { team: null, membership: null, error: { ...membershipError, tableNotExists: true } };
     }
 
+    if (membershipError) {
+        return { team: null, membership: null, error: membershipError };
+    }
+
     if (
-        membershipError ||
         !membership ||
         !ROLE_RANK[membership.role] ||
         ROLE_RANK[membership.role] < ROLE_RANK[minimumRole]
@@ -497,8 +500,8 @@ router.get('/:opportunityId/ideas', async (req, res) => {
             'viewer'
         );
         if (!team) {
-            if (teamError?.accessDenied || teamError?.tableNotExists) return sendTeamAccessError(res, teamError);
-            return res.json([]);
+            if (!teamError) return res.json([]);
+            return sendTeamAccessError(res, teamError);
         }
 
         const { data, error } = await supabase
@@ -746,8 +749,8 @@ router.get('/:opportunityId/tasks', async (req, res) => {
             'viewer'
         );
         if (!team) {
-            if (teamError?.accessDenied || teamError?.tableNotExists) return sendTeamAccessError(res, teamError);
-            return res.json([]);
+            if (!teamError) return res.json([]);
+            return sendTeamAccessError(res, teamError);
         }
 
         const { data, error } = await supabase
@@ -910,8 +913,8 @@ router.get('/:opportunityId/checklist', async (req, res) => {
             'viewer'
         );
         if (!team) {
-            if (teamError?.accessDenied || teamError?.tableNotExists) return sendTeamAccessError(res, teamError);
-            return res.json([]);
+            if (!teamError) return res.json([]);
+            return sendTeamAccessError(res, teamError);
         }
 
         const { data, error } = await supabase

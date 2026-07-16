@@ -69,6 +69,51 @@ describe('Opportunities API', () => {
         );
     });
 
+    it('preserves microsecond precision in the opportunity cursor', async () => {
+        const firstPage = createChain({
+            data: [
+                {
+                    id: '00000000-0000-4000-8000-000000000002',
+                    user_id: TEST_AUTH.internalUserId,
+                    title: 'Newest',
+                    created_at: '2026-07-16T10:00:00.123456+00:00',
+                },
+                {
+                    id: '00000000-0000-4000-8000-000000000001',
+                    user_id: TEST_AUTH.internalUserId,
+                    title: 'Older',
+                    created_at: '2026-07-16T09:00:00.000000+00:00',
+                },
+            ],
+            error: null,
+        });
+        const nextPage = createChain({ data: [], error: null });
+        mockFrom.mockReturnValueOnce(firstPage).mockReturnValueOnce(nextPage);
+
+        const firstResponse = await request(app)
+            .get('/api/v1/opportunities?limit=1')
+            .set(authHeader);
+        const decodedCursor = JSON.parse(Buffer.from(firstResponse.body.nextCursor, 'base64url').toString('utf8'));
+
+        expect(decodedCursor.createdAt).toBe('2026-07-16T10:00:00.123456+00:00');
+
+        const secondResponse = await request(app)
+            .get(`/api/v1/opportunities?cursor=${encodeURIComponent(firstResponse.body.nextCursor)}`)
+            .set(authHeader);
+
+        expect(secondResponse.status).toBe(200);
+        expect(nextPage.or).toHaveBeenCalledWith(expect.stringContaining('2026-07-16T10:00:00.123456+00:00'));
+    });
+
+    it('GET /api/v1/opportunities/:id rejects an invalid identifier before database access', async () => {
+        const res = await request(app)
+            .get('/api/v1/opportunities/not-a-uuid')
+            .set(authHeader);
+
+        expect(res.status).toBe(400);
+        expect(mockFrom).not.toHaveBeenCalled();
+    });
+
     it('GET /api/v1/opportunities/:id permits an invited hackathon collaborator only', async () => {
         const sharedHackathon = {
             id: '00000000-0000-4000-8000-000000000040',

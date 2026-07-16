@@ -58,9 +58,28 @@ function logAudit(action, userId, resourceId = null, outcome = 'success', detail
     }));
 }
 
+const TIMESTAMPTZ_PATTERN = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d{1,6})?(?:Z|[+-]\d{2}:\d{2})$/;
+
+function isValidTimestamptz(value) {
+    if (typeof value !== 'string') return false;
+
+    const match = value.match(TIMESTAMPTZ_PATTERN);
+    if (!match || Number.isNaN(Date.parse(value))) return false;
+
+    const [, year, month, day, hour, minute, second] = match.map(Number);
+    const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+    return month >= 1 && month <= 12 &&
+        day >= 1 && day <= daysInMonth &&
+        hour <= 23 && minute <= 59 && second <= 59;
+}
+
 function encodeCursor(opportunity) {
+    if (!isValidTimestamptz(opportunity.created_at)) {
+        throw new Error('Opportunity cursor requires a valid created_at timestamp');
+    }
+
     return Buffer.from(JSON.stringify({
-        createdAt: new Date(opportunity.created_at).toISOString(),
+        createdAt: opportunity.created_at,
         id: opportunity.id,
     })).toString('base64url');
 }
@@ -68,13 +87,10 @@ function encodeCursor(opportunity) {
 function decodeCursor(cursor) {
     try {
         const parsed = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8'));
-        const createdAt = new Date(parsed.createdAt);
-
         if (
             !parsed || typeof parsed.id !== 'string' ||
             !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(parsed.id) ||
-            Number.isNaN(createdAt.getTime()) ||
-            createdAt.toISOString() !== parsed.createdAt
+            !isValidTimestamptz(parsed.createdAt)
         ) {
             return null;
         }
@@ -170,7 +186,7 @@ router.use('/:opportunityId/rounds', opportunityRoundsRouter);
  * GET /api/opportunities/:id
  * Get a single opportunity by ID
  */
-router.get('/:id', async (req, res) => {
+router.get('/:id', validate(idParamSchema, 'params'), async (req, res) => {
     try {
         const { id } = req.params;
 

@@ -46,4 +46,23 @@ describe('Notifications API', () => {
         expect(res.status).toBe(400);
         expect(mockFrom).not.toHaveBeenCalled();
     });
+
+    it('marks only the authenticated user notification as read', async () => {
+        const notificationId = '00000000-0000-4000-8000-000000000010';
+        const chain = createChain({
+            data: { id: notificationId, read_at: '2026-07-16T00:00:00.000Z' },
+            error: null,
+        });
+        mockFrom.mockReturnValue(chain);
+
+        const res = await request(app)
+            .patch(`/api/v1/notifications/${notificationId}/read`)
+            .set(authHeader);
+
+        expect(res.status).toBe(200);
+        expect(res.body).toEqual({ id: notificationId, read_at: '2026-07-16T00:00:00.000Z' });
+        expect(chain.eq).toHaveBeenCalledWith('id', notificationId);
+        expect(chain.eq).toHaveBeenCalledWith('user_id', TEST_AUTH.internalUserId);
+        expect(chain.update).toHaveBeenCalledWith(expect.objectContaining({ read_at: expect.any(String) }));
+    });
 });

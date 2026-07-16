@@ -229,15 +229,23 @@ apiRouter.get('/health/deps', async (req, res) => {
             .limit(1);
 
         if (error) {
+            console.error('Health dependency check failed:', {
+                dependency: 'supabase',
+                message: error.message,
+            });
             checks.supabase = {
                 status: 'down',
-                message: error.message
+                message: 'Database dependency is unavailable.'
             };
         }
     } catch (error) {
+        console.error('Health dependency check failed:', {
+            dependency: 'supabase',
+            message: error.message,
+        });
         checks.supabase = {
             status: 'down',
-            message: error.message
+            message: 'Database dependency is unavailable.'
         };
     }
 

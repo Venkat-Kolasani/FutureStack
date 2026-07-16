@@ -194,4 +194,26 @@ describe('Hackathon voting API', () => {
         expect(res.status).toBe(403);
         expect(mockFrom).not.toHaveBeenCalledWith('brainstorm_ideas');
     });
+
+    it.each(['ideas', 'tasks', 'checklist'])('returns a server error for a %s membership lookup failure', async (resource) => {
+        mockFrom.mockImplementation((table) => {
+            if (table === 'hackathon_teams') {
+                return createChain({
+                    data: { id: TEAM_ID, opportunity_id: OPPORTUNITY_ID, user_id: TEST_AUTH.internalUserId },
+                    error: null,
+                });
+            }
+            if (table === 'team_memberships') {
+                return createChain({ data: null, error: { message: 'database connection lost' } });
+            }
+            throw new Error(`Unexpected table: ${table}`);
+        });
+
+        const res = await request(app)
+            .get(`/api/v1/hackathons/${OPPORTUNITY_ID}/${resource}`)
+            .set(authHeader);
+
+        expect(res.status).toBe(500);
+        expect(res.body).not.toEqual([]);
+    });
 });
