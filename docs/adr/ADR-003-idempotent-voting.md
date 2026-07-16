@@ -1,7 +1,7 @@
 # ADR-003: Database-enforced idempotent voting
 
 - Date written: 2026-07-16
-- Status: Proposed
+- Status: Accepted
 
 ## Problem
 
@@ -28,3 +28,7 @@ Application-level check-then-insert logic remains unsafe because concurrent requ
 ## Metrics and revisit threshold
 
 Test parallel retries and assert one persisted vote. Revisit the derived-count strategy only when vote traffic makes a direct aggregate query too expensive.
+
+## Deployment verification
+
+The source implementation and API contract are covered by mocked integration tests. Before production rollout, apply `20260716081332_idempotent_idea_votes.sql` to a disposable Supabase project, run the parallel-vote scenario against PostgreSQL, and record the result in `DOCUMENTATION.md`.

@@ -191,10 +191,14 @@ const HackathonDetail = () => {
         }
     };
 
-    const handleVoteIdea = async (ideaId) => {
+    const handleVoteIdea = async (idea) => {
         try {
-            const updated = await hackathonService.voteIdea(id, ideaId);
-            setIdeas(ideas.map(i => i.id === ideaId ? updated : i));
+            const updated = idea.current_user_voted
+                ? await hackathonService.removeIdeaVote(id, idea.id)
+                : await hackathonService.voteIdea(id, idea.id);
+            setIdeas(ideas.map((currentIdea) => (
+                currentIdea.id === idea.id ? { ...currentIdea, ...updated } : currentIdea
+            )));
         } catch (error) {
             console.error('Error voting on idea:', error);
         }

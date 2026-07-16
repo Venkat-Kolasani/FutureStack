@@ -12,7 +12,8 @@ const {
     updateTaskSchema,
     createChecklistItemSchema,
     updateChecklistItemSchema,
-    idParamSchema
+    idParamSchema,
+    hackathonIdeaParamsSchema
 } = require('../validation/schemas');
 
 const router = express.Router();
@@ -340,11 +341,26 @@ router.get('/:opportunityId/ideas', async (req, res) => {
             .from('brainstorm_ideas')
             .select('*')
             .eq('team_id', team.id)
-            .order('votes', { ascending: false });
+            .order('vote_count', { ascending: false });
 
         if (error) throw error;
 
-        res.json(data || []);
+        const ideas = data || [];
+        if (!ideas.length) return res.json([]);
+
+        const { data: userVotes, error: userVotesError } = await supabase
+            .from('idea_votes')
+            .select('idea_id')
+            .eq('user_id', req.auth.internalUserId)
+            .in('idea_id', ideas.map((idea) => idea.id));
+
+        if (userVotesError) throw userVotesError;
+
+        const votedIdeaIds = new Set((userVotes || []).map((vote) => vote.idea_id));
+        return res.json(ideas.map((idea) => ({
+            ...idea,
+            current_user_voted: votedIdeaIds.has(idea.id),
+        })));
     } catch (error) {
         console.error('Error fetching ideas:', error.message);
         res.status(500).json({ error: 'Failed to fetch ideas' });
@@ -393,7 +409,7 @@ router.post('/:opportunityId/ideas', validate(createIdeaSchema), async (req, res
 router.put('/:opportunityId/ideas/:ideaId', validate(updateIdeaSchema), async (req, res) => {
     try {
         const { opportunityId, ideaId } = req.params;
-        const { title, description, category, votes, is_selected } = req.body;
+        const { title, description, category, is_selected } = req.body;
 
         const { team } = await getTeamForOpportunity(opportunityId, req.auth.internalUserId);
         if (!team) {
@@ -404,7 +420,6 @@ router.put('/:opportunityId/ideas/:ideaId', validate(updateIdeaSchema), async (r
         if (title !== undefined) updateData.title = title;
         if (description !== undefined) updateData.description = description;
         if (category !== undefined) updateData.category = category;
-        if (votes !== undefined) updateData.votes = votes;
         if (is_selected !== undefined) updateData.is_selected = is_selected;
 
         const { data, error } = await supabase
@@ -462,11 +477,7 @@ router.delete('/:opportunityId/ideas/:ideaId', async (req, res) => {
     }
 });
 
-/**
- * POST /api/hackathons/:opportunityId/ideas/:ideaId/vote
- * Toggle vote (increment by 1)
- */
-router.post('/:opportunityId/ideas/:ideaId/vote', async (req, res) => {
+async function voteIdea(req, res) {
     try {
         const { opportunityId, ideaId } = req.params;
 
@@ -475,34 +486,63 @@ router.post('/:opportunityId/ideas/:ideaId/vote', async (req, res) => {
             return res.status(404).json({ error: 'Team not found' });
         }
 
-        // Get current votes and increment
-        const { data: idea, error: fetchError } = await supabase
-            .from('brainstorm_ideas')
-            .select('votes')
-            .eq('id', ideaId)
-            .eq('team_id', team.id)
-            .single();
-
-        if (fetchError || !idea) {
-            return res.status(404).json({ error: 'Idea not found' });
-        }
-
-        const { data, error } = await supabase
-            .from('brainstorm_ideas')
-            .update({ votes: (idea.votes || 0) + 1 })
-            .eq('id', ideaId)
-            .eq('team_id', team.id)
-            .select()
-            .single();
+        const { data, error } = await supabase.rpc('cast_idea_vote', {
+            p_idea_id: ideaId,
+            p_team_id: team.id,
+            p_user_id: req.auth.internalUserId,
+        });
 
         if (error) throw error;
 
-        res.json(data);
+        const vote = Array.isArray(data) ? data[0] : data;
+        if (!vote) return res.status(404).json({ error: 'Idea not found' });
+
+        return res.json({
+            id: vote.idea_id,
+            vote_count: vote.vote_count,
+            current_user_voted: true,
+            created: vote.created,
+        });
     } catch (error) {
         console.error('Error voting on idea:', error.message);
-        res.status(500).json({ error: 'Failed to vote on idea' });
+        return res.status(500).json({ error: 'Failed to vote on idea' });
     }
-});
+}
+
+async function removeIdeaVote(req, res) {
+    try {
+        const { opportunityId, ideaId } = req.params;
+
+        const { team } = await getTeamForOpportunity(opportunityId, req.auth.internalUserId);
+        if (!team) return res.status(404).json({ error: 'Team not found' });
+
+        const { data, error } = await supabase.rpc('remove_idea_vote', {
+            p_idea_id: ideaId,
+            p_team_id: team.id,
+            p_user_id: req.auth.internalUserId,
+        });
+
+        if (error) throw error;
+
+        const vote = Array.isArray(data) ? data[0] : data;
+        if (!vote) return res.status(404).json({ error: 'Idea not found' });
+
+        return res.json({
+            id: vote.idea_id,
+            vote_count: vote.vote_count,
+            current_user_voted: false,
+            removed: vote.removed,
+        });
+    } catch (error) {
+        console.error('Error removing idea vote:', error.message);
+        return res.status(500).json({ error: 'Failed to remove idea vote' });
+    }
+}
+
+router.put('/:opportunityId/ideas/:ideaId/vote', validate(hackathonIdeaParamsSchema, 'params'), voteIdea);
+router.delete('/:opportunityId/ideas/:ideaId/vote', validate(hackathonIdeaParamsSchema, 'params'), removeIdeaVote);
+// Preserve the pre-v1 method while existing clients migrate to idempotent PUT.
+router.post('/:opportunityId/ideas/:ideaId/vote', validate(hackathonIdeaParamsSchema, 'params'), voteIdea);
 
 // =============================================================================
 // HACKATHON TASKS

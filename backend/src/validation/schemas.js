@@ -189,6 +189,11 @@ const opportunityListQuerySchema = Joi.object({
     category: Joi.string().valid('internship', 'hackathon').optional(),
 });
 
+const hackathonIdeaParamsSchema = Joi.object({
+    opportunityId: Joi.string().uuid().required(),
+    ideaId: Joi.string().uuid().required(),
+});
+
 // =============================================================================
 // HACKATHON TEAM COLLABORATION SCHEMAS
 // =============================================================================
@@ -349,11 +354,6 @@ const updateIdeaSchema = Joi.object({
         .valid('feature', 'design', 'tech', 'other')
         .optional(),
 
-    votes: Joi.number()
-        .integer()
-        .min(0)
-        .optional(),
-
     is_selected: Joi.boolean()
         .optional()
 }).min(1);
@@ -484,6 +484,7 @@ module.exports = {
     updateOpportunitySchema,
     idParamSchema,
     opportunityListQuerySchema,
+    hackathonIdeaParamsSchema,
     // Hackathon team collaboration
     createTeamSchema,
     updateTeamSchema,

@@ -142,6 +142,8 @@ Authenticated owners manage links through `/api/share-links`; viewers use the pu
 
 Team collaboration workspace. Its UI lives in `src/pages/HackathonDetail.jsx` and `src/components/hackathons/`; apply [`../docs/hackathon-collaboration-migration.sql`](../docs/hackathon-collaboration-migration.sql) before using it against a new database.
 
+Apply `supabase/migrations/20260716081332_idempotent_idea_votes.sql` before deploying the v1 vote endpoints. The migration preserves legacy aggregate totals while recording all new authenticated votes individually.
+
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET/POST/PUT | `/api/v1/hackathons/:id/team` | Team CRUD |

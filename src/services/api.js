@@ -402,7 +402,12 @@ export const hackathonService = {
     },
 
     voteIdea: async (opportunityId, ideaId) => {
-        const response = await api.post(`/hackathons/${opportunityId}/ideas/${ideaId}/vote`);
+        const response = await api.put(`/hackathons/${opportunityId}/ideas/${ideaId}/vote`);
+        return response.data;
+    },
+
+    removeIdeaVote: async (opportunityId, ideaId) => {
+        const response = await api.delete(`/hackathons/${opportunityId}/ideas/${ideaId}/vote`);
         return response.data;
     },
 
