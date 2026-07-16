@@ -3,7 +3,7 @@
  * 
  * Features:
  * - Add ideas with title, description, category
- * - Vote on ideas (simple increment)
+ * - Cast or remove one authenticated vote per idea
  * - Mark idea as selected (finalized)
  * - Category badges (feature, design, tech, other)
  */
@@ -52,11 +52,11 @@ const IdeaBrainstormingBoard = ({
         await onUpdateIdea(idea.id, { is_selected: !idea.is_selected });
     };
 
-    // Sort ideas: selected first, then by votes
+    // Sort ideas: selected first, then by persisted vote count
     const sortedIdeas = [...ideas].sort((a, b) => {
         if (a.is_selected && !b.is_selected) return -1;
         if (!a.is_selected && b.is_selected) return 1;
-        return (b.votes || 0) - (a.votes || 0);
+        return (b.vote_count || 0) - (a.vote_count || 0);
     });
 
     if (!hasTeam) {
@@ -130,12 +130,19 @@ const IdeaBrainstormingBoard = ({
                             <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-200 dark:border-white/10">
                                 <div className="flex items-center gap-3">
                                     <button
-                                        onClick={() => onVoteIdea(idea.id)}
-                                        className="flex items-center gap-1 text-gray-600 dark:text-gray-400 hover:text-blue-400 transition-colors"
-                                        title="Vote for this idea"
+                                        onClick={() => onVoteIdea(idea)}
+                                        aria-pressed={idea.current_user_voted}
+                                        aria-label={idea.current_user_voted
+                                            ? `Remove your vote; ${idea.vote_count || 0} votes`
+                                            : `Vote for this idea; ${idea.vote_count || 0} votes`}
+                                        className={`flex items-center gap-1 transition-colors ${idea.current_user_voted
+                                                ? 'text-blue-500 dark:text-blue-400 hover:text-blue-400 dark:hover:text-blue-300'
+                                                : 'text-gray-600 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400'
+                                            }`}
+                                        title={idea.current_user_voted ? 'Remove your vote' : 'Vote for this idea'}
                                     >
                                         <FaThumbsUp size={14} />
-                                        <span className="text-sm font-medium">{idea.votes || 0}</span>
+                                        <span className="text-sm font-medium">{idea.vote_count || 0}</span>
                                     </button>
                                     <button
                                         onClick={() => handleToggleSelected(idea)}

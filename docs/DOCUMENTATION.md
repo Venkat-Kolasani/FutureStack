@@ -47,11 +47,12 @@ Career applications are fragmented across job boards, messages, spreadsheets, do
 | Light and dark theme | Available | Theme preference is managed in React context and applied to Clerk appearance as well as app UI. |
 | Interview rounds and preparation | Available | Rounds are internship-only and synchronize derived parent fields server-side. |
 | Documents and ATS hints | Available | ATS analysis is rule-based and runs in the browser; it is not an official ATS score. |
-| Hackathon collaboration | Available | Team, members, ideas/votes, tasks, and checklist are separate, user-owned resources. |
+| Hackathon collaboration | Implemented, migration-gated | Account-backed owner/editor/viewer memberships authorize workspaces; the name-only roster is display data. Idea votes are database-idempotent. |
 | Read-only share links | Available | A stored snapshot is shared, not live dashboard access. Links can expire, be revoked, and require a passcode. |
 | AI Resume Checker | Implemented, UI-gated | Backend pipeline, storage, provider settings, tests, and UI components exist; `AI_RESUME_CHECK_ENABLED` is currently `false`. |
 | Progress Logger | Schema migration ready | Tracks and daily logs, indexes, and Clerk-compatible RLS are defined; API and UI remain separate follow-on work. |
-| Reminders, tags, bulk import/export, advanced filters | Planned | These are intentionally not claimed as shipped features. |
+| In-app deadline reminders | Implemented, scheduler-gated | An opportunity write transaction queues 7-day and 1-day reminder intent; leased dispatch creates idempotent in-app notifications. GitHub Actions is an optional best-effort free-tier scheduler. |
+| Email delivery, tags, bulk import/export, advanced filters | Planned | Email is intentionally not claimed: the implemented path produces in-app notifications only. |
 
 ## 3. System architecture
 
@@ -59,13 +60,15 @@ Career applications are fragmented across job boards, messages, spreadsheets, do
 flowchart LR
   U["User browser"] --> R["React SPA"]
   R -->|"Clerk session"| C["Clerk"]
-  R -->|"Bearer JWT over HTTPS"| A["Express API"]
+  R -->|"Bearer JWT over HTTPS"| A["Express API /api/v1"]
   A -->|"verify JWT and resolve internal user"| C
   A -->|"user-scoped service-role queries"| DB[("Supabase PostgreSQL")]
   R -. "current status-board refresh events" .-> RT["Supabase Realtime"]
   RT -.-> DB
   A --> ST["Supabase Storage"]
   A -. "gated only" .-> LLM["Gemini or Ollama"]
+  G["GitHub Actions\nbest-effort / 15 min"] -->|"token-protected dispatch"| A
+  A --> J[("Postgres reminder\noutbox + in-app notifications")]
 ```
 
 ### Why this architecture?
@@ -77,6 +80,8 @@ flowchart LR
 | Clerk | Avoids building credential storage, OAuth, sessions, and token issuance. | Adds vendor dependency and requires correct JWT-key configuration. |
 | Supabase PostgreSQL | Provides managed relational data, storage, RLS, migrations, and realtime primitives. | Service-role use must be tightly controlled; schema and RLS changes are security-sensitive. |
 | REST over a separate API | Clear resources and predictable debugging for CRUD-oriented domains. | Some multi-resource screens require several endpoints; a BFF aggregation layer may be useful later. |
+| Versioned API prefix | `/api/v1` permits additive and breaking contract evolution without silently breaking existing clients. | A temporary legacy mount adds code paths and must be retired on its advertised sunset date. |
+| Transactional outbox | Couples reminder intent to the same database transaction as an opportunity deadline change, then dispatches it asynchronously with leases and retries. | A free GitHub Actions scheduler is delayed occasionally; it is acceptable for in-app reminders, not strict-timing or safety-critical work. |
 | Vercel AI SDK with Gemini/Ollama | Provider abstraction permits a hosted or local model option. | LLM calls are slow, variable, and costly, so the feature is gated. |
 
 ### Deployment shape today
@@ -87,6 +92,7 @@ flowchart LR
 - Database, storage, and optional realtime: Supabase.
 - Product analytics: PostHog when configured.
 - CI: GitHub Actions runs frontend build/tests, backend tests, architecture guardrails, and non-blocking dependency audits.
+- Reminder scheduling: an optional repository workflow posts to the token-protected dispatcher every 15 minutes. It is intentionally described as best-effort because the GitHub Actions free tier has no execution SLA.
 
 The exact environment contract lives in `.env.example` and `backend/.env.example`. Secrets are backend-only; the browser receives only public configuration such as Clerk's publishable key and Supabase's anon key.
 
@@ -159,12 +165,18 @@ sequenceDiagram
 2. Helmet headers, including CSP, HSTS, frame protection, `nosniff`, and a referrer policy.
 3. CORS using a comma-separated allowlist from `CORS_ORIGIN`.
 4. A 1 MB JSON body limit and input sanitization.
-5. General rate limiting: 2,000 requests per 15 minutes per IP, excluding liveness health checks.
-6. Write rate limiting: 1,500 mutating requests per 15 minutes per IP.
-7. Request/response logging for write operations.
+5. Read rate limiting: 100 GET requests per minute per authenticated internal user, with an IP fallback before authentication.
+6. Write rate limiting: 20 mutating requests per minute per authenticated internal user, with an IP fallback before authentication.
+7. JSON request/response logging with an `X-Request-Id` correlation identifier.
 8. Public health routes, protected route mounts, a 404 handler, and centralized error fallback.
 
-These limits are deliberately generous for a personal productivity app. They are a first abuse-control layer, not a complete DDoS or multi-region rate-limiting solution.
+The limits protect a free-tier personal-productivity service from accidental loops and basic abuse. They are process-local, not a complete DDoS or multi-region rate-limiting solution.
+
+### API versioning and pagination
+
+`/api/v1` is the canonical public contract. The old `/api` mount remains only as a transition path and responds with `Deprecation`, `Sunset`, and `Link: rel="successor-version"` headers. This lets a client migrate deliberately instead of discovering a breaking change at runtime. The versioning decision and retirement condition are recorded in [ADR-001](adr/ADR-001-versioned-api.md).
+
+Opportunity lists use cursor pagination rather than `OFFSET`: results are sorted by `(created_at DESC, id DESC)`, a cursor encodes the last row, and the API reads `limit + 1` rows to determine `nextCursor`. That ordering stays stable while new opportunities are inserted and avoids walking an ever-larger offset. The matching composite index must be justified with a realistic `EXPLAIN (ANALYZE, BUFFERS)` benchmark before claiming a performance gain; see [ADR-002](adr/ADR-002-pagination-and-indexes.md).
 
 ### Authentication and internal identity
 
@@ -218,9 +230,16 @@ erDiagram
   INTERVIEW_PREP ||--o{ BEHAVIORAL_PREP : contains
   OPPORTUNITIES ||--o| HACKATHON_TEAMS : has
   HACKATHON_TEAMS ||--o{ TEAM_MEMBERS : has
+  HACKATHON_TEAMS ||--o{ TEAM_MEMBERSHIPS : authorizes
+  USERS ||--o{ TEAM_MEMBERSHIPS : receives_role
+  HACKATHON_TEAMS ||--o{ TEAM_INVITES : issues
   HACKATHON_TEAMS ||--o{ BRAINSTORM_IDEAS : has
+  BRAINSTORM_IDEAS ||--o{ IDEA_VOTES : receives
+  USERS ||--o{ IDEA_VOTES : casts
   HACKATHON_TEAMS ||--o{ HACKATHON_TASKS : has
   HACKATHON_TEAMS ||--o{ SUBMISSION_CHECKLIST : has
+  OPPORTUNITIES ||--o{ NOTIFICATION_JOBS : queues
+  USERS ||--o{ USER_NOTIFICATIONS : receives
   DOCUMENTS ||--o{ RESUME_AI_CHECKS : produces
   PROGRESS_TRACKS ||--o{ PROGRESS_LOGS : records
 ```
@@ -236,7 +255,8 @@ erDiagram
 | `opportunity_rounds` | Ordered interview stages and results. | A normalized child collection avoids hard-coding a fixed number of interview columns. |
 | `documents` and `opportunity_documents` | User documents and many-to-many assignments. | A document can be reused across applications. |
 | Interview-prep tables | Research, question bank, technical topics, and behavioral STAR records. | Structured prep data is easier to extend and query than one unbounded blob. |
-| Hackathon collaboration tables | Team, members, ideas, tasks, and checklist items. | Distinct resources allow independent CRUD and validation. |
+| Hackathon collaboration tables | Team, display roster, account memberships, hashed invites, ideas, votes, tasks, and checklist items. | `team_memberships` is the authorization source; the roster remains flexible display data. A `(idea_id, user_id)` primary key prevents duplicate votes under concurrency. |
+| `notification_jobs`, `user_notifications` | Deadline-reminder intent, lease/retry state, and user-visible in-app notifications. | A transactionally created job is durable, idempotent, and retryable without making an opportunity write wait for background work. |
 | `share_links` | Snapshot metadata, hashed token, encrypted recoverable token, passcode data, expiry, status, and views. | Sharing is isolated from live dashboard authorization. |
 | `resume_ai_checks`, `user_ai_settings` | Persisted AI result and encrypted per-user settings. | AI runs can be shown later without repeating paid work. |
 | `progress_tracks`, `progress_logs` | User-owned learning tracks and one daily log per track, with flexible track-specific JSON metadata. | The normalized track/log relationship supports history and yearly heatmaps without a table per learning template. |
@@ -381,7 +401,15 @@ It supports Gemini and local Ollama through the Vercel AI SDK. A user-provided A
 
 Hackathons are not modeled as a separate top-level product. They are opportunities with `category = hackathon`, which prevents duplicate deadline/status/reporting logic. Hackathon-specific collaboration is attached only where needed: team, members, idea board and votes, task board, and submission checklist.
 
-This is a composition-over-duplication decision: shared lifecycle data remains in `opportunities`; specialized data is normalized into specialized tables.
+This is a composition-over-duplication decision: shared lifecycle data remains in `opportunities`; specialized data is normalized into specialized tables. `team_members` remains a name-only display roster, but it is not authorization. `team_memberships` stores an account and an owner/editor/viewer role; the API checks that membership before returning or changing workspace data. Invites contain only a SHA-256 hash of an opaque token and are redeemed in a row-locked database function, so two concurrent acceptance attempts cannot make one invite valid twice.
+
+Idea voting is also enforced where concurrency exists: `idea_votes` has a `(idea_id, user_id)` primary key, while a server-only PostgreSQL function adds or removes the vote and updates `vote_count`. A non-negative `vote_count` check constraint and team-scoped vote deletion protect the aggregate and authorization boundary. The database constraint is the real duplicate-vote protection; an application-level “check then insert” alone would have a time-of-check/time-of-use race. See [ADR-003](adr/ADR-003-idempotent-voting.md) and [ADR-005](adr/ADR-005-team-memberships.md).
+
+### Deadline reminders: transactional outbox
+
+An insert or deadline change on `opportunities` writes 7-day and 1-day reminder jobs in the same database transaction. A changed deadline or owner cancels obsolete queued or leased work before replacement jobs are queued. A dispatcher leases due jobs with `FOR UPDATE SKIP LOCKED`, increments attempts, writes an idempotent `user_notifications` row, then conditionally marks the job completed, retryable, or dead; a missing conditional update is treated as a lost lease and is not counted as delivered. The unique keys on jobs and notifications make at-least-once dispatch safe for the current in-app delivery result.
+
+The free implementation deliberately separates *durable work* from *best-effort scheduling*. `.github/workflows/dispatch-reminders.yml` posts to the token-protected dispatcher every 15 minutes only when repository secrets exist. GitHub Actions can be delayed, so I would say in an interview: “That trade-off is fine for personal in-app deadline reminders; for strict timing, I would use an always-on scheduler or dedicated worker and alert on queue age.” It is not an email sender, and it does not claim an execution SLA. See [ADR-004](adr/ADR-004-transactional-outbox.md).
 
 ### Read-only share links
 
@@ -402,6 +430,7 @@ The public endpoint returns only the snapshot after token/passcode checks. This 
 - General, write, public-share, and AI-specific rate limits exist.
 - User-owned database tables have RLS policies.
 - Share tokens are hashed; passcodes are salted and hashed; stored recoverable tokens and AI BYOK values are encrypted with authenticated encryption.
+- Team-invite tokens are hashed before persistence; reminder dispatch has a separate bearer token and dead-letter visibility is restricted to configured internal users.
 - No backend secrets are placed in `REACT_APP_*` variables.
 
 ### What I would not overclaim
@@ -409,7 +438,7 @@ The public endpoint returns only the snapshot after token/passcode checks. This 
 - Process-local rate limiting is not enough when the API has multiple instances. It should move to a shared store such as Redis or an edge/API-gateway control.
 - A service-role Supabase key is powerful. Its access should stay isolated to the server, and code review must verify every user scope.
 - File uploads should gain malware scanning, file-type verification beyond extensions/MIME hints, size controls appropriate for the deployment, and quarantine behavior before enterprise rollout.
-- Security logging should become structured, redacted, centrally retained telemetry rather than only process logs.
+- Request IDs and JSON process logs exist, but they should become centrally retained, redacted telemetry with tracing and alerts before relying on them operationally.
 - Secret rotation needs a KMS/secret-manager plan. Encryption-key rotation must support decrypting existing ciphertext or re-encrypting it safely.
 
 ### Threat-model answers
@@ -436,12 +465,12 @@ npm run check:architecture
 (cd backend && npm test)
 ```
 
-`check:architecture` enforces the frontend API boundary. Tests mock Clerk and Supabase, so they do not require live secrets. Manual smoke checks remain important for sign-in, pages changed, an expected error case, upload flows, public share behavior, and responsive UI.
+`check:architecture` enforces the frontend API boundary. Tests mock Clerk and Supabase, so they do not require live secrets. Manual smoke checks remain important for sign-in, pages changed, an expected error case, upload flows, public share behavior, and responsive UI. The repository does not yet have a disposable PostgreSQL-backed concurrency suite for the vote functions; ADR-003 defines that required release-gate coverage, so the invariant must not be described as end-to-end concurrency-tested until that fixture is added.
 
 ### Observability today
 
 - The API has health and dependency-health endpoints.
-- Write requests emit JSON-shaped process logs.
+- Requests emit JSON logs with an `X-Request-Id`; dependency health includes the reminder outbox's dead-job count.
 - PostHog is optional for client product analytics.
 - The UI has error boundaries, loading states, toasts, and a realtime connection indicator.
 
@@ -458,11 +487,12 @@ I would add structured logs with correlation IDs, distributed traces from browse
 | API compute | One Express service can hold a local cache and limits. | Stateless containers behind a load balancer; environment-based configuration. | Horizontally autoscaled regional services, safe deploys, and request budgets. |
 | Auth-user mapping | Five-minute in-memory cache. | Redis cache or reliable Clerk webhook provisioning. | Shared cache with TTL/invalidations; no per-request insert/lookup surprise. |
 | Rate limits | In-process/IP limits. | Redis-backed user/IP keys; tighter limits on expensive paths. | Edge WAF/API gateway, bot control, anomaly detection, and tenant quotas. |
-| Core database | User-scoped rows with basic indexes. | Composite indexes beginning with `user_id`, query plans, connection pooling, and backups. | Read replicas/partitioning where measured, lifecycle policies, tenant-aware capacity planning. |
+| Core database | User-scoped rows plus targeted collaboration/outbox indexes. | Benchmark candidate composite indexes with realistic data and `EXPLAIN (ANALYZE, BUFFERS)`; then add connection pooling and backups. | Read replicas/partitioning where measured, lifecycle policies, tenant-aware capacity planning. |
 | Analytics | Read all user rows and calculate in Node. | SQL `GROUP BY`, indexed date/status queries, per-user caching. | Incremental aggregates/materialized views or event-driven warehouse pipeline. |
 | Realtime | Broad database-change subscription followed by full refetch. | Filtered user events and query invalidation. | Broadcast/event service with tenant channels, backpressure, idempotent versions, and presence only where needed. |
 | File handling | Application-level uploads and document metadata. | Direct-to-object-storage signed uploads, strict validation and scanning. | CDN, asynchronous scanning/processing, lifecycle tiers, regional strategy. |
 | AI analysis | Synchronous request with multiple LLM calls. | Durable job queue, status polling/events, retries, idempotency key, spend limits. | Separate worker pool, provider failover, per-tenant quotas, evaluation/quality monitoring. |
+| Deadline reminders | Transactional outbox, leased batches, in-app notifications, GitHub Actions best-effort scheduler. | Monitor queue age/dead jobs and move timing-sensitive dispatch to a dedicated scheduler/worker. | Independently scalable workers, provider-backed notification channels, per-tenant preferences, and delivery audit events. |
 | Secrets and encryption | Environment secrets and AES-GCM application encryption. | Managed secret store and KMS-backed envelope encryption. | Rotation, audit trails, separate keys/tenants where required, least-privilege service identities. |
 
 ### Database-specific plan
@@ -473,7 +503,9 @@ For analytics, I would replace application loops with parameterized SQL aggregat
 
 ### Consistency and asynchronous work
 
-The current CRUD paths are synchronous because a user expects immediate feedback. Operations that can take seconds or call external services—AI evaluation, malware scanning, large report exports, notifications—should become jobs. A production job record needs a status machine, idempotency key, attempt count, error reason, trace ID, and explicit retry/dead-letter behavior. The UI should show queued/running/completed/failed states instead of holding an HTTP request open.
+The current CRUD paths are synchronous because a user expects immediate feedback. Deadline reminders already use the job pattern: state, unique idempotency key, attempt count, lease, error reason, retry, and dead-letter state are persisted in PostgreSQL. Their current output is an in-app notification; the GitHub workflow only wakes dispatch and is not the durable queue itself.
+
+Other operations that can take seconds or call external services—AI evaluation, malware scanning, large report exports, and real email/push delivery—should use the same pattern. The UI should show queued/running/completed/failed states instead of holding an HTTP request open, and a future worker should add a trace ID and observable queue-age SLO.
 
 ### Rollout discipline
 
@@ -501,17 +533,21 @@ Use the 60-second answer, then name one end-to-end flow: add an internship, trac
 
 **“What is the hardest feature?”**
 
-Choose interview-round synchronization or secure sharing. For rounds, explain avoiding two sources of truth. For sharing, explain snapshot isolation, token hashing, passcode hashing, expiry, and revocation.
+Choose interview-round synchronization, secure sharing, or the reminder outbox. For the outbox, explain why writing an opportunity and separately sending a notification can lose work; the transaction makes intent durable, while leases/retries/idempotency make at-least-once dispatch safe. Be candid that GitHub Actions is only a best-effort free scheduler.
 
 **“What would you build next?”**
 
-Start with the highest product value and operational readiness: reminders and follow-up timeline for user value; then AI queue/observability for safe rollout. Tie the answer to a measured need rather than a random feature list.
+Start with measured operational readiness: wire the in-app reminder outbox only after its migration, token, and scheduler secrets are configured; add queue-age/dead-letter alerts; then move AI work into a durable job flow before enabling it. Tie the answer to measured need rather than a random feature list.
 
 ### Architecture and API
 
 **“Walk me through a request.”**
 
-Browser calls `src/services/api.js`; Axios gets a fresh Clerk token; Express applies security middleware; `requireAuth` verifies RS256 JWT locally, resolves the internal UUID, validates the payload, performs a user-scoped Supabase query, and returns JSON. The UI handles status-specific errors and refreshes its local state.
+Browser calls `src/services/api.js` against `/api/v1`; Axios gets a fresh Clerk token; Express assigns a request ID, applies security middleware, verifies RS256 JWT locally, resolves the internal UUID, validates the payload, applies user-aware rate limits, performs a user-scoped Supabase query, and returns JSON. The UI handles status-specific errors and refreshes its local state.
+
+**“Why cursor pagination and an API version?”**
+
+The cursor preserves the `(created_at, id)` position while rows are inserted, whereas a changing `OFFSET` can skip or repeat rows and gets slower with depth. `/api/v1` gives clients a stable contract; the legacy mount advertises its deprecation and sunset rather than breaking silently.
 
 **“How do you make the app maintainable?”**
 
@@ -571,11 +607,14 @@ The authentication path distinguishes invalid tokens from database/bootstrap fai
 | Auth and user provisioning | `backend/src/middleware/auth.js` |
 | HTTP security, limits, health, route mounts | `backend/src/app.js` |
 | Opportunity CRUD | `backend/src/routes/opportunities.js` |
+| API versioning, limits, request IDs, health | `backend/src/app.js`, `docs/adr/ADR-001-versioned-api.md` |
 | Round status derivation | `backend/src/lib/syncOpportunityFromRounds.js` |
 | Analytics computations | `backend/src/routes/analytics.js`, `backend/src/lib/interviewPipelineAnalytics.js` |
 | Documents/ATS | `src/utils/atsScorer.js`, `backend/src/routes/documents.js` |
 | AI pipeline and settings | `backend/src/lib/resume-agent/`, `backend/src/lib/llm/`, `backend/src/lib/apiKeyVault.js` |
 | Share security | `backend/src/lib/shareLinks.js`, share-link route modules |
+| Collaboration authorization and votes | `backend/src/routes/hackathons.js`, `supabase/migrations/20260716081332_idempotent_idea_votes.sql`, `supabase/migrations/20260716083209_team_memberships_and_invites.sql`, `supabase/migrations/20260716100000_review_hardening.sql` |
+| Reminder outbox | `backend/src/lib/reminderJobs.js`, `backend/src/routes/internal-jobs.js`, `.github/workflows/dispatch-reminders.yml`, `supabase/migrations/20260716082400_transactional_reminder_outbox.sql`, `supabase/migrations/20260716100000_review_hardening.sql` |
 | SQL schema and policies | `docs/*.sql`, `supabase/migrations/` |
 | Tests and CI | `docs/TESTING.md`, `backend/tests/`, `.github/workflows/ci.yml` |
 

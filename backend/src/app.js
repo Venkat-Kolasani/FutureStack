@@ -4,7 +4,9 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const { ipKeyGenerator } = require('express-rate-limit');
 const mongoSanitize = require('express-mongo-sanitize');
+const { randomUUID } = require('crypto');
 
 const { requireAuth } = require('./middleware/auth');
 const { supabase } = require('./lib/supabase');
@@ -17,14 +19,26 @@ const shareLinksRoutes = require('./routes/share-links');
 const publicShareLinksRoutes = require('./routes/public-share-links');
 const resumeCheckerRoutes = require('./routes/resume-checker');
 const aiSettingsRoutes = require('./routes/ai-settings');
+const internalJobsRoutes = require('./routes/internal-jobs');
+const adminJobsRoutes = require('./routes/admin-jobs');
+const notificationsRoutes = require('./routes/notifications');
 
 const app = express();
+const apiRouter = express.Router();
+const legacyApiRouter = express.Router();
+const API_V1_PREFIX = '/api/v1';
+const LEGACY_API_SUNSET = 'Thu, 31 Dec 2026 23:59:59 GMT';
 
 // =============================================================================
 // Trust Proxy Configuration
 // =============================================================================
 
 app.set('trust proxy', 1);
+
+const DEAD_JOB_READINESS_THRESHOLD = Number.parseInt(
+    process.env.DEAD_JOB_READINESS_THRESHOLD || '0',
+    10
+);
 
 // =============================================================================
 // Middleware
@@ -71,53 +85,85 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: '1mb' }));
 app.use(mongoSanitize());
 
-const generalLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 2000,
+app.use((req, res, next) => {
+    const requestId = req.get('X-Request-Id');
+    req.requestId = requestId && requestId.length <= 128 ? requestId : randomUUID();
+    res.set('X-Request-Id', req.requestId);
+    const startedAt = process.hrtime.bigint();
+
+    res.on('finish', () => {
+        if (process.env.NODE_ENV === 'test') return;
+
+        const durationMs = Number(process.hrtime.bigint() - startedAt) / 1e6;
+        console.log(JSON.stringify({
+            timestamp: new Date().toISOString(),
+            type: 'HTTP_REQUEST',
+            requestId: req.requestId,
+            method: req.method,
+            path: req.baseUrl + req.path,
+            statusCode: res.statusCode,
+            durationMs: Number(durationMs.toFixed(2)),
+        }));
+    });
+
+    next();
+});
+
+const authenticatedReadLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 100,
     standardHeaders: true,
     legacyHeaders: false,
-    skip: (req) => req.path === '/api/health',
+    skip: (req) => req.method !== 'GET',
+    keyGenerator: (req) => {
+        if (req.auth?.internalUserId) return `read:user:${req.auth.internalUserId}`;
+        const ip = req.ips?.[0] || req.ip;
+        return `read:ip:${ipKeyGenerator(ip)}`;
+    },
     handler: (req, res) => {
-        const resetTime = new Date(Date.now() + 15 * 60 * 1000);
+        const resetTime = new Date(Date.now() + 60 * 1000);
         const retryAfterSeconds = Math.ceil((resetTime - Date.now()) / 1000);
 
         res.set('Retry-After', retryAfterSeconds.toString());
         res.status(429).json({
             error: 'Rate Limit Exceeded',
-            message: 'You have made too many requests. This is to prevent abuse and ensure fair usage for all users.',
+            code: 'READ_RATE_LIMIT',
+            message: 'You have made too many read requests. Please wait before trying again.',
             retryAfter: resetTime.toISOString(),
             retryAfterSeconds,
-            limit: 2000,
-            window: '15 minutes',
-            note: 'If you are on a shared network, multiple users may be affected. Please wait and try again.'
+            limit: 100,
+            window: '1 minute',
         });
     }
 });
 
 const writeOperationsLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 1500,
+    windowMs: 60 * 1000,
+    max: 20,
     standardHeaders: true,
     legacyHeaders: false,
     skip: (req) => !['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method),
+    keyGenerator: (req) => {
+        if (req.auth?.internalUserId) return `write:user:${req.auth.internalUserId}`;
+        const ip = req.ips?.[0] || req.ip;
+        return `write:ip:${ipKeyGenerator(ip)}`;
+    },
     handler: (req, res) => {
-        const resetTime = new Date(Date.now() + 15 * 60 * 1000);
+        const resetTime = new Date(Date.now() + 60 * 1000);
         const retryAfterSeconds = Math.ceil((resetTime - Date.now()) / 1000);
 
         res.set('Retry-After', retryAfterSeconds.toString());
         res.status(429).json({
             error: 'Write Rate Limit Exceeded',
-            message: 'You have made too many create/update/delete operations. This limit helps prevent abuse while allowing you to add multiple opportunities. Please wait a moment and try again.',
+            code: 'WRITE_RATE_LIMIT',
+            message: 'You have made too many create, update, or delete requests. Please wait before trying again.',
             retryAfter: resetTime.toISOString(),
             retryAfterSeconds,
-            limit: 1500,
-            window: '15 minutes',
-            note: 'If you are on a shared network (hostel, campus), this limit is shared among all users. You can add up to 1500 opportunities collectively per 15 minutes.'
+            limit: 20,
+            window: '1 minute',
         });
     }
 });
-
-app.use('/api/', generalLimiter);
 
 if (process.env.NODE_ENV === 'development') {
     app.use((req, res, next) => {
@@ -127,6 +173,8 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 app.use((req, res, next) => {
+    if (process.env.NODE_ENV === 'test') return next();
+
     if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) {
         const clientIp = req.ips && req.ips.length > 0 ? req.ips[0] : req.ip;
 
@@ -159,7 +207,7 @@ app.use((req, res, next) => {
 // Routes
 // =============================================================================
 
-app.get('/api/health', (req, res) => {
+apiRouter.get('/health', (req, res) => {
     res.json({
         status: 'ok',
         timestamp: new Date().toISOString(),
@@ -167,10 +215,11 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-app.get('/api/health/deps', async (req, res) => {
+apiRouter.get('/health/deps', async (req, res) => {
     const checks = {
         supabase: { status: 'ok' },
         aiTables: { status: 'ok' },
+        reminderJobs: { status: 'ok', deadJobs: 0 },
     };
 
     try {
@@ -180,15 +229,53 @@ app.get('/api/health/deps', async (req, res) => {
             .limit(1);
 
         if (error) {
+            console.error('Health dependency check failed:', {
+                dependency: 'supabase',
+                message: error.message,
+            });
             checks.supabase = {
                 status: 'down',
-                message: error.message
+                message: 'Database dependency is unavailable.'
             };
         }
     } catch (error) {
+        console.error('Health dependency check failed:', {
+            dependency: 'supabase',
+            message: error.message,
+        });
         checks.supabase = {
             status: 'down',
-            message: error.message
+            message: 'Database dependency is unavailable.'
+        };
+    }
+
+    try {
+        const { count, error } = await supabase
+            .from('notification_jobs')
+            .select('id', { count: 'exact', head: true })
+            .eq('state', 'dead');
+
+        if (error) {
+            checks.reminderJobs = {
+                status: 'missing',
+                deadJobs: 0,
+                message: error.message,
+                hint: 'Apply the transactional reminder outbox migration before enabling dispatch.',
+            };
+        } else {
+            const deadJobs = count || 0;
+            checks.reminderJobs = {
+                status: deadJobs > DEAD_JOB_READINESS_THRESHOLD ? 'degraded' : 'ok',
+                deadJobs,
+                threshold: DEAD_JOB_READINESS_THRESHOLD,
+            };
+        }
+    } catch (error) {
+        checks.reminderJobs = {
+            status: 'missing',
+            deadJobs: 0,
+            message: error.message,
+            hint: 'Apply the transactional reminder outbox migration before enabling dispatch.',
         };
     }
 
@@ -223,23 +310,37 @@ app.get('/api/health/deps', async (req, res) => {
     });
 });
 
-app.use('/api/opportunities', requireAuth, writeOperationsLimiter, opportunitiesRoutes);
-app.use('/api/analytics', requireAuth, analyticsRoutes);
-app.use('/api/documents', requireAuth, writeOperationsLimiter, documentsRoutes);
-app.use('/api/hackathons', requireAuth, writeOperationsLimiter, hackathonsRoutes);
-app.use('/api/interview-prep', requireAuth, writeOperationsLimiter, interviewPrepRoutes);
-app.use('/api/share-links', requireAuth, writeOperationsLimiter, shareLinksRoutes);
-app.use('/api/public/share-links', publicShareLinksRoutes);
-app.use('/api/documents/:id/ai-check', requireAuth, resumeCheckerRoutes);
-app.use('/api/ai-settings', requireAuth, aiSettingsRoutes);
+apiRouter.use('/opportunities', requireAuth, authenticatedReadLimiter, writeOperationsLimiter, opportunitiesRoutes);
+apiRouter.use('/analytics', requireAuth, authenticatedReadLimiter, analyticsRoutes);
+apiRouter.use('/documents', requireAuth, authenticatedReadLimiter, writeOperationsLimiter, documentsRoutes);
+apiRouter.use('/hackathons', requireAuth, authenticatedReadLimiter, writeOperationsLimiter, hackathonsRoutes);
+apiRouter.use('/interview-prep', requireAuth, authenticatedReadLimiter, writeOperationsLimiter, interviewPrepRoutes);
+apiRouter.use('/share-links', requireAuth, authenticatedReadLimiter, writeOperationsLimiter, shareLinksRoutes);
+apiRouter.use('/public/share-links', publicShareLinksRoutes);
+apiRouter.use('/documents/:id/ai-check', requireAuth, authenticatedReadLimiter, resumeCheckerRoutes);
+apiRouter.use('/ai-settings', requireAuth, authenticatedReadLimiter, writeOperationsLimiter, aiSettingsRoutes);
+apiRouter.use('/notifications', requireAuth, authenticatedReadLimiter, writeOperationsLimiter, notificationsRoutes);
+apiRouter.use('/admin/jobs', requireAuth, authenticatedReadLimiter, adminJobsRoutes);
+apiRouter.use('/internal/jobs', internalJobsRoutes);
 
-app.get('/api/me', requireAuth, (req, res) => {
+apiRouter.get('/me', requireAuth, authenticatedReadLimiter, (req, res) => {
     res.json({
         userId: req.auth.userId,
         internalUserId: req.auth.internalUserId,
         email: req.auth.email
     });
 });
+
+app.use(API_V1_PREFIX, apiRouter);
+
+legacyApiRouter.use((req, res, next) => {
+    res.set('Deprecation', 'true');
+    res.set('Sunset', LEGACY_API_SUNSET);
+    res.set('Link', `<${API_V1_PREFIX}${req.originalUrl.replace(/^\/api/, '')}>; rel="successor-version"`);
+    next();
+});
+legacyApiRouter.use(apiRouter);
+app.use('/api', legacyApiRouter);
 
 // =============================================================================
 // Error Handling

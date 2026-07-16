@@ -31,11 +31,18 @@ export const initAnalytics = () => {
     });
 };
 
+export const redactedPageUrl = (path) => {
+    const safeUrl = new URL(window.location.href);
+    safeUrl.pathname = path;
+    return safeUrl.href;
+};
+
 // Track page views (call on route changes)
 export const trackPageView = (path, title) => {
     if (!POSTHOG_KEY) return;
+
     posthog.capture('$pageview', {
-        $current_url: window.location.href,
+        $current_url: redactedPageUrl(path),
         $pathname: path,
         title: title || document.title
     });

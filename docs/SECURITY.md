@@ -19,17 +19,18 @@ The backend implements multiple layers of security to protect against common web
 
 ### 1. Rate Limiting
 
-We use generous rate limits that allow normal usage patterns while preventing abuse:
+The current limits protect the free-tier service from accidental loops and basic abuse. They are user-aware after authentication and fall back to IP before authentication:
 
 #### General API Endpoints
-- **Limit**: 2000 requests per 15 minutes per IP address
-- **Applies to**: All `/api/*` endpoints
+- **Limit**: 100 GET requests per minute per authenticated internal user
+- **Fallback**: IP address before authentication
+- **Applies to**: Protected `/api/v1/*` reads
 - **Response**: HTTP 429 with clear error message and retry time
 
 #### Write Operations
-- **Limit**: 1500 write operations (POST/PUT/PATCH/DELETE) per 15 minutes per IP address (shared across the same IP)
-- **Applies to**: Opportunity creation, updates, and deletions
-- **Response**: HTTP 429 with helpful tips for bulk operations
+- **Limit**: 20 write operations (POST/PUT/PATCH/DELETE) per minute per authenticated internal user
+- **Fallback**: IP address before authentication
+- **Applies to**: Protected `/api/v1/*` mutations
 
 **Rate Limit Error Response Example**:
 ```json
@@ -37,9 +38,9 @@ We use generous rate limits that allow normal usage patterns while preventing ab
   "error": "Write Rate Limit Exceeded",
   "message": "You have made too many create/update/delete operations...",
   "retryAfter": "2026-01-16T00:42:33.000Z",
-  "limit": 1500,
-  "window": "15 minutes",
-  "tip": "If you need to add many opportunities at once, you can still do so within this limit."
+  "limit": 20,
+  "window": "1 minute",
+  "retryAfterSeconds": 60
 }
 ```
 
@@ -105,7 +106,8 @@ All sensitive operations are logged in JSON format for monitoring and security a
   "timestamp": "2026-01-15T17:57:33.000Z",
   "type": "REQUEST",
   "method": "POST",
-  "path": "/api/opportunities",
+  "requestId": "4c4f3b7c-8d86-45be-b342-509e42a92061",
+  "path": "/api/v1/opportunities",
   "ip": "192.168.1.100"
 }
 ```
@@ -119,7 +121,6 @@ All sensitive operations are logged in JSON format for monitoring and security a
   "userId": "user_abc123",
   "resourceId": "550e8400-e29b-41d4-a716-446655440000",
   "details": {
-    "title": "Software Engineering Internship",
     "category": "internship"
   }
 }
@@ -456,15 +457,15 @@ npm update
    - **Impact**: Revoked tokens still work until expiry
    - **Mitigation**: Clerk handles this at their level; tokens are short-lived
 
-3. **No API Versioning**: Breaking changes will affect all clients
-   - **Impact**: Future updates may require frontend changes
-   - **Mitigation**: Plan API versions (e.g., `/api/v1/`, `/api/v2/`)
+3. **Process-local controls**: Rate limits and the internal-user cache are not shared by multiple API instances
+   - **Impact**: A horizontally scaled deployment can apply inconsistent limits and cache entries
+   - **Mitigation**: Move hot shared state to Redis or an edge/API-gateway control once scale warrants it
 
 ### Future Security Enhancements
 
 - [ ] Implement Redis for distributed auth caching
-- [ ] Add API versioning (`/api/v1/`)
-- [ ] Implement per-user rate limiting (not just per-IP)
+- [ ] Retire legacy `/api` only after the published sunset date and no known consumers remain
+- [ ] Move rate limiting to a shared user/IP store for multi-instance deployment
 - [ ] Add request signing for API key authentication
 - [ ] Implement Web Application Firewall (WAF) rules
 - [ ] Add DDoS protection (Cloudflare, AWS Shield)

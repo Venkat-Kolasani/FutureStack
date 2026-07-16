@@ -1,7 +1,12 @@
 const express = require('express');
 const { supabase } = require('../lib/supabase');
 const { validate } = require('../middleware/validate');
-const { createOpportunitySchema, updateOpportunitySchema, idParamSchema } = require('../validation/schemas');
+const {
+    createOpportunitySchema,
+    updateOpportunitySchema,
+    idParamSchema,
+    opportunityListQuerySchema,
+} = require('../validation/schemas');
 const opportunityRoundsRouter = require('./opportunity-rounds');
 const upcomingRoundsRouter = require('./upcoming-rounds');
 
@@ -53,21 +58,119 @@ function logAudit(action, userId, resourceId = null, outcome = 'success', detail
     }));
 }
 
+const TIMESTAMPTZ_PATTERN = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d{1,6})?(?:Z|[+-]\d{2}:\d{2})$/;
+
+function isValidTimestamptz(value) {
+    if (typeof value !== 'string') return false;
+
+    const match = value.match(TIMESTAMPTZ_PATTERN);
+    if (!match || Number.isNaN(Date.parse(value))) return false;
+
+    const [, year, month, day, hour, minute, second] = match.map(Number);
+    const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+    return month >= 1 && month <= 12 &&
+        day >= 1 && day <= daysInMonth &&
+        hour <= 23 && minute <= 59 && second <= 59;
+}
+
+function encodeCursor(opportunity) {
+    if (!isValidTimestamptz(opportunity.created_at)) {
+        throw new Error('Opportunity cursor requires a valid created_at timestamp');
+    }
+
+    return Buffer.from(JSON.stringify({
+        createdAt: opportunity.created_at,
+        id: opportunity.id,
+    })).toString('base64url');
+}
+
+function decodeCursor(cursor) {
+    try {
+        const parsed = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8'));
+        if (
+            !parsed || typeof parsed.id !== 'string' ||
+            !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(parsed.id) ||
+            !isValidTimestamptz(parsed.createdAt)
+        ) {
+            return null;
+        }
+
+        return { createdAt: parsed.createdAt, id: parsed.id };
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * A collaboration invite grants access only to a hackathon workspace, never to
+ * another user's general opportunity list. The membership lookup happens after
+ * the owner-scoped read fails, so the common path stays a single indexed query.
+ */
+async function getCollaboratorHackathonOpportunity(opportunityId, userId) {
+    const { data: membership, error: membershipError } = await supabase
+        .from('team_memberships')
+        .select('team_id, hackathon_teams!inner(opportunity_id)')
+        .eq('user_id', userId)
+        .eq('hackathon_teams.opportunity_id', opportunityId)
+        .single();
+
+    if (membershipError || !membership) {
+        return { data: null, error: membershipError };
+    }
+
+    const { data, error } = await supabase
+        .from('opportunities')
+        .select('*')
+        .eq('id', opportunityId)
+        .eq('category', 'hackathon')
+        .single();
+
+    return { data, error };
+}
+
 /**
  * GET /api/opportunities
  * Get all opportunities for the authenticated user
  */
-router.get('/', async (req, res) => {
+router.get('/', validate(opportunityListQuerySchema, 'query'), async (req, res) => {
     try {
-        const { data, error } = await supabase
+        const { limit, cursor, status, category } = req.query;
+        const decodedCursor = cursor ? decodeCursor(cursor) : null;
+
+        if (cursor && !decodedCursor) {
+            return res.status(400).json({
+                error: 'Validation Error',
+                message: 'cursor must be a valid opportunity cursor',
+                details: [{ field: 'cursor', message: 'cursor is invalid or malformed' }],
+            });
+        }
+
+        let query = supabase
             .from('opportunities')
             .select('*')
-            .eq('user_id', req.auth.internalUserId)
-            .order('created_at', { ascending: false });
+            .eq('user_id', req.auth.internalUserId);
+
+        if (status) query = query.eq('status', status);
+        if (category) query = query.eq('category', category);
+        if (decodedCursor) {
+            query = query.or(
+                `created_at.lt.${decodedCursor.createdAt},and(created_at.eq.${decodedCursor.createdAt},id.lt.${decodedCursor.id})`
+            );
+        }
+
+        const { data, error } = await query
+            .order('created_at', { ascending: false })
+            .order('id', { ascending: false })
+            .limit(limit + 1);
 
         if (error) throw error;
 
-        res.json(data);
+        const rows = data || [];
+        const hasNextPage = rows.length > limit;
+        const items = hasNextPage ? rows.slice(0, limit) : rows;
+        const nextCursor = hasNextPage ? encodeCursor(items[items.length - 1]) : null;
+
+        res.json({ items, nextCursor });
     } catch (error) {
         return handleRouteError(res, 'FETCH_OPPORTUNITIES', error, 'Failed to fetch opportunities');
     }
@@ -83,7 +186,7 @@ router.use('/:opportunityId/rounds', opportunityRoundsRouter);
  * GET /api/opportunities/:id
  * Get a single opportunity by ID
  */
-router.get('/:id', async (req, res) => {
+router.get('/:id', validate(idParamSchema, 'params'), async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -94,14 +197,29 @@ router.get('/:id', async (req, res) => {
             .eq('user_id', req.auth.internalUserId)
             .single();
 
-        if (error) {
-            if (error.code === 'PGRST116') {
-                return res.status(404).json({ error: 'Opportunity not found' });
+        if (!error) return res.json(data);
+
+        if (error.code !== 'PGRST116') throw error;
+
+        const collaboratorResult = await getCollaboratorHackathonOpportunity(
+            id,
+            req.auth.internalUserId
+        );
+
+        if (!collaboratorResult.data) {
+            if (collaboratorResult.error?.code === '42P01') {
+                return res.status(503).json({
+                    error: 'Collaboration tables are not configured',
+                    code: 'TABLES_NOT_EXIST',
+                });
             }
-            throw error;
+            if (collaboratorResult.error && collaboratorResult.error.code !== 'PGRST116') {
+                throw collaboratorResult.error;
+            }
+            return res.status(404).json({ error: 'Opportunity not found' });
         }
 
-        res.json(data);
+        return res.json(collaboratorResult.data);
     } catch (error) {
         return handleRouteError(res, 'FETCH_OPPORTUNITY', error, 'Failed to fetch opportunity');
     }

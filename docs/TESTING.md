@@ -22,7 +22,7 @@ Set these env vars for local builds if they are not already in `.env`:
 
 ```bash
 export REACT_APP_CLERK_PUBLISHABLE_KEY=pk_test_placeholder
-export REACT_APP_API_URL=http://localhost:3001/api
+export REACT_APP_API_URL=http://localhost:3001/api/v1
 ```
 
 ## If you changed…

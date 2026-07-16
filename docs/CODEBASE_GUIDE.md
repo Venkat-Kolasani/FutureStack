@@ -9,7 +9,7 @@ A full-stack React + Express app that helps students track internships and hacka
 | Environment | URL |
 |-------------|-----|
 | Frontend | [futuretracker.online](https://futuretracker.online) |
-| Backend API | [futurestack-api.onrender.com/api](https://futurestack-api.onrender.com/api) |
+| Backend API | [futurestack-api.onrender.com/api/v1](https://futurestack-api.onrender.com/api/v1) |
 | Service status | [UptimeRobot](https://stats.uptimerobot.com/ArICmEg95Y) |
 
 ---
@@ -44,7 +44,7 @@ FutureStack/
 1. **All data through the API** — Frontend must not call `supabase.from()` except realtime in `StatusBoard.jsx`. Enforced by `npm run check:architecture`.
 2. **Auth on every protected route** — `requireAuth` middleware; handlers use `req.auth.internalUserId`.
 3. **Internship-only features** — Interview rounds and interview prep reject non-internship opportunities server-side.
-4. **Migrations in `docs/`** — SQL files are the source of truth; run manually in Supabase.
+4. **Migrations in `docs/` and `supabase/migrations/`** — SQL files are the source of truth; apply them manually in Supabase in documented order.
 5. **Tests for backend routes** — Changes under `backend/src/routes/` need tests in `backend/tests/`.
 
 ---
@@ -59,7 +59,7 @@ sequenceDiagram
     participant S as Supabase (service role)
 
     R->>A: opportunityService.getAll()
-    A->>E: GET /api/opportunities + Bearer JWT
+    A->>E: GET /api/v1/opportunities + Bearer JWT
     E->>E: Verify Clerk token, resolve user id
     E->>S: SELECT … WHERE user_id = ?
     S-->>E: rows
@@ -95,17 +95,20 @@ sequenceDiagram
 
 | Mount path | File | Domain |
 |------------|------|--------|
-| `/api/opportunities` | `routes/opportunities.js` | CRUD + nested rounds |
-| `/api/analytics` | `routes/analytics.js` | Dashboard stats |
-| `/api/documents` | `routes/documents.js` | Vault + assign + ATS fields |
-| `/api/hackathons` | `routes/hackathons.js` | Team collaboration |
-| `/api/interview-prep` | `routes/interview-prep.js` | Prep workspace |
-| `/api/share-links` | `routes/share-links.js` | Authenticated share create/list/revoke |
-| `/api/public/share-links` | `routes/public-share-links.js` | Public token/passcode read-only shares |
-| `/api/documents/:id/ai-check` | `routes/resume-checker.js` | Gated AI resume-check pipeline |
-| `/api/ai-settings` | `routes/ai-settings.js` | Encrypted user AI-provider settings |
-| `/api/health` | `app.js` | Liveness |
-| `/api/health/deps` | `app.js` | Supabase reachability |
+| `/api/v1/opportunities` | `routes/opportunities.js` | CRUD, cursor pagination, nested rounds |
+| `/api/v1/analytics` | `routes/analytics.js` | Dashboard stats |
+| `/api/v1/documents` | `routes/documents.js` | Vault + assign + ATS fields |
+| `/api/v1/hackathons` | `routes/hackathons.js` | Account-backed collaboration |
+| `/api/v1/interview-prep` | `routes/interview-prep.js` | Prep workspace |
+| `/api/v1/share-links` | `routes/share-links.js` | Authenticated share create/list/revoke |
+| `/api/v1/public/share-links` | `routes/public-share-links.js` | Public token/passcode read-only shares |
+| `/api/v1/documents/:id/ai-check` | `routes/resume-checker.js` | Gated AI resume-check pipeline |
+| `/api/v1/ai-settings` | `routes/ai-settings.js` | Encrypted user AI-provider settings |
+| `/api/v1/notifications` | `routes/notifications.js` | Authenticated in-app deadline reminders |
+| `/api/v1/internal/jobs/dispatch` | `routes/internal-jobs.js` | Token-protected outbox dispatcher |
+| `/api/v1/admin/jobs/dead` | `routes/admin-jobs.js` | Configured-admin dead-letter view |
+| `/api/v1/health` | `app.js` | Liveness |
+| `/api/v1/health/deps` | `app.js` | Supabase and reminder-outbox readiness |
 
 Round-specific logic also lives in `routes/opportunity-rounds.js` (mounted from opportunities router) and `lib/syncOpportunityFromRounds.js`.
 
@@ -127,6 +130,7 @@ and the provider-agnostic LLM layer in `lib/llm/`. See [`ai-resume-checker.md`](
 | `interviewPrepService` | `/interview-prep/:opportunityId` |
 | `analyticsService` | `/analytics` |
 | `shareLinkService` | `/share-links`, `/public/share-links` |
+| `notificationService` | `/notifications` |
 
 Always add new endpoints here — pages should not construct URLs manually.
 
@@ -141,7 +145,8 @@ Always add new endpoints here — pages should not construct URLs manually.
 | Documents + ATS | [`documents-and-ats.md`](documents-and-ats.md) | `documents-migration.sql` |
 | AI Resume Checker (UI gated) | [`ai-resume-checker.md`](ai-resume-checker.md) | `ai-resume-check-migration.sql`, `user-ai-settings-migration.sql` |
 | Dashboard share links | [`share-links.md`](share-links.md) | `share-links-migration.sql`, `supabase/migrations/20260624163000_create_share_links.sql`, `supabase/migrations/20260624171000_add_recoverable_share_tokens.sql` |
-| Hackathon collaboration | `src/pages/HackathonDetail.jsx` and `src/components/hackathons/` | `hackathon-collaboration-migration.sql` |
+| Hackathon collaboration | `src/pages/HackathonDetail.jsx` and `src/components/hackathons/` | `hackathon-collaboration-migration.sql`, `20260716081332_idempotent_idea_votes.sql`, `20260716083209_team_memberships_and_invites.sql`, `20260716100000_review_hardening.sql` |
+| Deadline reminders | `backend/src/lib/reminderJobs.js`, `.github/workflows/dispatch-reminders.yml` | `20260716082400_transactional_reminder_outbox.sql`, `20260716100000_review_hardening.sql` |
 | Architecture & challenges | [`DOCUMENTATION.md`](DOCUMENTATION.md) | `supabase-schema.sql` |
 | Testing & CI | [`TESTING.md`](TESTING.md) | — |
 | Security | [`SECURITY.md`](SECURITY.md) | — |
@@ -155,6 +160,9 @@ Always add new endpoints here — pages should not construct URLs manually.
 | Theme | Light and dark mode are implemented through `ThemeContext` and `ThemeToggle`. |
 | AI Resume Checker | Server pipeline and BYOK settings are implemented, but `AI_RESUME_CHECK_ENABLED` is `false`; keep user-facing claims aligned with that flag. |
 | Share links | Create, list, revoke, public read, and optional passcode verification are available. |
+| API contract | `/api/v1` is canonical; the legacy `/api` mount has a dated deprecation response. Opportunity lists use stable cursor pagination. |
+| Collaboration | `team_memberships` authorizes owner/editor/viewer access; name-only roster entries remain display data. Idea votes are unique per account in PostgreSQL. |
+| Reminders | The transactional outbox creates in-app deadline notifications. The optional free GitHub Actions trigger is best-effort, so it is not suitable for strict deadlines. |
 | Quality gates | CI builds/tests frontend and backend, runs architecture guardrails, and performs informational dependency audits. |
 
 When explaining the project in an interview, lead with **realtime Kanban + RLS challenge**, then **round save latency fix**, then **interview prep** or **ATS scorer** depending on the role.

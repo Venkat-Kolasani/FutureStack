@@ -21,6 +21,10 @@ import TaskBoard from '../components/hackathons/TaskBoard';
 import SubmissionChecklist from '../components/hackathons/SubmissionChecklist';
 import { opportunityService, hackathonService } from '../services/api';
 
+export const mergeIdeaVoteResponse = (ideas, updated) => ideas.map((currentIdea) => (
+    currentIdea.id === updated.id ? { ...currentIdea, ...updated } : currentIdea
+));
+
 const tabs = [
     { id: 'overview', label: 'Overview', icon: FaInfoCircle },
     { id: 'team', label: 'Team', icon: FaUsers },
@@ -50,6 +54,7 @@ const HackathonDetail = () => {
     const [hackathon, setHackathon] = useState(null);
     const [team, setTeam] = useState(null);
     const [members, setMembers] = useState([]);
+    const [access, setAccess] = useState(null);
     const [ideas, setIdeas] = useState([]);
     const [tasks, setTasks] = useState([]);
     const [checklist, setChecklist] = useState([]);
@@ -78,6 +83,7 @@ const HackathonDetail = () => {
                 const teamData = await hackathonService.getTeam(id);
                 setTeam(teamData.team);
                 setMembers(teamData.members || []);
+                setAccess(teamData.access || null);
 
                 // Load ideas, tasks, checklist
                 const [ideasData, tasksData, checklistData] = await Promise.all([
@@ -97,6 +103,7 @@ const HackathonDetail = () => {
                 // Continue with null team - components will show empty/setup state
                 setTeam(null);
                 setMembers([]);
+                setAccess(null);
                 setIdeas([]);
                 setTasks([]);
                 setChecklist([]);
@@ -118,6 +125,7 @@ const HackathonDetail = () => {
             const result = await hackathonService.createTeam(id, data);
             setTeam(result.team);
             setMembers(result.members || []);
+            setAccess(result.access || { role: 'owner' });
             toast.success('Team created!');
         } catch (error) {
             console.error('Error creating team:', error);
@@ -158,6 +166,21 @@ const HackathonDetail = () => {
         }
     };
 
+    const handleCreateInvite = async (data) => {
+        setIsLoading(true);
+        try {
+            const result = await hackathonService.createInvite(id, data);
+            toast.success('Single-use invite link created');
+            return result;
+        } catch (error) {
+            console.error('Error creating team invite:', error);
+            toast.error('Failed to create invite link');
+            return null;
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     // Ideas handlers
     const handleCreateIdea = async (data) => {
         setIsLoading(true);
@@ -191,10 +214,12 @@ const HackathonDetail = () => {
         }
     };
 
-    const handleVoteIdea = async (ideaId) => {
+    const handleVoteIdea = async (idea) => {
         try {
-            const updated = await hackathonService.voteIdea(id, ideaId);
-            setIdeas(ideas.map(i => i.id === ideaId ? updated : i));
+            const updated = idea.current_user_voted
+                ? await hackathonService.removeIdeaVote(id, idea.id)
+                : await hackathonService.voteIdea(id, idea.id);
+            setIdeas((currentIdeas) => mergeIdeaVoteResponse(currentIdeas, updated));
         } catch (error) {
             console.error('Error voting on idea:', error);
         }
@@ -374,10 +399,12 @@ const HackathonDetail = () => {
                         <TeamManagementPanel
                             team={team}
                             members={members}
+                            access={access}
                             onCreateTeam={handleCreateTeam}
                             onAddMember={handleAddMember}
                             onUpdateMember={handleUpdateMember}
                             onRemoveMember={handleRemoveMember}
+                            onCreateInvite={handleCreateInvite}
                             isLoading={isLoading}
                         />
                     )}

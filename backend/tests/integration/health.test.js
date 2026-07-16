@@ -20,6 +20,22 @@ describe('Health endpoints', () => {
         expect(res.body).toHaveProperty('timestamp');
     });
 
+    it('GET /api/v1/health returns ok and emits a request ID', async () => {
+        const res = await request(app).get('/api/v1/health');
+
+        expect(res.status).toBe(200);
+        expect(res.headers['x-request-id']).toEqual(expect.any(String));
+        expect(res.headers.deprecation).toBeUndefined();
+    });
+
+    it('legacy API responses include deprecation headers', async () => {
+        const res = await request(app).get('/api/health');
+
+        expect(res.status).toBe(200);
+        expect(res.headers.deprecation).toBe('true');
+        expect(res.headers.sunset).toBeDefined();
+    });
+
     it('GET /api/health/deps returns ok when supabase is healthy', async () => {
         const res = await request(app).get('/api/health/deps');
 
@@ -40,5 +56,24 @@ describe('Health endpoints', () => {
         expect(res.status).toBe(503);
         expect(res.body.status).toBe('degraded');
         expect(res.body.checks.supabase.status).toBe('down');
+        expect(res.body.checks.supabase.message).toBe('Database dependency is unavailable.');
+    });
+
+    it('GET /api/v1/health/deps becomes degraded when dead reminder jobs exceed the threshold', async () => {
+        const { supabase } = require('../../src/lib/supabase');
+        const { createChain } = require('../mocks/supabase');
+        supabase.from
+            .mockReturnValueOnce(createChain({ data: [{ id: 'user-1' }], error: null }))
+            .mockReturnValueOnce(createChain({ count: 1, error: null }))
+            .mockReturnValueOnce(createChain({ data: [{ user_id: 'user-1' }], error: null }));
+
+        const res = await request(app).get('/api/v1/health/deps');
+
+        expect(res.status).toBe(503);
+        expect(res.body.checks.reminderJobs).toEqual(expect.objectContaining({
+            status: 'degraded',
+            deadJobs: 1,
+            threshold: 0,
+        }));
     });
 });

@@ -57,14 +57,14 @@ RLS is enabled with owner-only authenticated policies. Public viewing is handled
 
 Protected routes:
 
-- `GET /api/share-links` — list current user share metadata and copyable URLs when available.
-- `POST /api/share-links` — create a share and return the raw URL once.
-- `DELETE /api/share-links/:id` — revoke a share.
+- `GET /api/v1/share-links` — list current user share metadata and copyable URLs when available.
+- `POST /api/v1/share-links` — create a share and return the raw URL once.
+- `DELETE /api/v1/share-links/:id` — revoke a share.
 
 Public routes:
 
-- `GET /api/public/share-links/:token` — fetch public snapshot, or return passcode-required / revoked / expired state.
-- `POST /api/public/share-links/:token/verify` — verify passcode and return public snapshot.
+- `GET /api/v1/public/share-links/:token` — fetch public snapshot, or return passcode-required / revoked / expired state.
+- `POST /api/v1/public/share-links/:token/verify` — verify passcode and return public snapshot.
 
 ## Manual Verification
 
