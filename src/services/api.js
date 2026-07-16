@@ -147,8 +147,27 @@ export const roundService = {
 
 export const opportunityService = {
     getAll: async () => {
-        const response = await api.get('/opportunities');
-        return response.data.items;
+        const items = [];
+        let cursor = null;
+
+        do {
+            const response = await api.get('/opportunities', {
+                params: {
+                    limit: 100,
+                    ...(cursor ? { cursor } : {}),
+                },
+            });
+            const pageItems = response.data?.items;
+
+            if (!Array.isArray(pageItems)) {
+                throw new Error('Invalid opportunities response');
+            }
+
+            items.push(...pageItems);
+            cursor = response.data.nextCursor || null;
+        } while (cursor);
+
+        return items;
     },
 
     getPage: async (params = {}) => {
