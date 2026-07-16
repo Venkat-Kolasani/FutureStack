@@ -1,7 +1,7 @@
 # ADR-002: Cursor pagination and query-driven indexes
 
 - Date written: 2026-07-16
-- Status: Proposed
+- Status: Accepted
 
 ## Problem
 

@@ -15,7 +15,7 @@
 | Layer | What we built |
 |-------|----------------|
 | **Database** | `opportunity_rounds` table + `current_round_number` / `rejected_round_number` on `opportunities` |
-| **Backend** | Nested REST routes under `/api/opportunities/:id/rounds` + `syncOpportunityFromRounds()` |
+| **Backend** | Nested REST routes under `/api/v1/opportunities/:id/rounds` + `syncOpportunityFromRounds()` |
 | **Frontend** | `RoundTimeline`, `AddRoundModal`, `roundService` in `api.js`, internship detail drawer + card badges |
 
 **Scope:** internships only (`category === 'internship'`). Hackathons use the collaboration workspace.
@@ -28,10 +28,10 @@
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/opportunities/:opportunityId/rounds` | List rounds (ordered by `round_number`) |
-| POST | `/api/opportunities/:opportunityId/rounds` | Create round (auto `round_number` if omitted) |
-| PATCH | `/api/opportunities/:opportunityId/rounds/:roundId` | Update type, date, result, notes |
-| DELETE | `/api/opportunities/:opportunityId/rounds/:roundId` | Delete round; re-sync parent opportunity |
+| GET | `/api/v1/opportunities/:opportunityId/rounds` | List rounds (ordered by `round_number`) |
+| POST | `/api/v1/opportunities/:opportunityId/rounds` | Create round (auto `round_number` if omitted) |
+| PATCH | `/api/v1/opportunities/:opportunityId/rounds/:roundId` | Update type, date, result, notes |
+| DELETE | `/api/v1/opportunities/:opportunityId/rounds/:roundId` | Delete round; re-sync parent opportunity |
 
 ### Mutation response shape (POST / PATCH / DELETE)
 
@@ -140,7 +140,7 @@ src/services/api.js           # roundService
 
 ## Analytics & reports
 
-`GET /api/analytics` includes `pipelineAnalytics` — built server-side from internship opportunities and their rounds in **one batched query** (no per-internship round fetches).
+`GET /api/v1/analytics` includes `pipelineAnalytics` — built server-side from internship opportunities and their rounds in **one batched query** (no per-internship round fetches).
 
 | Field | Meaning |
 |-------|---------|

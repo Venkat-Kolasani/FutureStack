@@ -31,6 +31,8 @@ Server runs at `http://localhost:3001` by default.
 | `SUPABASE_URL` | Supabase project URL | [Supabase Dashboard](https://supabase.com) > Settings > API |
 | `SUPABASE_SERVICE_ROLE_KEY` | Service role key (secret!) | Supabase Dashboard > Settings > API |
 | `SHARE_LINK_ENCRYPTION_KEY` | 32-byte secret used to encrypt recoverable share tokens | Generate locally with `openssl rand -base64 32` |
+| `JOB_DISPATCH_TOKEN` | Bearer secret for the reminder dispatcher | Generate locally with `openssl rand -base64 48` |
+| `JOB_ADMIN_USER_IDS` | Comma-separated internal user UUIDs allowed to inspect dead jobs | Supabase `users.id` values for internal administrators |
 | `RESUME_AI_ENABLED` | Enables or disables AI-check requests | `true` or `false` |
 | `LLM_PROVIDER` / `LLM_MODEL` | AI provider and model when the pipeline is enabled | `gemini` or `ollama` |
 | `GEMINI_API_KEY` | Server-side Gemini key, when using Gemini | Google AI Studio |
@@ -51,7 +53,7 @@ All paths below are canonical `/api/v1` endpoints. The legacy `/api` prefix rema
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/api/v1/health` | Liveness check |
-| GET | `/api/v1/health/deps` | Supabase reachability (returns 503 if down) |
+| GET | `/api/v1/health/deps` | Supabase, AI-table, and reminder-outbox readiness (returns 503 if degraded) |
 
 ### Auth & user
 
@@ -68,6 +70,8 @@ All paths below are canonical `/api/v1` endpoints. The legacy `/api` prefix rema
 | POST | `/api/v1/opportunities` | Create |
 | PUT/PATCH | `/api/v1/opportunities/:id` | Update |
 | DELETE | `/api/v1/opportunities/:id` | Delete |
+
+`GET /api/v1/opportunities` accepts `limit` (1–100), optional `status`/`category`, and opaque `cursor`; it returns `{ items, nextCursor }` sorted by `(created_at DESC, id DESC)`.
 
 ### Interview rounds (internships)
 
@@ -123,21 +127,21 @@ Requires `GEMINI_API_KEY` (or `LLM_PROVIDER=ollama`). Set `RESUME_AI_ENABLED=fal
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/ai-settings` | Read the authenticated user's safe provider-setting metadata |
-| PUT | `/api/ai-settings` | Save encrypted user-managed provider settings |
-| DELETE | `/api/ai-settings` | Remove user-managed settings |
+| GET | `/api/v1/ai-settings` | Read the authenticated user's safe provider-setting metadata |
+| PUT | `/api/v1/ai-settings` | Save encrypted user-managed provider settings |
+| DELETE | `/api/v1/ai-settings` | Remove user-managed settings |
 
 ### Share links
 
-Authenticated owners manage links through `/api/share-links`; viewers use the public routes without a Clerk session.
+Authenticated owners manage links through `/api/v1/share-links`; viewers use the public routes without a Clerk session.
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/share-links` | List the current user's share metadata |
-| POST | `/api/share-links` | Create a read-only, optional-passcode share |
-| DELETE | `/api/share-links/:id` | Revoke a share |
-| GET | `/api/public/share-links/:token` | Read public snapshot or passcode-required state |
-| POST | `/api/public/share-links/:token/verify` | Verify passcode and read snapshot |
+| GET | `/api/v1/share-links` | List the current user's share metadata |
+| POST | `/api/v1/share-links` | Create a read-only, optional-passcode share |
+| DELETE | `/api/v1/share-links/:id` | Revoke a share |
+| GET | `/api/v1/public/share-links/:token` | Read public snapshot or passcode-required state |
+| POST | `/api/v1/public/share-links/:token/verify` | Verify passcode and read snapshot |
 
 ### Hackathons
 

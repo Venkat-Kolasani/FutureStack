@@ -2,7 +2,7 @@
 
 FutureTracker is a full-stack career-application workspace for students and early-career professionals. It brings internships, hackathons, interview preparation, documents, deadlines, and application insights into one focused workflow.
 
-[Live app](https://futuretracker.online) · [API](https://futurestack-api.onrender.com/api/health) · [Documentation](docs/DOCUMENTATION.md) · [Contributing](CONTRIBUTING.md)
+[Live app](https://futuretracker.online) · [API](https://futurestack-api.onrender.com/api/v1/health) · [Documentation](docs/DOCUMENTATION.md) · [Contributing](CONTRIBUTING.md)
 
 ## Project status
 
@@ -15,7 +15,8 @@ The core product is actively implemented and includes opportunity tracking, prot
 - Record multi-round interview progress and keep the parent opportunity status in sync.
 - Prepare for internship interviews with research, questions, technical topics, STAR stories, and reflections.
 - Store resumes, cover letters, and external links; associate them with opportunities and receive local ATS-style guidance for PDF and DOCX uploads.
-- Collaborate on hackathons with a team workspace, ideas, tasks, votes, and submission checklist.
+- Collaborate on hackathons with account-backed owner/editor/viewer access, expiring single-use invites, an idempotent idea-vote model, tasks, and a submission checklist.
+- Generate durable in-app deadline reminders through a transactional outbox. The free GitHub Actions dispatcher is optional and best-effort, not a strict-timing service.
 - Create revocable, optional-passcode, read-only share links without requiring viewers to sign in.
 - Explore funnel, deadline, status, and rejection insights.
 
@@ -84,7 +85,7 @@ The checked-in templates are the complete configuration reference: [`.env.exampl
 | `.env` | `REACT_APP_CLERK_PUBLISHABLE_KEY`, `REACT_APP_API_URL`, `REACT_APP_SUPABASE_URL`, `REACT_APP_SUPABASE_ANON_KEY` |
 | `backend/.env` | `CLERK_SECRET_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `CORS_ORIGIN` |
 
-For production, also set `CLERK_JWT_PUBLIC_KEY` for local JWT verification. Share links need `SHARE_LINK_ENCRYPTION_KEY`. The optional AI pipeline is configured only in `backend/.env` with `RESUME_AI_ENABLED`, provider/model values, and either a server Gemini key or user-managed BYOK settings. Never expose service-role, Clerk secret, or AI keys in frontend variables.
+For production, also set `CLERK_JWT_PUBLIC_KEY` for local JWT verification. Share links need `SHARE_LINK_ENCRYPTION_KEY`. Account invites use `FRONTEND_URL`; the optional reminder dispatcher uses `JOB_DISPATCH_TOKEN`, with `JOB_ADMIN_USER_IDS` controlling the dead-letter view. The optional AI pipeline is configured only in `backend/.env` with `RESUME_AI_ENABLED`, provider/model values, and either a server Gemini key or user-managed BYOK settings. Never expose service-role, Clerk secret, job-dispatch, or AI keys in frontend variables.
 
 ## Database setup
 
@@ -96,8 +97,9 @@ Apply the SQL files in the following order to a new Supabase project:
 4. [`docs/opportunity-rounds-migration.sql`](docs/opportunity-rounds-migration.sql) and [`docs/opportunity-rounds-round-types-patch.sql`](docs/opportunity-rounds-round-types-patch.sql)
 5. [`docs/interview-prep-migration.sql`](docs/interview-prep-migration.sql)
 6. [`docs/hackathon-collaboration-migration.sql`](docs/hackathon-collaboration-migration.sql)
-7. [`docs/share-links-migration.sql`](docs/share-links-migration.sql), then the SQL files in [`supabase/migrations`](supabase/migrations)
-8. [`docs/ai-tables-setup.sql`](docs/ai-tables-setup.sql) only when enabling the AI Resume Checker
+7. [`docs/share-links-migration.sql`](docs/share-links-migration.sql), then the SQL files in [`supabase/migrations`](supabase/migrations) in timestamp order
+8. [`supabase/migrations/20260716081332_idempotent_idea_votes.sql`](supabase/migrations/20260716081332_idempotent_idea_votes.sql), [`20260716082400_transactional_reminder_outbox.sql`](supabase/migrations/20260716082400_transactional_reminder_outbox.sql), and [`20260716083209_team_memberships_and_invites.sql`](supabase/migrations/20260716083209_team_memberships_and_invites.sql)
+9. [`docs/ai-tables-setup.sql`](docs/ai-tables-setup.sql) only when enabling the AI Resume Checker
 
 Each migration enables and scopes Row-Level Security policies. Review them before applying in a production project.
 
@@ -114,20 +116,21 @@ The architecture check protects the frontend/API boundary. Feature-specific comm
 
 ## API overview
 
-All endpoints except health checks and public-share reads require a Clerk bearer token.
+All endpoints except health checks and public-share reads require a Clerk bearer token. Canonical endpoints use `/api/v1`; the legacy `/api` prefix is temporarily supported with `Deprecation` and `Sunset` headers.
 
 | Area | Prefix |
 | --- | --- |
-| Health | `/api/health`, `/api/health/deps` |
-| Opportunities and interview rounds | `/api/opportunities` |
-| Analytics | `/api/analytics` |
-| Documents and ATS fields | `/api/documents` |
-| Interview preparation | `/api/interview-prep` |
-| Hackathon collaboration | `/api/hackathons` |
-| Authenticated share links | `/api/share-links` |
-| Public share reads | `/api/public/share-links` |
-| AI resume checks | `/api/documents/:id/ai-check` |
-| AI provider settings | `/api/ai-settings` |
+| Health | `/api/v1/health`, `/api/v1/health/deps` |
+| Opportunities and interview rounds | `/api/v1/opportunities` |
+| Analytics | `/api/v1/analytics` |
+| Documents and ATS fields | `/api/v1/documents` |
+| Interview preparation | `/api/v1/interview-prep` |
+| Hackathon collaboration | `/api/v1/hackathons` |
+| Authenticated share links | `/api/v1/share-links` |
+| Public share reads | `/api/v1/public/share-links` |
+| AI resume checks | `/api/v1/documents/:id/ai-check` |
+| AI provider settings | `/api/v1/ai-settings` |
+| In-app notifications | `/api/v1/notifications` |
 
 The complete endpoint list, request expectations, and curl examples are in [backend/README.md](backend/README.md).
 
@@ -138,6 +141,7 @@ The complete endpoint list, request expectations, and curl examples are in [back
 | [Project status](docs/PROJECT_STATUS.md) | Current shipped, gated, and planned capabilities |
 | [Codebase guide](docs/CODEBASE_GUIDE.md) | Routes, service objects, request flow, and contribution orientation |
 | [Architecture guide](docs/DOCUMENTATION.md) | System design and deployment model |
+| [Architecture decisions](docs/adr/README.md) | Decision records and interview-ready trade-offs |
 | [Testing guide](docs/TESTING.md) | Commands, focused test suites, and manual checks |
 | [Security guide](docs/SECURITY.md) | Deployment controls and security assumptions |
 | [Interview rounds](docs/interview-rounds.md) | Multi-round pipeline and parent-status synchronization |
