@@ -7,6 +7,7 @@ function createChain(result = { data: null, error: null }) {
         select: jest.fn(() => chain),
         insert: jest.fn(() => chain),
         update: jest.fn(() => chain),
+        upsert: jest.fn(() => chain),
         delete: jest.fn(() => chain),
         eq: jest.fn(() => chain),
         or: jest.fn(() => chain),

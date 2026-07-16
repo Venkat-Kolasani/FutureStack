@@ -343,6 +343,18 @@ export const healthCheck = async () => {
     return response.data;
 };
 
+export const notificationService = {
+    list: async ({ limit = 25 } = {}) => {
+        const response = await api.get('/notifications', { params: { limit } });
+        return response.data.notifications;
+    },
+
+    markRead: async (notificationId) => {
+        const response = await api.patch(`/notifications/${notificationId}/read`);
+        return response.data;
+    },
+};
+
 // =============================================================================
 // HACKATHON TEAM COLLABORATION SERVICE
 // =============================================================================

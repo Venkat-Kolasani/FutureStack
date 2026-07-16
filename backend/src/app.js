@@ -19,6 +19,9 @@ const shareLinksRoutes = require('./routes/share-links');
 const publicShareLinksRoutes = require('./routes/public-share-links');
 const resumeCheckerRoutes = require('./routes/resume-checker');
 const aiSettingsRoutes = require('./routes/ai-settings');
+const internalJobsRoutes = require('./routes/internal-jobs');
+const adminJobsRoutes = require('./routes/admin-jobs');
+const notificationsRoutes = require('./routes/notifications');
 
 const app = express();
 const apiRouter = express.Router();
@@ -31,6 +34,11 @@ const LEGACY_API_SUNSET = 'Thu, 31 Dec 2026 23:59:59 GMT';
 // =============================================================================
 
 app.set('trust proxy', 1);
+
+const DEAD_JOB_READINESS_THRESHOLD = Number.parseInt(
+    process.env.DEAD_JOB_READINESS_THRESHOLD || '0',
+    10
+);
 
 // =============================================================================
 // Middleware
@@ -211,6 +219,7 @@ apiRouter.get('/health/deps', async (req, res) => {
     const checks = {
         supabase: { status: 'ok' },
         aiTables: { status: 'ok' },
+        reminderJobs: { status: 'ok', deadJobs: 0 },
     };
 
     try {
@@ -229,6 +238,36 @@ apiRouter.get('/health/deps', async (req, res) => {
         checks.supabase = {
             status: 'down',
             message: error.message
+        };
+    }
+
+    try {
+        const { count, error } = await supabase
+            .from('notification_jobs')
+            .select('id', { count: 'exact', head: true })
+            .eq('state', 'dead');
+
+        if (error) {
+            checks.reminderJobs = {
+                status: 'missing',
+                deadJobs: 0,
+                message: error.message,
+                hint: 'Apply the transactional reminder outbox migration before enabling dispatch.',
+            };
+        } else {
+            const deadJobs = count || 0;
+            checks.reminderJobs = {
+                status: deadJobs > DEAD_JOB_READINESS_THRESHOLD ? 'degraded' : 'ok',
+                deadJobs,
+                threshold: DEAD_JOB_READINESS_THRESHOLD,
+            };
+        }
+    } catch (error) {
+        checks.reminderJobs = {
+            status: 'missing',
+            deadJobs: 0,
+            message: error.message,
+            hint: 'Apply the transactional reminder outbox migration before enabling dispatch.',
         };
     }
 
@@ -272,6 +311,9 @@ apiRouter.use('/share-links', requireAuth, authenticatedReadLimiter, writeOperat
 apiRouter.use('/public/share-links', publicShareLinksRoutes);
 apiRouter.use('/documents/:id/ai-check', requireAuth, authenticatedReadLimiter, resumeCheckerRoutes);
 apiRouter.use('/ai-settings', requireAuth, authenticatedReadLimiter, writeOperationsLimiter, aiSettingsRoutes);
+apiRouter.use('/notifications', requireAuth, authenticatedReadLimiter, writeOperationsLimiter, notificationsRoutes);
+apiRouter.use('/admin/jobs', requireAuth, authenticatedReadLimiter, adminJobsRoutes);
+apiRouter.use('/internal/jobs', internalJobsRoutes);
 
 apiRouter.get('/me', requireAuth, authenticatedReadLimiter, (req, res) => {
     res.json({

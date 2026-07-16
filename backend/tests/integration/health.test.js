@@ -57,4 +57,28 @@ describe('Health endpoints', () => {
         expect(res.body.status).toBe('degraded');
         expect(res.body.checks.supabase.status).toBe('down');
     });
+
+    it('GET /api/v1/health/deps becomes degraded when dead reminder jobs exceed the threshold', async () => {
+        const { supabase } = require('../../src/lib/supabase');
+        const { createChain } = require('../mocks/supabase');
+        const deadJobCountChain = {
+            select: jest.fn(function select() { return this; }),
+            eq: jest.fn(function eq() { return this; }),
+            then: (resolve) => resolve({ count: 1, error: null }),
+        };
+
+        supabase.from
+            .mockReturnValueOnce(createChain({ data: [{ id: 'user-1' }], error: null }))
+            .mockReturnValueOnce(deadJobCountChain)
+            .mockReturnValueOnce(createChain({ data: [{ user_id: 'user-1' }], error: null }));
+
+        const res = await request(app).get('/api/v1/health/deps');
+
+        expect(res.status).toBe(503);
+        expect(res.body.checks.reminderJobs).toEqual(expect.objectContaining({
+            status: 'degraded',
+            deadJobs: 1,
+            threshold: 0,
+        }));
+    });
 });

@@ -1,7 +1,7 @@
 # ADR-004: Transactional outbox for deadline reminders
 
 - Date written: 2026-07-16
-- Status: Proposed
+- Status: Accepted
 
 ## Problem
 
@@ -28,3 +28,7 @@ GitHub Actions has no strict execution SLA. Dead jobs and delayed schedules must
 ## Metrics and revisit threshold
 
 Track queued-job age, retry count, dead-job count, and dispatch duration. Move to a dedicated worker when reminders regularly exceed the documented tolerance or strict timing is needed.
+
+## Deployment verification
+
+Before enabling the scheduled workflow, apply `20260716082400_transactional_reminder_outbox.sql` to a disposable Supabase project. Configure `JOB_DISPATCH_TOKEN`, `JOB_ADMIN_USER_IDS`, and GitHub Actions secrets, then verify a queued job, retry, dead-letter result, and `/api/v1/health/deps` degradation.

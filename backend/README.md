@@ -158,6 +158,17 @@ Apply `supabase/migrations/20260716081332_idempotent_idea_votes.sql` before depl
 |--------|----------|-------------|
 | GET | `/api/v1/analytics` | Dashboard stats and chart data |
 
+### Notifications and background jobs
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/v1/notifications` | List the authenticated user's in-app reminders |
+| PATCH | `/api/v1/notifications/:id/read` | Mark one notification as read |
+| POST | `/api/v1/internal/jobs/dispatch` | Token-protected reminder dispatcher for GitHub Actions |
+| GET | `/api/v1/admin/jobs/dead` | Configured-admin visibility into dead-letter jobs |
+
+The dispatcher requires `JOB_DISPATCH_TOKEN`. Dead-job visibility requires `JOB_ADMIN_USER_IDS` (comma-separated internal user UUIDs). Apply `20260716082400_transactional_reminder_outbox.sql` before enabling either feature.
+
 ## Testing
 
 ```bash
