@@ -100,16 +100,15 @@ Apply the SQL files in the following order to a new Supabase project:
 5. [`docs/interview-prep-migration.sql`](docs/interview-prep-migration.sql)
 6. [`docs/hackathon-collaboration-migration.sql`](docs/hackathon-collaboration-migration.sql)
 7. [`docs/share-links-migration.sql`](docs/share-links-migration.sql), then the SQL files in [`supabase/migrations`](supabase/migrations) in timestamp order
-8. The July 16 migrations in timestamp order: [`20260716081332_idempotent_idea_votes.sql`](supabase/migrations/20260716081332_idempotent_idea_votes.sql), [`20260716082400_transactional_reminder_outbox.sql`](supabase/migrations/20260716082400_transactional_reminder_outbox.sql), [`20260716083209_team_memberships_and_invites.sql`](supabase/migrations/20260716083209_team_memberships_and_invites.sql), [`20260716100000_review_hardening.sql`](supabase/migrations/20260716100000_review_hardening.sql), [`20260716110000_rounds_drive_active_events.sql`](supabase/migrations/20260716110000_rounds_drive_active_events.sql), [`20260716120000_optional_email_reminders.sql`](supabase/migrations/20260716120000_optional_email_reminders.sql), and [`20260716123000_user_notification_preferences.sql`](supabase/migrations/20260716123000_user_notification_preferences.sql)
-9. [`docs/ai-tables-setup.sql`](docs/ai-tables-setup.sql) only when enabling the AI Resume Checker
+8. [`docs/ai-tables-setup.sql`](docs/ai-tables-setup.sql) only when enabling the AI Resume Checker
 
 Each migration enables and scopes Row-Level Security policies. Review them before applying in a production project.
 
 ### Optional free Resend reminders
 
-1. Apply [`20260716120000_optional_email_reminders.sql`](supabase/migrations/20260716120000_optional_email_reminders.sql) and [`20260716123000_user_notification_preferences.sql`](supabase/migrations/20260716123000_user_notification_preferences.sql) after the existing reminder-outbox migrations.
+1. Confirm [`20260716120000_optional_email_reminders.sql`](supabase/migrations/20260716120000_optional_email_reminders.sql) and [`20260716123000_user_notification_preferences.sql`](supabase/migrations/20260716123000_user_notification_preferences.sql) were applied through the timestamp-ordered migration step above.
 2. In the [Resend API Keys dashboard](https://resend.com/api-keys), select **Create API Key**, name it `FutureStack Render production`, choose **Sending access**, and restrict it to the verified sender domain. Copy the `re_...` value immediately: Resend shows it only once.
-3. In Render, add `REMINDER_EMAILS_ENABLED=true`, `RESEND_API_KEY`, and `REMINDER_EMAIL_FROM=FutureStack <your-verified-domain>`. Redeploy the API. Do not add these to Vercel.
+3. In Render, add `REMINDER_EMAILS_ENABLED=true`, `RESEND_API_KEY`, and `REMINDER_EMAIL_FROM=FutureStack <reminders@your-verified-domain>`. Redeploy the API. Do not add these to Vercel.
 4. Keep the GitHub Actions reminder dispatcher configured. It wakes the existing outbox; it does not send email directly. Each signed-in user chooses **Email deadline reminders** from the bell icon's Notifications page; the default is off until they opt in.
 
 The implementation is intentionally best-effort: an email provider error retries through the existing job lease, and a per-job record plus Resend idempotency protects duplicate sends. See [`docs/DOCUMENTATION.md`](docs/DOCUMENTATION.md), [ADR-007](docs/adr/ADR-007-optional-email-reminders.md), and [ADR-008](docs/adr/ADR-008-user-controlled-email-reminders.md) for the limits and scale path.
