@@ -54,6 +54,17 @@ async function findUserEmail(supabase, userId) {
     return data?.email || null;
 }
 
+async function userWantsDeadlineEmail(supabase, userId) {
+    const { data, error } = await supabase
+        .from('user_notification_preferences')
+        .select('deadline_email_enabled')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+    if (error) throw error;
+    return data?.deadline_email_enabled === true;
+}
+
 async function findEmailDelivery(supabase, notificationJobId) {
     const { data, error } = await supabase
         .from('notification_email_deliveries')
@@ -116,6 +127,7 @@ async function sendWithResend({ config, recipientEmail, job, fetchImpl = fetch }
             Authorization: `Bearer ${config.apiKey}`,
             'Content-Type': 'application/json',
             'Idempotency-Key': `deadline-reminder/${job.id}`,
+            'User-Agent': 'FutureStack/1.0 (+https://futuretracker.online)',
         },
         body: JSON.stringify({
             from: config.from,
@@ -140,6 +152,11 @@ async function deliverDeadlineReminderEmail(supabase, job, {
 } = {}) {
     const config = getReminderEmailConfig(env);
     if (!config.enabled) return { status: 'disabled' };
+
+    const userSelectedEmail = await userWantsDeadlineEmail(supabase, job.user_id);
+    if (!userSelectedEmail) {
+        return { status: 'disabled_by_user' };
+    }
 
     const recipientEmail = await findUserEmail(supabase, job.user_id);
     if (!recipientEmail) return { status: 'skipped_no_recipient' };

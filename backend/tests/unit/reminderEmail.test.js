@@ -36,11 +36,16 @@ function createUpdateChain(result = { error: null }) {
 
 function createSupabase({
     email = 'owner@example.com',
+    deadlineEmailEnabled = true,
     existingDelivery = null,
     insertResult = { error: null },
     updateResult = { error: null },
 } = {}) {
     const userLookup = createMaybeSingleChain({ data: email ? { email } : null, error: null });
+    const preferenceLookup = createMaybeSingleChain({
+        data: { deadline_email_enabled: deadlineEmailEnabled },
+        error: null,
+    });
     const deliveryLookup = createMaybeSingleChain({ data: existingDelivery, error: null });
     const insert = jest.fn(() => Promise.resolve(insertResult));
     const update = jest.fn(() => createUpdateChain(updateResult));
@@ -49,6 +54,9 @@ function createSupabase({
         supabase: {
             from: jest.fn((table) => {
                 if (table === 'users') return { select: jest.fn(() => userLookup) };
+                if (table === 'user_notification_preferences') {
+                    return { select: jest.fn(() => preferenceLookup) };
+                }
                 if (table === 'notification_email_deliveries') {
                     return {
                         select: jest.fn(() => deliveryLookup),
@@ -107,6 +115,7 @@ describe('reminder email delivery', () => {
                 headers: expect.objectContaining({
                     Authorization: 'Bearer re_test_key',
                     'Idempotency-Key': `deadline-reminder/${job.id}`,
+                    'User-Agent': 'FutureStack/1.0 (+https://futuretracker.online)',
                 }),
             })
         );
@@ -114,6 +123,18 @@ describe('reminder email delivery', () => {
             state: 'sent',
             provider_message_id: 'resend-message-1',
         }));
+    });
+
+    it('does not read the recipient or call Resend when the user has not opted in', async () => {
+        const { supabase, insert } = createSupabase({ deadlineEmailEnabled: false });
+        const fetchImpl = jest.fn();
+
+        await expect(deliverDeadlineReminderEmail(supabase, job, { env: enabledEnv, fetchImpl }))
+            .resolves.toEqual({ status: 'disabled_by_user' });
+        expect(fetchImpl).not.toHaveBeenCalled();
+        expect(insert).not.toHaveBeenCalled();
+        expect(supabase.from).toHaveBeenCalledWith('user_notification_preferences');
+        expect(supabase.from).not.toHaveBeenCalledWith('users');
     });
 
     it('does not resend a delivery that was already persisted', async () => {

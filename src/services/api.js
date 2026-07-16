@@ -375,6 +375,18 @@ export const notificationService = {
     },
 };
 
+export const notificationPreferenceService = {
+    get: async () => {
+        const response = await api.get('/notification-preferences');
+        return response.data;
+    },
+
+    update: async ({ deadlineEmailEnabled }) => {
+        const response = await api.put('/notification-preferences', { deadlineEmailEnabled });
+        return response.data;
+    },
+};
+
 // =============================================================================
 // HACKATHON TEAM COLLABORATION SERVICE
 // =============================================================================

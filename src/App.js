@@ -38,6 +38,7 @@ const Calendar = lazy(() => import('./pages/Calendar'));
 const Reports = lazy(() => import('./pages/Reports'));
 const Analytics = lazy(() => import('./pages/Analytics'));
 const Documents = lazy(() => import('./pages/Documents'));
+const Notifications = lazy(() => import('./pages/Notifications'));
 const PublicSharePage = lazy(() => import('./pages/PublicSharePage'));
 
 // Loading fallback component for Suspense
@@ -163,6 +164,11 @@ function AppContent() {
             <Route path="/documents" element={
               <ProtectedRoute>
                 <Documents />
+              </ProtectedRoute>
+            } />
+            <Route path="/notifications" element={
+              <ProtectedRoute>
+                <Notifications />
               </ProtectedRoute>
             } />
           </Routes>
