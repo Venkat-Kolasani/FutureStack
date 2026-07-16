@@ -1,7 +1,7 @@
 # ADR-008: User-controlled email reminder preference
 
 - Date written: 2026-07-16
-- Status: Proposed
+- Status: Accepted
 
 ## Problem
 

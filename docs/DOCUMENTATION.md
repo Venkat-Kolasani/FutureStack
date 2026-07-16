@@ -52,7 +52,7 @@ Career applications are fragmented across job boards, messages, spreadsheets, do
 | AI Resume Checker | Implemented, UI-gated | Backend pipeline, storage, provider settings, tests, and UI components exist; `AI_RESUME_CHECK_ENABLED` is currently `false`. |
 | Progress Logger | Schema migration ready | Tracks and daily logs, indexes, and Clerk-compatible RLS are defined; API and UI remain separate follow-on work. |
 | Hackathon submission reminders | Available, scheduler-configured | The outbox and leased dispatcher create durable in-app notifications. GitHub Actions is an optional best-effort free-tier scheduler; the active-events migration limits new reminder intent to hackathon submissions. |
-| Optional Resend email reminders | Implemented, migration/config-gated | Email is disabled by default. A per-job delivery record and Resend idempotency key make retried sends safe; enable only after applying the email migration and configuring backend secrets. |
+| Website notification center and optional Resend email reminders | Implemented, migration/config-gated | The bell page shows persisted website notifications and lets each user opt into email copies. A per-job delivery record and Resend idempotency key make retried sends safe. |
 | Tags, bulk import/export, advanced filters | Planned | These are intentionally not claimed as shipped features. |
 
 **Production rollout status (checked July 16, 2026):** `20260716110000_rounds_drive_active_events.sql` is applied to the connected Supabase project. Read-only verification confirmed the new columns, triggers, and index; it preserved all 71 opportunity rows, backfilled `applied_on` for the 59 internship rows, and cancelled only queued internship reminder jobs. The matching application code is published; optional email delivery remains off until the separate migration and backend configuration below are completed.
@@ -80,7 +80,8 @@ flowchart LR
   A --> ST["Supabase Storage"]
   A -. "gated only" .-> LLM["Gemini or Ollama"]
   G["GitHub Actions\nbest-effort / 15 min"] -->|"token-protected dispatch"| A
-  A --> J[("Postgres reminder\noutbox + in-app notifications")]
+  A --> J[("Postgres reminder\noutbox + website notifications")]
+  R -->|"bell page: list/read and preference"| A
   A -. "optional, config-gated" .-> E["Resend email API"]
 ```
 
@@ -106,7 +107,7 @@ flowchart LR
 - Product analytics: PostHog when configured.
 - CI: GitHub Actions runs frontend build/tests, backend tests, architecture guardrails, and non-blocking dependency audits.
 - Reminder scheduling: an optional repository workflow posts to the token-protected dispatcher every 15 minutes. It is intentionally described as best-effort because the GitHub Actions free tier has no execution SLA.
-- Email delivery: an optional Resend API call runs only inside the leased dispatcher. It is server-only, disabled by default, and never blocks opportunity create/update requests.
+- Email delivery: an optional Resend API call runs only inside the leased dispatcher. It is server-only, never blocks opportunity create/update requests, and is selected per user from the website notification page.
 
 The exact environment contract lives in `.env.example` and `backend/.env.example`. Vercel must receive `REACT_APP_API_URL=https://futurestack-aeyn.onrender.com/api/v1` at build time. Secrets are backend-only; the browser receives only public configuration such as Clerk's publishable key and Supabase's anon key.
 
@@ -441,13 +442,17 @@ The free implementation deliberately separates *durable work* from *best-effort 
 
 ### Optional Resend email delivery
 
-The email channel follows [ADR-007](adr/ADR-007-optional-email-reminders.md). It runs **after** the idempotent in-app notification is written and only when all three backend-only values are present: `REMINDER_EMAILS_ENABLED=true`, `RESEND_API_KEY`, and `REMINDER_EMAIL_FROM`. A missing user account email is a successful skip; it does not retry or prevent the in-app reminder. A configured Resend failure is retryable through the existing job lease and backoff, then appears in the existing dead-letter view.
+An **in-app notification** here means a row persisted in `user_notifications`, shown to the signed-in user on the website's bell-icon **Notifications** page. It is not a browser push notification and it does not require the browser to be open when the reminder is generated. The page loads the user's own notification rows, lets them mark a row read, and contains the email preference toggle.
 
-Before enabling it, apply [`20260716120000_optional_email_reminders.sql`](../supabase/migrations/20260716120000_optional_email_reminders.sql). The migration adds `notification_email_deliveries`, keyed by `notification_job_id`, so a persisted `sent` result prevents re-sending a completed job. The Resend request also carries `Idempotency-Key: deadline-reminder/<job-id>` to cover the failure window where Resend accepts a message but the worker fails before it records the provider response. Resend keeps this key for 24 hours, so the channel is still at-least-once rather than an absolute delivery guarantee.
+The email channel follows [ADR-007](adr/ADR-007-optional-email-reminders.md) and [ADR-008](adr/ADR-008-user-controlled-email-reminders.md). It runs **after** the idempotent website notification is written and only when two independent conditions are true: the deployment has `REMINDER_EMAILS_ENABLED=true`, `RESEND_API_KEY`, and `REMINDER_EMAIL_FROM`; and that user has selected **Email deadline reminders**. The preference is default-off to avoid assuming consent, but it is the user's choice—not an administrator-controlled product choice. A missing user account email is a successful skip; it does not retry or prevent the website notification. A configured Resend failure is retryable through the existing job lease and backoff, then appears in the existing dead-letter view.
+
+Before enabling it, apply [`20260716120000_optional_email_reminders.sql`](../supabase/migrations/20260716120000_optional_email_reminders.sql) and [`20260716123000_user_notification_preferences.sql`](../supabase/migrations/20260716123000_user_notification_preferences.sql). The first adds `notification_email_deliveries`, keyed by `notification_job_id`, so a persisted `sent` result prevents re-sending a completed job. The second stores the authenticated user's `deadline_email_enabled` choice. The Resend request also carries `Idempotency-Key: deadline-reminder/<job-id>` to cover the failure window where Resend accepts a message but the worker fails before it records the provider response, plus the required `User-Agent` header for direct API calls. Resend keeps this key for 24 hours, so the channel is still at-least-once rather than an absolute delivery guarantee.
+
+To create the key, visit [Resend API Keys](https://resend.com/api-keys), choose **Create API Key**, name it `FutureStack Render production`, choose **Sending access**, and limit it to the verified sender domain. Copy the resulting `re_...` value immediately—it is shown only once—and add it only to Render's backend environment. For a production sender, add and verify a domain in [Resend Domains](https://resend.com/domains) before creating the domain-restricted key.
 
 This stays within Resend's free transactional plan as of July 16, 2026: 3,000 emails per month, 100 per day, and one custom domain. Start with `onboarding@resend.dev` only to test delivery to the account owner's email; verify a custom domain before enabling reminders for other users. Check [Resend pricing](https://resend.com/pricing/) before rollout because provider quotas can change. Do not put the API key in Vercel or any `REACT_APP_*` variable.
 
-**What we deliberately do not do yet:** per-user email opt-in/unsubscribe preferences, open/click tracking, provider webhooks, or a permanent email audit/event stream. Those become necessary when email is a user promise rather than a best-effort convenience. The first upgrade is Resend webhooks plus delivery-event reconciliation; the next is per-user channel preferences and a dedicated scheduler/worker.
+**What we deliberately do not do yet:** browser push notifications, open/click tracking, provider webhooks, or a permanent email audit/event stream. Those become necessary when email is a user promise rather than a best-effort convenience. The first upgrade is Resend webhooks plus delivery-event reconciliation; the next is per-reminder timing/timezone controls and a dedicated scheduler/worker.
 
 ### Read-only share links
 
@@ -652,7 +657,7 @@ The authentication path distinguishes invalid tokens from database/bootstrap fai
 | AI pipeline and settings | `backend/src/lib/resume-agent/`, `backend/src/lib/llm/`, `backend/src/lib/apiKeyVault.js` |
 | Share security | `backend/src/lib/shareLinks.js`, share-link route modules |
 | Collaboration authorization and votes | `backend/src/routes/hackathons.js`, `supabase/migrations/20260716081332_idempotent_idea_votes.sql`, `supabase/migrations/20260716083209_team_memberships_and_invites.sql`, `supabase/migrations/20260716100000_review_hardening.sql` |
-| Reminder outbox and optional email | `backend/src/lib/reminderJobs.js`, `backend/src/lib/reminderEmail.js`, `backend/src/routes/internal-jobs.js`, `.github/workflows/dispatch-reminders.yml`, `supabase/migrations/20260716082400_transactional_reminder_outbox.sql`, `supabase/migrations/20260716120000_optional_email_reminders.sql` |
+| Website notifications, reminder outbox, and email preference | `src/pages/Notifications.jsx`, `backend/src/routes/notifications.js`, `backend/src/routes/notification-preferences.js`, `backend/src/lib/reminderJobs.js`, `backend/src/lib/reminderEmail.js`, `.github/workflows/dispatch-reminders.yml`, `supabase/migrations/20260716082400_transactional_reminder_outbox.sql`, `supabase/migrations/20260716120000_optional_email_reminders.sql`, `supabase/migrations/20260716123000_user_notification_preferences.sql` |
 | Active internship events | `src/components/rounds/`, `backend/src/routes/upcoming-rounds.js`, `supabase/migrations/20260716110000_rounds_drive_active_events.sql` |
 | SQL schema and policies | `docs/*.sql`, `supabase/migrations/` |
 | Tests and CI | `docs/TESTING.md`, `backend/tests/`, `.github/workflows/ci.yml` |

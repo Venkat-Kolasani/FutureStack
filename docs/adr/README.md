@@ -33,8 +33,8 @@ Update an ADR's status only when its corresponding implementation is complete an
 - [ADR-004: Deadline reminder outbox](ADR-004-transactional-outbox.md)
 - [ADR-005: Team memberships](ADR-005-team-memberships.md)
 - [ADR-007: Optional email delivery for deadline reminders](ADR-007-optional-email-reminders.md)
+- [ADR-008: User-controlled email reminder preference](ADR-008-user-controlled-email-reminders.md)
 
 ## Proposed decisions
 
 - [ADR-006: Interview rounds as active internship events](ADR-006-interview-rounds-as-active-events.md)
-- [ADR-008: User-controlled email reminder preference](ADR-008-user-controlled-email-reminders.md)
