@@ -27,14 +27,21 @@ describe('Hackathon voting API', () => {
         mockFrom.mockReset();
         mockRpc.mockReset();
         mockFrom.mockImplementation((table) => {
-            if (table !== 'hackathon_teams') {
-                throw new Error(`Unexpected table: ${table}`);
+            if (table === 'hackathon_teams') {
+                return createChain({
+                    data: { id: TEAM_ID, opportunity_id: OPPORTUNITY_ID, user_id: TEST_AUTH.internalUserId },
+                    error: null,
+                });
             }
 
-            return createChain({
-                data: { id: TEAM_ID, opportunity_id: OPPORTUNITY_ID, user_id: TEST_AUTH.internalUserId },
-                error: null,
-            });
+            if (table === 'team_memberships') {
+                return createChain({
+                    data: { team_id: TEAM_ID, user_id: TEST_AUTH.internalUserId, role: 'owner' },
+                    error: null,
+                });
+            }
+
+            throw new Error(`Unexpected table: ${table}`);
         });
     });
 
@@ -95,5 +102,96 @@ describe('Hackathon voting API', () => {
         expect(res.body.error).toBe('Validation Error');
         expect(mockFrom).not.toHaveBeenCalled();
         expect(mockRpc).not.toHaveBeenCalled();
+    });
+
+    it('redeems a valid invite without exposing the stored token hash', async () => {
+        mockRpc.mockResolvedValue({
+            data: [{ team_id: TEAM_ID, opportunity_id: OPPORTUNITY_ID, role: 'editor' }],
+            error: null,
+        });
+
+        const res = await request(app)
+            .post('/api/v1/hackathons/invites/1234567890123456789012345678901234567890123/accept')
+            .set(authHeader);
+
+        expect(res.status).toBe(200);
+        expect(res.body).toEqual({
+            teamId: TEAM_ID,
+            opportunityId: OPPORTUNITY_ID,
+            role: 'editor',
+        });
+        expect(mockRpc).toHaveBeenCalledWith(
+            'accept_team_invite',
+            expect.objectContaining({ p_user_id: TEST_AUTH.internalUserId, p_token_hash: expect.stringMatching(/^[a-f0-9]{64}$/) })
+        );
+    });
+
+    it('creates an owner-only invite while persisting only a token hash', async () => {
+        const inviteChain = createChain({
+            data: {
+                id: '00000000-0000-4000-8000-000000000050',
+                role: 'viewer',
+                expires_at: '2026-07-23T08:00:00.000Z',
+                created_at: '2026-07-16T08:00:00.000Z',
+            },
+            error: null,
+        });
+        mockFrom.mockImplementation((table) => {
+            if (table === 'hackathon_teams') {
+                return createChain({
+                    data: { id: TEAM_ID, opportunity_id: OPPORTUNITY_ID, user_id: TEST_AUTH.internalUserId },
+                    error: null,
+                });
+            }
+            if (table === 'team_memberships') {
+                return createChain({
+                    data: { team_id: TEAM_ID, user_id: TEST_AUTH.internalUserId, role: 'owner' },
+                    error: null,
+                });
+            }
+            if (table === 'team_invites') return inviteChain;
+            throw new Error(`Unexpected table: ${table}`);
+        });
+
+        const res = await request(app)
+            .post(`/api/v1/hackathons/${OPPORTUNITY_ID}/invites`)
+            .set(authHeader)
+            .send({ role: 'viewer', expiresInHours: 24 });
+
+        expect(res.status).toBe(201);
+        expect(res.body.invite).not.toHaveProperty('token_hash');
+        expect(res.body.inviteUrl).toMatch(/\/hackathons\/invites\/[A-Za-z0-9_-]{43}$/);
+        expect(inviteChain.insert).toHaveBeenCalledWith(expect.objectContaining({
+            token_hash: expect.stringMatching(/^[a-f0-9]{64}$/),
+            role: 'viewer',
+        }));
+    });
+
+    it('prevents a viewer from creating workspace content', async () => {
+        mockFrom.mockImplementation((table) => {
+            if (table === 'hackathon_teams') {
+                return createChain({
+                    data: { id: TEAM_ID, opportunity_id: OPPORTUNITY_ID, user_id: TEST_AUTH.internalUserId },
+                    error: null,
+                });
+            }
+
+            if (table === 'team_memberships') {
+                return createChain({
+                    data: { team_id: TEAM_ID, user_id: TEST_AUTH.internalUserId, role: 'viewer' },
+                    error: null,
+                });
+            }
+
+            throw new Error(`Unexpected table: ${table}`);
+        });
+
+        const res = await request(app)
+            .post(`/api/v1/hackathons/${OPPORTUNITY_ID}/ideas`)
+            .set(authHeader)
+            .send({ title: 'Forbidden idea' });
+
+        expect(res.status).toBe(403);
+        expect(mockFrom).not.toHaveBeenCalledWith('brainstorm_ideas');
     });
 });

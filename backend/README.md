@@ -25,6 +25,7 @@ Server runs at `http://localhost:3001` by default.
 | `PORT` | Server port (default: 3001) | - |
 | `NODE_ENV` | Environment (development/production) | - |
 | `CORS_ORIGIN` | Frontend URL for CORS | Your frontend URL |
+| `FRONTEND_URL` | Canonical frontend origin used in generated invite links | Your deployed frontend URL |
 | `CLERK_SECRET_KEY` | Clerk secret key (starts with `sk_`) | [Clerk Dashboard](https://clerk.com) > API Keys |
 | `CLERK_JWT_PUBLIC_KEY` | JWT public key for local verification (recommended for production) | Clerk Dashboard > API Keys > Show JWT Public Key |
 | `SUPABASE_URL` | Supabase project URL | [Supabase Dashboard](https://supabase.com) > Settings > API |
@@ -142,15 +143,19 @@ Authenticated owners manage links through `/api/share-links`; viewers use the pu
 
 Team collaboration workspace. Its UI lives in `src/pages/HackathonDetail.jsx` and `src/components/hackathons/`; apply [`../docs/hackathon-collaboration-migration.sql`](../docs/hackathon-collaboration-migration.sql) before using it against a new database.
 
-Apply `supabase/migrations/20260716081332_idempotent_idea_votes.sql` before deploying the v1 vote endpoints. The migration preserves legacy aggregate totals while recording all new authenticated votes individually.
+Apply `20260716081332_idempotent_idea_votes.sql` and `20260716083209_team_memberships_and_invites.sql` after the base collaboration schema before deploying these routes. The second migration backfills team owners, stores only hashed invite tokens, and makes the API role checks effective.
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET/POST/PUT | `/api/v1/hackathons/:id/team` | Team CRUD |
 | POST/PUT/DELETE | `/api/v1/hackathons/:id/team/members` | Members |
+| POST | `/api/v1/hackathons/:id/invites` | Owner creates an expiring, single-use account invite |
+| POST | `/api/v1/hackathons/invites/:token/accept` | Authenticated user accepts an invite |
 | GET/POST/PUT/DELETE | `/api/v1/hackathons/:id/ideas` | Brainstorming + vote |
 | GET/POST/PUT/DELETE | `/api/v1/hackathons/:id/tasks` | Task board |
 | GET/POST/PUT/DELETE | `/api/v1/hackathons/:id/checklist` | Submission checklist |
+
+Owners manage the team, roster, and invites; editors may change workspace content; viewers may read it and vote. The name-only roster is not an authorization source.
 
 ### Analytics
 

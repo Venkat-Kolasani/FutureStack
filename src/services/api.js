@@ -376,6 +376,16 @@ export const hackathonService = {
         return response.data;
     },
 
+    createInvite: async (opportunityId, data = {}) => {
+        const response = await api.post(`/hackathons/${opportunityId}/invites`, data);
+        return response.data;
+    },
+
+    acceptInvite: async (token) => {
+        const response = await api.post(`/hackathons/invites/${token}/accept`);
+        return response.data;
+    },
+
     // Team members
     addMember: async (opportunityId, data) => {
         const response = await api.post(`/hackathons/${opportunityId}/team/members`, data);

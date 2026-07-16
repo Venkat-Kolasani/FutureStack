@@ -194,6 +194,15 @@ const hackathonIdeaParamsSchema = Joi.object({
     ideaId: Joi.string().uuid().required(),
 });
 
+const teamInviteTokenParamsSchema = Joi.object({
+    token: Joi.string()
+        .pattern(/^[A-Za-z0-9_-]{43}$/)
+        .required()
+        .messages({
+            'string.pattern.base': 'Invalid invite token format',
+        }),
+});
+
 // =============================================================================
 // HACKATHON TEAM COLLABORATION SCHEMAS
 // =============================================================================
@@ -247,6 +256,11 @@ const updateTeamSchema = Joi.object({
             'string.max': 'Description cannot exceed 500 characters'
         })
 }).min(1);
+
+const createTeamInviteSchema = Joi.object({
+    role: Joi.string().valid('editor', 'viewer').default('editor'),
+    expiresInHours: Joi.number().integer().min(1).max(24 * 30).default(24 * 7),
+});
 
 /**
  * Validation schema for creating a team member
@@ -485,9 +499,11 @@ module.exports = {
     idParamSchema,
     opportunityListQuerySchema,
     hackathonIdeaParamsSchema,
+    teamInviteTokenParamsSchema,
     // Hackathon team collaboration
     createTeamSchema,
     updateTeamSchema,
+    createTeamInviteSchema,
     createTeamMemberSchema,
     updateTeamMemberSchema,
     createIdeaSchema,

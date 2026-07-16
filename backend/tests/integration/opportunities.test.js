@@ -69,6 +69,28 @@ describe('Opportunities API', () => {
         );
     });
 
+    it('GET /api/v1/opportunities/:id permits an invited hackathon collaborator only', async () => {
+        const sharedHackathon = {
+            id: '00000000-0000-4000-8000-000000000040',
+            user_id: '00000000-0000-4000-8000-000000000041',
+            title: 'Shared hackathon',
+            category: 'hackathon',
+        };
+
+        mockFrom
+            .mockReturnValueOnce(createChain({ data: null, error: { code: 'PGRST116' } }))
+            .mockReturnValueOnce(createChain({ data: { team_id: '00000000-0000-4000-8000-000000000042' }, error: null }))
+            .mockReturnValueOnce(createChain({ data: sharedHackathon, error: null }));
+
+        const res = await request(app)
+            .get(`/api/v1/opportunities/${sharedHackathon.id}`)
+            .set(authHeader);
+
+        expect(res.status).toBe(200);
+        expect(res.body).toEqual(sharedHackathon);
+        expect(mockFrom).toHaveBeenNthCalledWith(2, 'team_memberships');
+    });
+
     it('POST /api/opportunities returns 400 for invalid body', async () => {
         const res = await request(app)
             .post('/api/opportunities')

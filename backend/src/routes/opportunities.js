@@ -86,6 +86,33 @@ function decodeCursor(cursor) {
 }
 
 /**
+ * A collaboration invite grants access only to a hackathon workspace, never to
+ * another user's general opportunity list. The membership lookup happens after
+ * the owner-scoped read fails, so the common path stays a single indexed query.
+ */
+async function getCollaboratorHackathonOpportunity(opportunityId, userId) {
+    const { data: membership, error: membershipError } = await supabase
+        .from('team_memberships')
+        .select('team_id, hackathon_teams!inner(opportunity_id)')
+        .eq('user_id', userId)
+        .eq('hackathon_teams.opportunity_id', opportunityId)
+        .single();
+
+    if (membershipError || !membership) {
+        return { data: null, error: membershipError };
+    }
+
+    const { data, error } = await supabase
+        .from('opportunities')
+        .select('*')
+        .eq('id', opportunityId)
+        .eq('category', 'hackathon')
+        .single();
+
+    return { data, error };
+}
+
+/**
  * GET /api/opportunities
  * Get all opportunities for the authenticated user
  */
@@ -154,14 +181,29 @@ router.get('/:id', async (req, res) => {
             .eq('user_id', req.auth.internalUserId)
             .single();
 
-        if (error) {
-            if (error.code === 'PGRST116') {
-                return res.status(404).json({ error: 'Opportunity not found' });
+        if (!error) return res.json(data);
+
+        if (error.code !== 'PGRST116') throw error;
+
+        const collaboratorResult = await getCollaboratorHackathonOpportunity(
+            id,
+            req.auth.internalUserId
+        );
+
+        if (!collaboratorResult.data) {
+            if (collaboratorResult.error?.code === '42P01') {
+                return res.status(503).json({
+                    error: 'Collaboration tables are not configured',
+                    code: 'TABLES_NOT_EXIST',
+                });
             }
-            throw error;
+            if (collaboratorResult.error && collaboratorResult.error.code !== 'PGRST116') {
+                throw collaboratorResult.error;
+            }
+            return res.status(404).json({ error: 'Opportunity not found' });
         }
 
-        res.json(data);
+        return res.json(collaboratorResult.data);
     } catch (error) {
         return handleRouteError(res, 'FETCH_OPPORTUNITY', error, 'Failed to fetch opportunity');
     }
