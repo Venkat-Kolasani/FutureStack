@@ -231,7 +231,8 @@ router.get('/:id', validate(idParamSchema, 'params'), async (req, res) => {
  */
 router.post('/', validate(createOpportunitySchema), async (req, res) => {
     try {
-        const { title, description, link, deadline, category, status, notes, campus_mode } = req.body;
+        const { title, description, link, deadline, applied_on, category, status, notes, campus_mode } = req.body;
+        const isInternship = category === 'internship';
 
         const { data, error } = await supabase
             .from('opportunities')
@@ -240,7 +241,12 @@ router.post('/', validate(createOpportunitySchema), async (req, res) => {
                 title,
                 description: description || null,
                 link: link || null,
-                deadline: deadline || null,
+                // Internship applications are tracked after applying. Their
+                // application close date is not an active product deadline.
+                deadline: isInternship ? null : deadline || null,
+                applied_on: isInternship
+                    ? applied_on || new Date().toISOString().slice(0, 10)
+                    : null,
                 category: category || null,
                 status: status || 'applied',
                 notes: notes || null,
@@ -268,7 +274,7 @@ router.post('/', validate(createOpportunitySchema), async (req, res) => {
 const updateHandler = async (req, res) => {
     try {
         const { id } = req.params;
-        const { title, description, link, deadline, category, status, notes, campus_mode } = req.body;
+        const { title, description, link, deadline, applied_on, category, status, notes, campus_mode } = req.body;
 
         // Build update object with only provided fields
         const updateData = {};
@@ -276,10 +282,15 @@ const updateHandler = async (req, res) => {
         if (description !== undefined) updateData.description = description;
         if (link !== undefined) updateData.link = link;
         if (deadline !== undefined) updateData.deadline = deadline;
+        if (applied_on !== undefined) updateData.applied_on = applied_on;
         if (category !== undefined) updateData.category = category;
         if (status !== undefined) updateData.status = status;
         if (notes !== undefined) updateData.notes = notes;
         if (campus_mode !== undefined) updateData.campus_mode = campus_mode || null;
+
+        // A category change sent by the client includes deadline: null. Do not
+        // erase the legacy application-close value on an unrelated edit.
+        if (category === 'internship' && deadline !== undefined) updateData.deadline = null;
 
         const { data, error } = await supabase
             .from('opportunities')

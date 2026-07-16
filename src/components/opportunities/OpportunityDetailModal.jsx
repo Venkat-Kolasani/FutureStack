@@ -188,8 +188,10 @@ const OpportunityDetailModal = ({
 
     if (!isOpen || !displayOpportunity) return null;
 
-    const daysRemaining = getDaysRemaining(displayOpportunity.deadline);
-    const overdue = isOverdue(displayOpportunity.deadline);
+    const isHackathon = displayOpportunity.category === 'hackathon';
+    const hasSubmissionDeadline = isHackathon && Boolean(displayOpportunity.deadline);
+    const daysRemaining = hasSubmissionDeadline ? getDaysRemaining(displayOpportunity.deadline) : null;
+    const overdue = hasSubmissionDeadline && isOverdue(displayOpportunity.deadline);
     const showInterviewRounds = supportsInterviewRounds(displayOpportunity.category);
     const campusModeLabel = getCampusModeLabel(displayOpportunity.campus_mode);
 
@@ -296,22 +298,29 @@ const OpportunityDetailModal = ({
                     {/* Scrollable Content */}
                     <div className="flex-1 overflow-y-auto p-6 space-y-6">
 
-                        {/* Deadline Section */}
+                        {/* Internships are recorded after applying; only hackathon
+                            submissions have an active deadline. */}
                         <section>
                             <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400 mb-2">
                                 <FaCalendarAlt size={14} />
-                                <h3 className="text-sm font-medium uppercase tracking-wide">Deadline</h3>
+                                <h3 className="text-sm font-medium uppercase tracking-wide">
+                                    {isHackathon ? 'Submission deadline' : 'Applied on'}
+                                </h3>
                             </div>
                             <div className="bg-black/5 dark:bg-white/5 rounded-lg p-4 border border-gray-200 dark:border-white/10">
                                 <p className="text-gray-900 dark:text-white font-medium">
-                                    {formatDate(displayOpportunity.deadline)}
+                                    {isHackathon
+                                        ? formatDate(displayOpportunity.deadline) || 'Not set'
+                                        : formatDate(displayOpportunity.applied_on)}
                                 </p>
-                                <p className={`text-sm mt-1 ${overdue ? 'text-red-400' : 'text-gray-600 dark:text-gray-400'}`}>
-                                    {overdue
-                                        ? `Overdue by ${Math.abs(daysRemaining)} days`
-                                        : `${daysRemaining} days remaining`
-                                    }
-                                </p>
+                                {hasSubmissionDeadline && (
+                                    <p className={`text-sm mt-1 ${overdue ? 'text-red-400' : 'text-gray-600 dark:text-gray-400'}`}>
+                                        {overdue
+                                            ? `Overdue by ${Math.abs(daysRemaining)} days`
+                                            : `${daysRemaining} days remaining`
+                                        }
+                                    </p>
+                                )}
                             </div>
                         </section>
 

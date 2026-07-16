@@ -7,6 +7,18 @@ const router = express.Router();
 // Helper to avoid toFixed + parseFloat conversions
 const roundToOneDecimal = (num) => Math.round(num * 10) / 10;
 
+const toLocalDateKey = (value) => {
+    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+        return value;
+    }
+
+    const date = new Date(value);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
 /**
  * GET /api/analytics
  * Get analytics data for the authenticated user
@@ -15,7 +27,8 @@ router.get('/', async (req, res) => {
     try {
         const userId = req.auth.internalUserId;
 
-        // Get all opportunities for the user with deadline included
+        // Only hackathon deadlines are active events. Internship timing is
+        // modeled through scheduled interview rounds.
         const { data: opportunities, error } = await supabase
             .from('opportunities')
             .select('id, title, status, category, campus_mode, created_at, deadline, rejected_round_number, current_round_number')
@@ -141,11 +154,10 @@ router.get('/', async (req, res) => {
             date.setDate(now.getDate() + i);
             date.setHours(0, 0, 0, 0);
 
-            const dateStr = date.toISOString().split('T')[0];
+            const dateStr = toLocalDateKey(date);
             const count = opportunities.filter(opp => {
-                if (!opp.deadline) return false;
-                const deadline = new Date(opp.deadline);
-                return deadline.toISOString().split('T')[0] === dateStr;
+                if (opp.category !== 'hackathon' || !opp.deadline) return false;
+                return toLocalDateKey(opp.deadline) === dateStr;
             }).length;
 
             deadlineDistribution.push({

@@ -44,6 +44,15 @@ const createOpportunitySchema = Joi.object({
             'date.format': 'Deadline must be a valid ISO date format'
         }),
 
+    applied_on: Joi.date()
+        .iso()
+        .raw()
+        .allow(null)
+        .optional()
+        .messages({
+            'date.format': 'Applied on must be a valid ISO date format'
+        }),
+
     category: Joi.string()
         .valid('internship', 'hackathon')
         .allow(null)
@@ -120,6 +129,15 @@ const updateOpportunitySchema = Joi.object({
         .optional()
         .messages({
             'date.format': 'Deadline must be a valid ISO date format'
+        }),
+
+    applied_on: Joi.date()
+        .iso()
+        .raw()
+        .allow(null)
+        .optional()
+        .messages({
+            'date.format': 'Applied on must be a valid ISO date format'
         }),
 
     category: Joi.string()

@@ -48,3 +48,21 @@ export const formatDate = (date) => {
 
   return dateObj.toLocaleDateString('en-US', options);
 };
+
+/**
+ * Format a database TIME value without applying a timezone conversion.
+ */
+export const formatTime = (time) => {
+  if (!time) return '';
+
+  const [hoursText, minutesText] = time.split(':');
+  const hours = Number(hoursText);
+  const minutes = Number(minutesText);
+  if (!Number.isInteger(hours) || !Number.isInteger(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+    return '';
+  }
+
+  const period = hours >= 12 ? 'PM' : 'AM';
+  const displayHour = hours % 12 || 12;
+  return `${displayHour}:${String(minutes).padStart(2, '0')} ${period}`;
+};

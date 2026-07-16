@@ -1,5 +1,5 @@
 import React from 'react';
-import { formatDate } from '../../utils/dateHelpers';
+import { formatDate, formatTime } from '../../utils/dateHelpers';
 import {
   getRoundResultLabel,
   getRoundTypeLabel,
@@ -29,7 +29,10 @@ const RoundTimelineReadOnly = ({ rounds = [] }) => {
           {round.scheduledDate && (
             <>
               <span className="text-gray-500">·</span>
-              <span className="text-gray-600 dark:text-gray-400">{formatDate(round.scheduledDate)}</span>
+              <span className="text-gray-600 dark:text-gray-400">
+                {formatDate(round.scheduledDate)}
+                {round.scheduledTime && ` · ${formatTime(round.scheduledTime)}`}
+              </span>
             </>
           )}
           <span

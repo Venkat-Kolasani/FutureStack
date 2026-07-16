@@ -6,6 +6,14 @@ import Button from '../common/Button';
 import DocumentSelector from '../documents/DocumentSelector';
 import { supportsDocuments, CAMPUS_MODE_FORM_OPTIONS } from '../../utils/opportunityHelpers';
 
+const getLocalDateInputValue = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 // initialData: values to pre-fill the form in edit mode
 // onSubmit: function passed from parent (Add / Edit page) to handle API call
 // isEdit: boolean to toggle button label (Create vs Update)
@@ -17,6 +25,7 @@ const OpportunityForm = ({ initialData = {}, onSubmit, isEdit = false, opportuni
     description: '',
     link: '',
     deadline: '',
+    applied_on: getLocalDateInputValue(),
     category: 'internship',
     status: 'applied',
     notes: '',
@@ -34,6 +43,7 @@ const OpportunityForm = ({ initialData = {}, onSubmit, isEdit = false, opportuni
         description: initialData.description || '',
         link: initialData.link || '',
         deadline: initialData.deadline || '',
+        applied_on: initialData.applied_on || initialData.created_at?.slice(0, 10) || getLocalDateInputValue(),
         category: initialData.category || 'internship',
         status: initialData.status || 'applied',
         notes: initialData.notes || '',
@@ -67,8 +77,12 @@ const OpportunityForm = ({ initialData = {}, onSubmit, isEdit = false, opportuni
       newErrors.title = 'Title is required';
     }
 
-    if (!formData.deadline) {
-      newErrors.deadline = 'Deadline is required';
+    if (formData.category === 'hackathon' && !formData.deadline) {
+      newErrors.deadline = 'Submission deadline is required';
+    }
+
+    if (formData.category === 'internship' && !formData.applied_on) {
+      newErrors.applied_on = 'Applied on date is required';
     }
 
     if (!formData.category) {
@@ -86,10 +100,23 @@ const OpportunityForm = ({ initialData = {}, onSubmit, isEdit = false, opportuni
 
     // Only call parent onSubmit when validation passes
     if (validateForm()) {
-      onSubmit({
-        ...formData,
+      const { deadline, ...opportunityData } = formData;
+      const payload = {
+        ...opportunityData,
+        applied_on: formData.applied_on || null,
         campus_mode: formData.campus_mode || null,
-      });
+      };
+
+      if (formData.category === 'hackathon') {
+        payload.deadline = deadline || null;
+      } else if (!isEdit || initialData.category === 'hackathon') {
+        // New internships and category changes must not create an application
+        // close date as an active deadline. Existing internship records retain
+        // their historical value until the user deliberately changes category.
+        payload.deadline = null;
+      }
+
+      onSubmit(payload);
     }
   };
 
@@ -145,23 +172,6 @@ const OpportunityForm = ({ initialData = {}, onSubmit, isEdit = false, opportuni
         />
       </div>
 
-      {/* Deadline */}
-      <div>
-        <label htmlFor="deadline" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-          Deadline <span className="text-red-400">*</span>
-        </label>
-        <input
-          type="date"
-          id="deadline"
-          name="deadline"
-          value={formData.deadline}
-          onChange={handleChange}
-          className={`w-full px-3 py-2.5 bg-black/5 dark:bg-white/5 border rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${errors.deadline ? 'border-red-500' : 'border-gray-200 dark:border-white/10'
-            }`}
-        />
-        {errors.deadline && <p className="text-red-400 text-sm mt-1">{errors.deadline}</p>}
-      </div>
-
       {/* Category */}
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
@@ -193,6 +203,44 @@ const OpportunityForm = ({ initialData = {}, onSubmit, isEdit = false, opportuni
         </div>
         {errors.category && <p className="text-red-400 text-sm mt-1">{errors.category}</p>}
       </div>
+
+      {formData.category === 'internship' ? (
+        <div>
+          <label htmlFor="applied_on" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+            Applied on <span className="text-red-400">*</span>
+          </label>
+          <input
+            type="date"
+            id="applied_on"
+            name="applied_on"
+            value={formData.applied_on}
+            onChange={handleChange}
+            className={`w-full px-3 py-2.5 bg-black/5 dark:bg-white/5 border rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${errors.applied_on ? 'border-red-500' : 'border-gray-200 dark:border-white/10'}`}
+          />
+          <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+            You are tracking this after applying. Add upcoming OA or interview times from the round timeline.
+          </p>
+          {errors.applied_on && <p className="text-red-400 text-sm mt-1">{errors.applied_on}</p>}
+        </div>
+      ) : (
+        <div>
+          <label htmlFor="deadline" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+            Submission deadline <span className="text-red-400">*</span>
+          </label>
+          <input
+            type="date"
+            id="deadline"
+            name="deadline"
+            value={formData.deadline}
+            onChange={handleChange}
+            className={`w-full px-3 py-2.5 bg-black/5 dark:bg-white/5 border rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${errors.deadline ? 'border-red-500' : 'border-gray-200 dark:border-white/10'}`}
+          />
+          <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+            This is for a hackathon submission, not a job application close date.
+          </p>
+          {errors.deadline && <p className="text-red-400 text-sm mt-1">{errors.deadline}</p>}
+        </div>
+      )}
 
       {/* Campus type (optional) */}
       <div>

@@ -124,7 +124,7 @@ const PublicSharePage = () => {
     () => [
       { label: 'Opportunities', value: summary.total || 0, accent: 'text-blue-200' },
       { label: 'Apply links', value: summary.opportunitiesWithLinks || 0, accent: 'text-purple-200' },
-      { label: 'Upcoming deadlines', value: summary.upcomingDeadlineCount || 0, accent: 'text-amber-200' },
+      { label: 'Upcoming submissions', value: summary.upcomingDeadlineCount || 0, accent: 'text-amber-200' },
       { label: 'Selected', value: summary.selected || 0, accent: 'text-green-200' },
     ],
     [summary]
@@ -229,7 +229,7 @@ const PublicSharePage = () => {
     <div className="min-h-screen overflow-hidden bg-white dark:bg-black text-gray-900 dark:text-white">
       <SEO
         title="Shared Opportunities"
-        description="Read-only FutureStack opportunities with deadlines and application links."
+        description="Read-only FutureStack opportunities with application links, interview progress, and hackathon submissions."
         canonical={`/share/${token}`}
         noindex={true}
       />
@@ -251,7 +251,7 @@ const PublicSharePage = () => {
                 Shared opportunities you can act on.
               </h1>
               <p className="mt-4 text-base leading-7 text-gray-700 dark:text-gray-300 sm:text-lg">
-                Review the opportunity details, deadlines, progress, and application links shared from FutureStack.
+                Review opportunity details, interview progress, hackathon submissions, and application links shared from FutureStack.
                 Private notes, documents, prep work, and owner identity stay hidden.
               </p>
             </div>
@@ -321,11 +321,11 @@ const PublicSharePage = () => {
                     )}
 
                     <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                      {fields.deadline && (
+                      {fields.deadline && opportunity.category === 'hackathon' && opportunity.deadline && (
                         <div className="rounded-xl bg-white/[0.03] p-3">
                           <p className="flex items-center gap-2 text-xs text-gray-500">
                             <FaCalendarAlt />
-                            Deadline
+                            Submission deadline
                           </p>
                           <p className="mt-1 text-sm font-medium text-gray-900 dark:text-white">{formatDate(opportunity.deadline)}</p>
                           <p className={`mt-1 text-xs ${getDeadlineState(opportunity.deadline).className}`}>

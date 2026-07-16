@@ -28,13 +28,14 @@ const REQUIRED_ROUND_COLUMNS = [
     'round_number',
     'round_type',
     'scheduled_date',
+    'scheduled_time',
     'result',
     'notes',
     'created_at',
     'updated_at',
 ];
 
-const REQUIRED_OPPORTUNITY_COLUMNS = ['current_round_number', 'rejected_round_number'];
+const REQUIRED_OPPORTUNITY_COLUMNS = ['current_round_number', 'rejected_round_number', 'applied_on'];
 
 async function verifyTableReadable(table) {
     const { error } = await supabase.from(table).select('*').limit(0);
@@ -53,71 +54,14 @@ async function verifyColumns(table, columns) {
     return data;
 }
 
-async function verifyInsertRoundConstraints() {
-    const { data: users, error: userError } = await supabase.from('users').select('id').limit(1);
-    if (userError) throw userError;
-    if (!users?.length) {
-        console.log('SKIP Round insert test (no users in database)');
-        return;
-    }
-
-    const userId = users[0].id;
-    const { data: internships, error: oppError } = await supabase
-        .from('opportunities')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('category', 'internship')
-        .limit(1);
-
-    if (oppError) throw oppError;
-    if (!internships?.length) {
-        console.log('SKIP Round insert test (no internship opportunities for test user)');
-        return;
-    }
-
-    const opportunityId = internships[0].id;
-    const testRow = {
-        opportunity_id: opportunityId,
-        user_id: userId,
-        round_number: 9999,
-        round_type: 'oa',
-        result: 'pending',
-        notes: 'PR1 schema verification (safe to delete)',
-    };
-
-    const { data: inserted, error: insertError } = await supabase
-        .from('opportunity_rounds')
-        .insert(testRow)
-        .select('id, round_type, result')
-        .single();
-
-    if (insertError) {
-        throw new Error(`Round insert failed: ${insertError.message}`);
-    }
-
-    console.log(`OK  Inserted test round ${inserted.id} (type=${inserted.round_type}, result=${inserted.result})`);
-
-    const { error: deleteError } = await supabase
-        .from('opportunity_rounds')
-        .delete()
-        .eq('id', inserted.id);
-
-    if (deleteError) {
-        throw new Error(`Round cleanup failed: ${deleteError.message}`);
-    }
-
-    console.log('OK  Deleted test round (cleanup)');
-}
-
 async function main() {
-    console.log('Verifying interview rounds schema (PR1)...\n');
+    console.log('Verifying interview rounds schema without writing data...\n');
 
     await verifyTableReadable('opportunity_rounds');
     await verifyColumns('opportunity_rounds', REQUIRED_ROUND_COLUMNS);
     await verifyColumns('opportunities', REQUIRED_OPPORTUNITY_COLUMNS);
-    await verifyInsertRoundConstraints();
 
-    console.log('\nAll PR1 schema checks passed.');
+    console.log('\nAll read-only rounds schema checks passed.');
 }
 
 main().catch((err) => {

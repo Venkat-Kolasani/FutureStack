@@ -5,12 +5,12 @@ import 'react-calendar/dist/Calendar.css';
 import './Calendar.css';
 import SEO from '../components/seo/SEO';
 import { opportunityService, roundService } from '../services/api';
-import { getDaysRemaining } from '../utils/dateHelpers';
+import { formatTime, getDaysRemaining } from '../utils/dateHelpers';
 import { getRoundTypeLabel } from '../utils/roundHelpers';
 import Modal from '../components/common/Modal';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
-import { FaBriefcase, FaCode, FaCalendarAlt, FaClock, FaLayerGroup } from 'react-icons/fa';
+import { FaCode, FaCalendarAlt, FaClock, FaLayerGroup } from 'react-icons/fa';
 
 const CalendarPage = () => {
   const [opportunities, setOpportunities] = useState([]);
@@ -48,10 +48,11 @@ const CalendarPage = () => {
     }
   };
 
-  // Parse deadline dates and create a map of dates with opportunities
+  // Job applications are recorded after applying. The calendar only maps
+  // hackathon submission dates; internship events come from interview rounds.
   const deadlineMap = {};
   opportunities.forEach(opp => {
-    if (opp.deadline) {
+    if (opp.category === 'hackathon' && opp.deadline) {
       const dateKey = new Date(opp.deadline).toDateString();
       if (!deadlineMap[dateKey]) {
         deadlineMap[dateKey] = [];
@@ -71,7 +72,7 @@ const CalendarPage = () => {
     }
   });
 
-  // Function to mark dates with deadlines and interviews
+  // Function to mark dates with submission deadlines and interview rounds.
   const tileContent = ({ date, view }) => {
     if (view === 'month') {
       const dateKey = date.toDateString();
@@ -79,21 +80,13 @@ const CalendarPage = () => {
       const roundsOnDate = interviewMap[dateKey];
 
       if ((oppsOnDate && oppsOnDate.length > 0) || (roundsOnDate && roundsOnDate.length > 0)) {
-        const internships = oppsOnDate
-          ? oppsOnDate.filter((opp) => opp.category === 'internship').length
-          : 0;
-        const hackathons = oppsOnDate
-          ? oppsOnDate.filter((opp) => opp.category === 'hackathon').length
-          : 0;
+        const hackathons = oppsOnDate?.length || 0;
         const interviews = roundsOnDate ? roundsOnDate.length : 0;
 
         return (
           <div className="flex justify-center items-center gap-1 mt-1">
-            {internships > 0 && (
-              <div className="w-2 h-2 bg-blue-500 rounded-full" title={`${internships} internship deadline(s)`} />
-            )}
             {hackathons > 0 && (
-              <div className="w-2 h-2 bg-green-500 rounded-full" title={`${hackathons} hackathon deadline(s)`} />
+              <div className="w-2 h-2 bg-green-500 rounded-full" title={`${hackathons} hackathon submission deadline(s)`} />
             )}
             {interviews > 0 && (
               <div className="w-2 h-2 bg-purple-500 rounded-full" title={`${interviews} interview round(s)`} />
@@ -148,7 +141,7 @@ const CalendarPage = () => {
     <div className="min-h-screen bg-white dark:bg-black p-4 sm:p-6">
       <SEO 
         title="Calendar"
-        description="View all your opportunity deadlines in a calendar format. Never miss an important date."
+        description="View upcoming interview rounds and hackathon submission deadlines in one calendar."
         canonical="/calendar"
         noindex={true}
       />
@@ -156,19 +149,15 @@ const CalendarPage = () => {
         {/* Header */}
         <div className="mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">Calendar</h1>
-          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">View all your deadlines in calendar format</p>
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">View upcoming interview rounds and hackathon submissions</p>
         </div>
 
         {/* Legend */}
         <Card className="p-4 mb-6">
           <div className="flex flex-wrap items-center gap-6">
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-blue-500 rounded-full" />
-              <span className="text-gray-700 dark:text-gray-300 text-sm">Internship Deadline</span>
-            </div>
-            <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-green-500 rounded-full" />
-              <span className="text-gray-700 dark:text-gray-300 text-sm">Hackathon Deadline</span>
+              <span className="text-gray-700 dark:text-gray-300 text-sm">Hackathon Submission</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-purple-500 rounded-full" />
@@ -176,7 +165,7 @@ const CalendarPage = () => {
             </div>
             <div className="flex items-center gap-2">
               <FaCalendarAlt className="text-gray-600 dark:text-gray-400" />
-              <span className="text-gray-700 dark:text-gray-300 text-sm">Click on a date to view opportunities</span>
+              <span className="text-gray-700 dark:text-gray-300 text-sm">Click on a date to view events</span>
             </div>
           </div>
         </Card>
@@ -199,18 +188,18 @@ const CalendarPage = () => {
             <div className="flex items-center gap-3">
               <FaCalendarAlt className="text-blue-400 text-2xl" />
               <div>
-                <p className="text-gray-600 dark:text-gray-400 text-sm">Total Deadlines</p>
-                <p className="text-gray-900 dark:text-white text-2xl font-bold">{opportunities.length}</p>
+                <p className="text-gray-600 dark:text-gray-400 text-sm">Interview Rounds</p>
+                <p className="text-gray-900 dark:text-white text-2xl font-bold">{upcomingRounds.length}</p>
               </div>
             </div>
           </Card>
           <Card className="p-4">
             <div className="flex items-center gap-3">
-              <FaBriefcase className="text-blue-400 text-2xl" />
+              <FaCode className="text-green-400 text-2xl" />
               <div>
-                <p className="text-gray-600 dark:text-gray-400 text-sm">Internship Deadlines</p>
+                <p className="text-gray-600 dark:text-gray-400 text-sm">Submission Deadlines</p>
                 <p className="text-gray-900 dark:text-white text-2xl font-bold">
-                  {opportunities.filter(opp => opp.category === 'internship').length}
+                  {opportunities.filter(opp => opp.category === 'hackathon' && opp.deadline).length}
                 </p>
               </div>
             </div>
@@ -219,7 +208,7 @@ const CalendarPage = () => {
             <div className="flex items-center gap-3">
               <FaCode className="text-green-400 text-2xl" />
               <div>
-                <p className="text-gray-600 dark:text-gray-400 text-sm">Hackathon Deadlines</p>
+                <p className="text-gray-600 dark:text-gray-400 text-sm">Hackathons Tracked</p>
                 <p className="text-gray-900 dark:text-white text-2xl font-bold">
                   {opportunities.filter(opp => opp.category === 'hackathon').length}
                 </p>
@@ -250,6 +239,7 @@ const CalendarPage = () => {
                     <p className="text-gray-900 dark:text-white font-medium">{round.opportunityTitle}</p>
                     <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">
                       Round {round.roundNumber} · {getRoundTypeLabel(round.roundType)}
+                      {round.scheduledTime && ` · ${formatTime(round.scheduledTime)}`}
                     </p>
                   </div>
                 ))}
@@ -265,21 +255,11 @@ const CalendarPage = () => {
                   <div className="flex-1">
                     <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">{opp.title}</h4>
                     <div className="flex flex-wrap items-center gap-2 mb-2">
-                      <span
-                        className={`px-2 py-1 rounded text-xs font-medium text-gray-900 dark:text-white ${opp.category === 'internship' ? 'bg-blue-600' : 'bg-green-600'
-                          }`}
-                      >
-                        {opp.category === 'internship' ? (
-                          <span className="flex items-center gap-1">
-                            <FaBriefcase size={10} />
-                            Internship
-                          </span>
-                        ) : (
-                          <span className="flex items-center gap-1">
-                            <FaCode size={10} />
-                            Hackathon
-                          </span>
-                        )}
+                      <span className="px-2 py-1 rounded text-xs font-medium text-gray-900 dark:text-white bg-green-600">
+                        <span className="flex items-center gap-1">
+                          <FaCode size={10} />
+                          Hackathon submission
+                        </span>
                       </span>
                       <span
                         className={`px-2 py-1 rounded text-xs font-medium text-gray-900 dark:text-white ${getStatusColor(

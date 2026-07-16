@@ -231,6 +231,7 @@ describe('Interview rounds API', () => {
                 round_number: 2,
                 round_type: 'technical',
                 scheduled_date: '2026-06-15',
+                scheduled_time: '15:00:00',
                 result: 'pending',
                 opportunities: { id: OPPORTUNITY_ID, title: 'Acme Intern', category: 'internship' },
             },
@@ -251,8 +252,20 @@ describe('Interview rounds API', () => {
             roundNumber: 2,
             roundType: 'technical',
             scheduledDate: '2026-06-15',
+            scheduledTime: '15:00:00',
             result: 'pending',
         });
+    });
+
+    it('POST /api/opportunities/:id/rounds rejects malformed scheduled times', async () => {
+        const res = await request(app)
+            .post(`/api/opportunities/${OPPORTUNITY_ID}/rounds`)
+            .set(authHeader)
+            .send({ round_type: 'oa', scheduled_time: '3pm' });
+
+        expect(res.status).toBe(400);
+        expect(res.body.error).toBe('Validation Error');
+        expect(mockFrom).not.toHaveBeenCalled();
     });
 
     it('GET /api/opportunities/rounds/upcoming returns 400 when from is after to', async () => {

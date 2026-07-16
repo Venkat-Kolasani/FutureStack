@@ -18,7 +18,7 @@ import {
   FaFileAlt,
   FaLaptopCode,
 } from 'react-icons/fa';
-import { formatDate, getDaysRemaining } from '../../utils/dateHelpers';
+import { formatDate, formatTime, getDaysRemaining } from '../../utils/dateHelpers';
 import {
   getRoundProgressStats,
   getRoundResultLabel,
@@ -253,6 +253,7 @@ const RoundTimeline = ({
                     {round.scheduled_date && (
                       <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                         {formatDate(round.scheduled_date)}
+                        {round.scheduled_time && ` · ${formatTime(round.scheduled_time)}`}
                         {scheduledHint && (
                           <span
                             className={`ml-1.5 ${

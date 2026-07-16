@@ -50,4 +50,31 @@ describe('Analytics API', () => {
             unspecified: 1,
         });
     });
+
+    it('counts only hackathon submission deadlines in the heatmap', async () => {
+        const today = new Date();
+        const todayKey = [
+            today.getFullYear(),
+            String(today.getMonth() + 1).padStart(2, '0'),
+            String(today.getDate()).padStart(2, '0'),
+        ].join('-');
+        const opportunities = [
+            { id: '1', title: 'Internship', status: 'applied', category: 'internship', campus_mode: null, created_at: todayKey, deadline: todayKey },
+            { id: '2', title: 'Hackathon', status: 'applied', category: 'hackathon', campus_mode: null, created_at: todayKey, deadline: todayKey },
+        ];
+
+        mockFrom.mockImplementation((table) => {
+            if (table === 'opportunities') return createChain({ data: opportunities, error: null });
+            if (table === 'opportunity_rounds') return createChain({ data: [], error: null });
+            return createChain({ data: null, error: null });
+        });
+
+        const res = await request(app).get('/api/analytics').set(authHeader);
+
+        expect(res.status).toBe(200);
+        expect(res.body.deadlineDistribution[0]).toEqual(expect.objectContaining({
+            date: todayKey,
+            count: 1,
+        }));
+    });
 });

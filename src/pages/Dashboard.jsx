@@ -101,18 +101,19 @@ const Dashboard = () => {
   const shortlistedCount = opportunities.filter(opp => opp.status === 'shortlisted').length;
   const selectedCount = opportunities.filter(opp => opp.status === 'selected').length;
 
-  // Final statuses where deadline no longer matters
+  // Final statuses where a hackathon submission deadline no longer matters.
   const finalStatuses = ['rejected', 'selected'];
 
-  // Get upcoming deadlines (next 3, not overdue, not rejected/selected, sorted chronologically)
+  // Job applications are entered after applying. Active internship events come
+  // from pending interview rounds; this list is submission deadlines only.
   const upcomingDeadlines = opportunities
-    .filter(opp => !isOverdue(opp.deadline) && !finalStatuses.includes(opp.status))
+    .filter(opp => opp.category === 'hackathon' && opp.deadline && !isOverdue(opp.deadline) && !finalStatuses.includes(opp.status))
     .sort((a, b) => new Date(a.deadline) - new Date(b.deadline))
     .slice(0, 3);
 
-  // Get overdue items (only for active applications, not rejected/selected)
+  // Overdue warnings apply only to hackathon submission dates.
   const overdueItems = opportunities.filter(
-    opp => isOverdue(opp.deadline) && !finalStatuses.includes(opp.status)
+    opp => opp.category === 'hackathon' && opp.deadline && isOverdue(opp.deadline) && !finalStatuses.includes(opp.status)
   );
 
   if (loading) {
@@ -132,7 +133,7 @@ const Dashboard = () => {
     <div className="min-h-screen bg-white dark:bg-black p-4 sm:p-6">
       <SEO 
         title="Dashboard"
-        description="View your opportunity tracking dashboard. See statistics, upcoming deadlines, and manage your internship and hackathon applications."
+        description="Track internship applications, upcoming interview rounds, and hackathon submission deadlines."
         canonical="/dashboard"
         noindex={true}
       />
@@ -140,7 +141,7 @@ const Dashboard = () => {
         {/* Header */}
         <div className="mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">Dashboard</h1>
-          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">Track your opportunities and upcoming deadlines</p>
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">Track applications, upcoming interview rounds, and hackathon submissions</p>
         </div>
 
         {/* Statistics Cards */}
@@ -222,7 +223,7 @@ const Dashboard = () => {
           </Card>
         )}
 
-        {/* Upcoming deadlines & interviews */}
+        {/* Hackathon submission deadlines & internship interview rounds */}
         <div className="mb-6 sm:mb-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
           <DeadlineWidget deadlines={upcomingDeadlines} onDelete={handleDeleteClick} />
           <UpcomingInterviewsWidget interviews={upcomingInterviews} loading={interviewsLoading} />

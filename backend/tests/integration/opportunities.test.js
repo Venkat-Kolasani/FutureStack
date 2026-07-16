@@ -158,9 +158,8 @@ describe('Opportunities API', () => {
             category: 'internship',
         };
 
-        mockFrom.mockReturnValue(
-            createChain({ data: created, error: null })
-        );
+        const chain = createChain({ data: created, error: null });
+        mockFrom.mockReturnValue(chain);
 
         const res = await request(app)
             .post('/api/opportunities')
@@ -169,11 +168,19 @@ describe('Opportunities API', () => {
                 title: 'Backend Intern',
                 category: 'internship',
                 link: 'https://example.com/jobs/1',
+                deadline: '2026-08-01',
+                applied_on: '2026-07-16',
             });
 
         expect(res.status).toBe(201);
         expect(res.body.title).toBe('Backend Intern');
         expect(mockFrom).toHaveBeenCalledWith('opportunities');
+        expect(chain.insert).toHaveBeenCalledWith(
+            expect.objectContaining({
+                deadline: null,
+                applied_on: '2026-07-16',
+            })
+        );
     });
 
     it('POST /api/opportunities accepts campus_mode', async () => {
@@ -203,6 +210,33 @@ describe('Opportunities API', () => {
         expect(chain.insert).toHaveBeenCalledWith(
             expect.objectContaining({ campus_mode: 'on_campus' })
         );
+    });
+
+    it('POST /api/opportunities does not assign an applied date to a hackathon', async () => {
+        const chain = createChain({
+            data: { id: 'opp-hackathon', title: 'Build Week', category: 'hackathon' },
+            error: null,
+        });
+        mockFrom.mockReturnValue(chain);
+
+        const res = await request(app)
+            .post('/api/opportunities')
+            .set(authHeader)
+            .send({
+                title: 'Build Week',
+                category: 'hackathon',
+                deadline: '2026-08-01',
+                applied_on: '2026-07-16',
+            });
+
+        expect(res.status).toBe(201);
+        expect(chain.insert).toHaveBeenCalledWith(
+            expect.objectContaining({
+                deadline: expect.any(Date),
+                applied_on: null,
+            })
+        );
+        expect(chain.insert.mock.calls[0][0].deadline.toISOString().slice(0, 10)).toBe('2026-08-01');
     });
 
     it('POST /api/opportunities rejects invalid campus_mode', async () => {
@@ -240,6 +274,30 @@ describe('Opportunities API', () => {
 
         expect(res.status).toBe(200);
         expect(chain.update).toHaveBeenCalledWith({ campus_mode: null });
+    });
+
+    it('PATCH /api/opportunities/:id clears a deadline when changing to an internship', async () => {
+        const chain = createChain({
+            data: {
+                id: '00000000-0000-4000-8000-000000000001',
+                category: 'internship',
+                deadline: null,
+            },
+            error: null,
+        });
+        mockFrom.mockReturnValue(chain);
+
+        const res = await request(app)
+            .patch('/api/opportunities/00000000-0000-4000-8000-000000000001')
+            .set(authHeader)
+            .send({ category: 'internship', deadline: null, applied_on: '2026-07-16' });
+
+        expect(res.status).toBe(200);
+        expect(chain.update).toHaveBeenCalledWith({
+            category: 'internship',
+            applied_on: '2026-07-16',
+            deadline: null,
+        });
     });
 
     it('PATCH /api/opportunities/:id returns 404 when not found', async () => {

@@ -158,7 +158,7 @@ function toPublicOpportunity(opportunity, fields, interviewRounds = null) {
         item.description = opportunity.description || null;
     }
 
-    if (fields.deadline) {
+    if (fields.deadline && opportunity.category === 'hackathon') {
         item.deadline = opportunity.deadline || null;
     }
 
@@ -175,7 +175,7 @@ function toPublicOpportunity(opportunity, fields, interviewRounds = null) {
     }
 
     if (fields.dateApplied) {
-        item.dateApplied = opportunity.created_at || null;
+        item.dateApplied = opportunity.applied_on || opportunity.created_at || null;
     }
 
     if (fields.rounds && interviewRounds?.length) {
@@ -183,6 +183,7 @@ function toPublicOpportunity(opportunity, fields, interviewRounds = null) {
             roundNumber: round.round_number,
             roundType: round.round_type,
             scheduledDate: round.scheduled_date || null,
+            scheduledTime: round.scheduled_time || null,
             result: round.result,
         }));
     }
@@ -216,13 +217,13 @@ function buildShareSnapshot({ opportunities, fields, expiry, selectedOpportunity
 
     const opportunitiesWithLinks = publicOpportunities.filter((opportunity) => opportunity.applicationLink).length;
     const upcomingDeadlineCount = publicOpportunities.filter((opportunity) => {
-        if (!opportunity.deadline) return false;
+        if (opportunity.category !== 'hackathon' || !opportunity.deadline) return false;
         const deadline = new Date(opportunity.deadline);
         deadline.setHours(0, 0, 0, 0);
         return deadline >= today;
     }).length;
     const expiredDeadlineCount = publicOpportunities.filter((opportunity) => {
-        if (!opportunity.deadline) return false;
+        if (opportunity.category !== 'hackathon' || !opportunity.deadline) return false;
         const deadline = new Date(opportunity.deadline);
         deadline.setHours(0, 0, 0, 0);
         return deadline < today;

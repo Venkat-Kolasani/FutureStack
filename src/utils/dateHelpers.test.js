@@ -1,4 +1,4 @@
-import { getDaysRemaining, isOverdue, formatDate } from './dateHelpers';
+import { getDaysRemaining, isOverdue, formatDate, formatTime } from './dateHelpers';
 
 describe('dateHelpers', () => {
     beforeEach(() => {
@@ -43,6 +43,18 @@ describe('dateHelpers', () => {
         it('returns empty string for falsy input', () => {
             expect(formatDate(null)).toBe('');
             expect(formatDate('')).toBe('');
+        });
+    });
+
+    describe('formatTime', () => {
+        it('formats database TIME values without a timezone conversion', () => {
+            expect(formatTime('15:00:00')).toBe('3:00 PM');
+            expect(formatTime('09:05')).toBe('9:05 AM');
+        });
+
+        it('returns an empty string for invalid values', () => {
+            expect(formatTime('25:00')).toBe('');
+            expect(formatTime(null)).toBe('');
         });
     });
 });
