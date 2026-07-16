@@ -80,8 +80,8 @@ Nested under opportunities. See [`../docs/interview-rounds.md`](../docs/intervie
 | Method | Endpoint | Notes |
 |--------|----------|-------|
 | GET | `/api/v1/opportunities/:id/rounds` | Ordered by `round_number` |
-| POST | `/api/v1/opportunities/:id/rounds` | Returns `{ round, opportunity, rounds }` |
-| PATCH | `/api/v1/opportunities/:id/rounds/:roundId` | Syncs parent status |
+| POST | `/api/v1/opportunities/:id/rounds` | Accepts optional `scheduled_date` / `scheduled_time` after the rounds active-events migration; returns `{ round, opportunity, rounds }` |
+| PATCH | `/api/v1/opportunities/:id/rounds/:roundId` | Updates optional scheduling and syncs parent status |
 | DELETE | `/api/v1/opportunities/:id/rounds/:roundId` | Re-syncs after delete |
 
 ### Interview prep (internships)
@@ -176,7 +176,7 @@ Owners manage the team, roster, and invites; editors may change workspace conten
 | POST | `/api/v1/internal/jobs/dispatch` | Token-protected reminder dispatcher for GitHub Actions |
 | GET | `/api/v1/admin/jobs/dead` | Configured-admin visibility into dead-letter jobs |
 
-The dispatcher requires `JOB_DISPATCH_TOKEN`. Dead-job visibility requires `JOB_ADMIN_USER_IDS` (comma-separated internal user UUIDs). Apply the July 16 migrations through `20260716100000_review_hardening.sql` before enabling either feature.
+The dispatcher requires `JOB_DISPATCH_TOKEN`. Dead-job visibility requires `JOB_ADMIN_USER_IDS` (comma-separated internal user UUIDs). The outbox becomes hackathon-submission-only after `20260716110000_rounds_drive_active_events.sql` is applied; until then, retain the existing generic deadline behavior. Apply the July 16 migrations through `20260716110000_rounds_drive_active_events.sql` before deploying the active-events API/frontend change.
 
 ## Testing
 

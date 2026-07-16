@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS opportunities (
   description TEXT,
   link TEXT,
   deadline DATE,
+  applied_on DATE,
   category TEXT CHECK (category IN ('internship', 'hackathon')),
   status TEXT CHECK (status IN ('applied', 'interviewed', 'shortlisted', 'selected', 'rejected', 'ghosted')),
   campus_mode TEXT CHECK (campus_mode IN ('on_campus', 'off_campus')),

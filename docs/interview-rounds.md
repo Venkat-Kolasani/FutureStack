@@ -6,9 +6,11 @@
 
 `opportunities.status` alone (`applied`, `shortlisted`, `interviewed`, …) cannot represent real hiring flows:
 
-- Users need to record **each round** (OA, technical, HR, final) with type, date, result, and notes.
+- Users need to record **each round** (OA, technical, HR, final) with type, scheduled date/time, result, and notes.
 - Users need to see **where they failed** (`Rejected at Round 2`) or **what is next** (`Round 3 · In progress`).
 - Kanban and analytics must stay consistent without a separate `current_stage` column.
+
+`scheduled_time` is migration-gated by `20260716110000_rounds_drive_active_events.sql`; apply it before deploying the corresponding API and UI change.
 
 ## Solution overview
 
@@ -30,7 +32,7 @@
 |--------|----------|-------------|
 | GET | `/api/v1/opportunities/:opportunityId/rounds` | List rounds (ordered by `round_number`) |
 | POST | `/api/v1/opportunities/:opportunityId/rounds` | Create round (auto `round_number` if omitted) |
-| PATCH | `/api/v1/opportunities/:opportunityId/rounds/:roundId` | Update type, date, result, notes |
+| PATCH | `/api/v1/opportunities/:opportunityId/rounds/:roundId` | Update type, scheduled date/time, result, notes |
 | DELETE | `/api/v1/opportunities/:opportunityId/rounds/:roundId` | Delete round; re-sync parent opportunity |
 
 ### Mutation response shape (POST / PATCH / DELETE)

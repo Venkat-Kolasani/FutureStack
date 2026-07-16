@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS opportunity_rounds (
     'other'
   )),
   scheduled_date DATE,
+  scheduled_time TIME,
   result TEXT NOT NULL DEFAULT 'pending' CHECK (result IN (
     'pending',
     'cleared',
@@ -88,6 +89,10 @@ CREATE INDEX IF NOT EXISTS idx_opportunity_rounds_user_id
 
 CREATE INDEX IF NOT EXISTS idx_opportunity_rounds_scheduled_date
   ON opportunity_rounds(scheduled_date);
+
+CREATE INDEX IF NOT EXISTS idx_opportunity_rounds_upcoming
+  ON opportunity_rounds(user_id, scheduled_date, scheduled_time)
+  WHERE result = 'pending' AND scheduled_date IS NOT NULL;
 
 DROP TRIGGER IF EXISTS update_opportunity_rounds_updated_at ON opportunity_rounds;
 CREATE TRIGGER update_opportunity_rounds_updated_at

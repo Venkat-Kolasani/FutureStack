@@ -1,6 +1,6 @@
 # FutureTracker
 
-FutureTracker is a full-stack career-application workspace for students and early-career professionals. It brings internships, hackathons, interview preparation, documents, deadlines, and application insights into one focused workflow.
+FutureTracker is a full-stack career-application workspace for students and early-career professionals. It brings post-application internship tracking, hackathons, interview preparation, documents, and application insights into one focused workflow.
 
 [Live app](https://futuretracker.online) · [API health](https://futurestack-aeyn.onrender.com/api/v1/health) · [Documentation](docs/DOCUMENTATION.md) · [Contributing](CONTRIBUTING.md)
 
@@ -10,15 +10,17 @@ The core product is actively implemented and includes opportunity tracking, prot
 
 ## What it does
 
-- Track internships and hackathons from saved opportunity to final outcome.
-- Manage deadlines in dashboard, calendar, Kanban status board, and PDF reports.
-- Record multi-round interview progress and keep the parent opportunity status in sync.
+- Track internships from application date to final outcome, and track hackathons through submission.
+- Manage upcoming interview rounds and hackathon submission deadlines in the dashboard, calendar, Kanban board, and PDF reports.
+- Record multi-round interview progress, including an optional scheduled time, and keep the parent opportunity status in sync.
 - Prepare for internship interviews with research, questions, technical topics, STAR stories, and reflections.
 - Store resumes, cover letters, and external links; associate them with opportunities and receive local ATS-style guidance for PDF and DOCX uploads.
 - Collaborate on hackathons with account-backed owner/editor/viewer access, expiring single-use invites, an idempotent idea-vote model, tasks, and a submission checklist.
-- Generate durable in-app deadline reminders through a transactional outbox. The free GitHub Actions dispatcher is optional and best-effort, not a strict-timing service.
+- Generate durable in-app hackathon-submission reminders through a transactional outbox. The free GitHub Actions dispatcher is optional and best-effort, not a strict-timing service.
 - Create revocable, optional-passcode, read-only share links without requiring viewers to sign in.
-- Explore funnel, deadline, status, and rejection insights.
+- Explore funnel, hackathon-submission, status, and rejection insights.
+
+The applied-date, scheduled-time, and hackathon-only reminder semantics are migration-gated. Apply [`20260716110000_rounds_drive_active_events.sql`](supabase/migrations/20260716110000_rounds_drive_active_events.sql) before deploying those API and frontend changes to an existing database.
 
 ## Stack
 
@@ -98,7 +100,7 @@ Apply the SQL files in the following order to a new Supabase project:
 5. [`docs/interview-prep-migration.sql`](docs/interview-prep-migration.sql)
 6. [`docs/hackathon-collaboration-migration.sql`](docs/hackathon-collaboration-migration.sql)
 7. [`docs/share-links-migration.sql`](docs/share-links-migration.sql), then the SQL files in [`supabase/migrations`](supabase/migrations) in timestamp order
-8. The July 16 migrations in timestamp order: [`20260716081332_idempotent_idea_votes.sql`](supabase/migrations/20260716081332_idempotent_idea_votes.sql), [`20260716082400_transactional_reminder_outbox.sql`](supabase/migrations/20260716082400_transactional_reminder_outbox.sql), [`20260716083209_team_memberships_and_invites.sql`](supabase/migrations/20260716083209_team_memberships_and_invites.sql), and [`20260716100000_review_hardening.sql`](supabase/migrations/20260716100000_review_hardening.sql)
+8. The July 16 migrations in timestamp order: [`20260716081332_idempotent_idea_votes.sql`](supabase/migrations/20260716081332_idempotent_idea_votes.sql), [`20260716082400_transactional_reminder_outbox.sql`](supabase/migrations/20260716082400_transactional_reminder_outbox.sql), [`20260716083209_team_memberships_and_invites.sql`](supabase/migrations/20260716083209_team_memberships_and_invites.sql), [`20260716100000_review_hardening.sql`](supabase/migrations/20260716100000_review_hardening.sql), and [`20260716110000_rounds_drive_active_events.sql`](supabase/migrations/20260716110000_rounds_drive_active_events.sql)
 9. [`docs/ai-tables-setup.sql`](docs/ai-tables-setup.sql) only when enabling the AI Resume Checker
 
 Each migration enables and scopes Row-Level Security policies. Review them before applying in a production project.

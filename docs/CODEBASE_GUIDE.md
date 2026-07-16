@@ -79,7 +79,7 @@ sequenceDiagram
 |------|------|------|-------|
 | `/` | `Home.jsx` | Public | Landing + footer status link |
 | `/share/:token` | `PublicSharePage.jsx` | Public | Read-only redacted opportunity share, optional passcode |
-| `/dashboard` | `Dashboard.jsx` | ✅ | Stats, deadlines |
+| `/dashboard` | `Dashboard.jsx` | ✅ | Stats, interview rounds, hackathon submission deadlines |
 | `/internships` | `InternshipList.jsx` | ✅ | Detail drawer → rounds + prep |
 | `/internships/:id/prep` | `InterviewPrepDetail.jsx` | ✅ | Interview prep workspace |
 | `/hackathons` | `HackathonList.jsx` | ✅ | |
@@ -106,7 +106,7 @@ sequenceDiagram
 | `/api/v1/public/share-links` | `routes/public-share-links.js` | Public token/passcode read-only shares |
 | `/api/v1/documents/:id/ai-check` | `routes/resume-checker.js` | Gated AI resume-check pipeline |
 | `/api/v1/ai-settings` | `routes/ai-settings.js` | Encrypted user AI-provider settings |
-| `/api/v1/notifications` | `routes/notifications.js` | Authenticated in-app deadline reminders |
+| `/api/v1/notifications` | `routes/notifications.js` | Authenticated in-app hackathon-submission reminders |
 | `/api/v1/internal/jobs/dispatch` | `routes/internal-jobs.js` | Token-protected outbox dispatcher |
 | `/api/v1/admin/jobs/dead` | `routes/admin-jobs.js` | Configured-admin dead-letter view |
 | `/api/v1/health` | `app.js` | Liveness |
@@ -148,7 +148,7 @@ Always add new endpoints here — pages should not construct URLs manually.
 | AI Resume Checker (UI gated) | [`ai-resume-checker.md`](ai-resume-checker.md) | `ai-resume-check-migration.sql`, `user-ai-settings-migration.sql` |
 | Dashboard share links | [`share-links.md`](share-links.md) | `share-links-migration.sql`, `supabase/migrations/20260624163000_create_share_links.sql`, `supabase/migrations/20260624171000_add_recoverable_share_tokens.sql` |
 | Hackathon collaboration | `src/pages/HackathonDetail.jsx` and `src/components/hackathons/` | `hackathon-collaboration-migration.sql`, `20260716081332_idempotent_idea_votes.sql`, `20260716083209_team_memberships_and_invites.sql`, `20260716100000_review_hardening.sql` |
-| Deadline reminders | `backend/src/lib/reminderJobs.js`, `.github/workflows/dispatch-reminders.yml` | `20260716082400_transactional_reminder_outbox.sql`, `20260716100000_review_hardening.sql` |
+| Active events and reminders | `backend/src/routes/upcoming-rounds.js`, `backend/src/lib/reminderJobs.js`, `.github/workflows/dispatch-reminders.yml` | `20260716110000_rounds_drive_active_events.sql`, `20260716082400_transactional_reminder_outbox.sql`, `20260716100000_review_hardening.sql` |
 | Architecture & challenges | [`DOCUMENTATION.md`](DOCUMENTATION.md) | `supabase-schema.sql` |
 | Testing & CI | [`TESTING.md`](TESTING.md) | — |
 | Security | [`SECURITY.md`](SECURITY.md) | — |
@@ -164,7 +164,7 @@ Always add new endpoints here — pages should not construct URLs manually.
 | Share links | Create, list, revoke, public read, and optional passcode verification are available. |
 | API contract | `/api/v1` is canonical; the legacy `/api` mount has a dated deprecation response. Opportunity lists use stable cursor pagination. |
 | Collaboration | `team_memberships` authorizes owner/editor/viewer access; name-only roster entries remain display data. Idea votes are unique per account in PostgreSQL. |
-| Reminders | The transactional outbox creates in-app deadline notifications. The optional free GitHub Actions trigger is best-effort, so it is not suitable for strict deadlines. |
+| Dates and reminders | The active-events migration makes internships track `applied_on` plus pending rounds, and limits new outbox jobs to hackathon submission dates. Until then, production retains its prior generic deadline behavior. The optional free GitHub Actions trigger is best-effort, so it is not suitable for strict deadlines. |
 | Quality gates | CI builds/tests frontend and backend, runs architecture guardrails, and performs informational dependency audits. |
 
 When explaining the project in an interview, lead with **realtime Kanban + RLS challenge**, then **round save latency fix**, then **interview prep** or **ATS scorer** depending on the role.

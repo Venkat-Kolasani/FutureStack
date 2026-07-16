@@ -21,6 +21,8 @@ The project must remain free-tier-only. Deadline reminders are best-effort and c
 
 Use a transactional outbox with leases, retries, deduplication, and a dead-letter state. GitHub Actions triggers the dispatcher as a best-effort free scheduler.
 
+The scope change to hackathon-submission-only reminders is proposed in [ADR-006](ADR-006-interview-rounds-as-active-events.md) and becomes effective only after its migration is applied.
+
 ## Consequences and failure modes
 
 GitHub Actions has no strict execution SLA. Dead jobs and delayed schedules must be visible in readiness and owner-only job endpoints. Strict-timing workflows require a dedicated worker later.

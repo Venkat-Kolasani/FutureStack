@@ -33,7 +33,7 @@ export REACT_APP_API_URL=http://localhost:3001/api/v1
 | `src/components/*` or `src/pages/*` | `npm run test:ci` + manual smoke steps below |
 | `backend/src/routes/*` or `backend/src/middleware/*` | `cd backend && npm test` — **add or update tests** in `backend/tests/` |
 | `backend/src/lib/validation.js` | `cd backend && npm test -- validation` |
-| `docs/*-migration.sql` | Manual: run migration on a dev Supabase project; document steps in the PR |
+| `docs/*-migration.sql` or `supabase/migrations/*` | Manual: run migration on a dev Supabase project; document steps in the PR |
 | Dashboard share links (`share_links`, `/share/:token`, `shareLinkService`) | `cd backend && npm test -- share-links`, `npm run test:ci`, `npm run build`, manual flow in [`docs/share-links.md`](share-links.md#manual-verification) |
 | Interview rounds (`backend/src/routes/opportunity-rounds.js`, `src/components/rounds/*`) | `cd backend && npm test -- rounds`, manual flow in [`docs/interview-rounds.md`](interview-rounds.md#testing) |
 | Interview prep (`backend/src/routes/interview-prep.js`, `src/components/interview-prep/*`) | `cd backend && npm test -- interview-prep`, manual flow in [`docs/interview-prep.md`](interview-prep.md#testing) |
@@ -81,7 +81,7 @@ cd backend && npm test -- share-links
 See [`docs/interview-rounds.md`](interview-rounds.md#testing).
 
 1. Open an internship → detail drawer → **Interview Pipeline**
-2. Add a round — save should complete quickly (toast + timeline without long **Saving…**)
+2. Add a pending round with a date and time — save should complete quickly and the timeline should show both (toast + timeline without long **Saving…**)
 3. Edit result to `rejected` — status badge and card summary update
 4. Confirm hackathon detail drawer has **no** rounds section
 
