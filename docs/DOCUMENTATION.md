@@ -1,6 +1,6 @@
 # FutureTracker: Interview Preparation Guide
 
-Last reviewed against the repository: July 15, 2026
+Last reviewed against the repository: July 16, 2026
 
 This is the single, interview-focused source of truth for FutureTracker. It explains what the product does, how the current implementation works, why the important choices were made, the trade-offs they create, and how the design would evolve for millions of users. It is deliberately candid: a strong interview answer distinguishes shipped behavior from a production-scale plan.
 
@@ -43,18 +43,19 @@ Career applications are fragmented across job boards, messages, spreadsheets, do
 
 | Capability | Current state | Important interview detail |
 | --- | --- | --- |
-| Opportunity CRUD, dashboard, calendar, reports, analytics | Active-events release pending | The production database migration is applied and verified. The matching API/frontend release will change internship display to `applied_on` and reserve active deadline behavior for hackathon submissions; all mutations go through the Express API. |
+| Opportunity CRUD, dashboard, calendar, reports, analytics | Available in the current release | The applied active-events migration uses `applied_on` for internships and reserves active `deadline` behavior for hackathon submissions; all mutations go through the Express API. |
 | Light and dark theme | Available | Theme preference is managed in React context and applied to Clerk appearance as well as app UI. |
-| Interview rounds and preparation | Available; scheduled-time release pending | Rounds are internship-only and synchronize derived parent fields server-side. The production database now has optional scheduling time; the matching API/frontend release is pending. |
+| Interview rounds and preparation | Available | Rounds are internship-only, synchronize derived parent fields server-side, and can hold an optional scheduled date/time. |
 | Documents and ATS hints | Available | ATS analysis is rule-based and runs in the browser; it is not an official ATS score. |
 | Hackathon collaboration | Implemented, migration-gated | Account-backed owner/editor/viewer memberships authorize workspaces; the name-only roster is display data. Idea votes are database-idempotent. |
 | Read-only share links | Available | A stored snapshot is shared, not live dashboard access. Links can expire, be revoked, and require a passcode. |
 | AI Resume Checker | Implemented, UI-gated | Backend pipeline, storage, provider settings, tests, and UI components exist; `AI_RESUME_CHECK_ENABLED` is currently `false`. |
 | Progress Logger | Schema migration ready | Tracks and daily logs, indexes, and Clerk-compatible RLS are defined; API and UI remain separate follow-on work. |
-| In-app hackathon submission reminders | Database behavior live; application release pending | The outbox and leased dispatcher exist. The applied active-events migration limits new reminder intent to hackathon submissions. GitHub Actions is an optional best-effort free-tier scheduler. |
-| Email delivery, tags, bulk import/export, advanced filters | Planned | Email is intentionally not claimed: the implemented path produces in-app notifications only. |
+| Hackathon submission reminders | Available, scheduler-configured | The outbox and leased dispatcher create durable in-app notifications. GitHub Actions is an optional best-effort free-tier scheduler; the active-events migration limits new reminder intent to hackathon submissions. |
+| Optional Resend email reminders | Implemented, migration/config-gated | Email is disabled by default. A per-job delivery record and Resend idempotency key make retried sends safe; enable only after applying the email migration and configuring backend secrets. |
+| Tags, bulk import/export, advanced filters | Planned | These are intentionally not claimed as shipped features. |
 
-**Production rollout status (checked July 16, 2026):** `20260716110000_rounds_drive_active_events.sql` is applied to the connected Supabase project. Read-only verification confirmed the new columns, triggers, and index; it preserved all 71 opportunity rows, backfilled `applied_on` for the 59 internship rows, and cancelled only queued internship reminder jobs. The matching API/frontend deployment remains pending.
+**Production rollout status (checked July 16, 2026):** `20260716110000_rounds_drive_active_events.sql` is applied to the connected Supabase project. Read-only verification confirmed the new columns, triggers, and index; it preserved all 71 opportunity rows, backfilled `applied_on` for the 59 internship rows, and cancelled only queued internship reminder jobs. The matching application code is published; optional email delivery remains off until the separate migration and backend configuration below are completed.
 
 ### Active-events rollout order
 
@@ -80,6 +81,7 @@ flowchart LR
   A -. "gated only" .-> LLM["Gemini or Ollama"]
   G["GitHub Actions\nbest-effort / 15 min"] -->|"token-protected dispatch"| A
   A --> J[("Postgres reminder\noutbox + in-app notifications")]
+  A -. "optional, config-gated" .-> E["Resend email API"]
 ```
 
 ### Why this architecture?
@@ -92,7 +94,7 @@ flowchart LR
 | Supabase PostgreSQL | Provides managed relational data, storage, RLS, migrations, and realtime primitives. | Service-role use must be tightly controlled; schema and RLS changes are security-sensitive. |
 | REST over a separate API | Clear resources and predictable debugging for CRUD-oriented domains. | Some multi-resource screens require several endpoints; a BFF aggregation layer may be useful later. |
 | Versioned API prefix | `/api/v1` permits additive and breaking contract evolution without silently breaking existing clients. | A temporary legacy mount adds code paths and must be retired on its advertised sunset date. |
-| Transactional outbox | The existing outbox couples deadline reminder intent to an opportunity write; after the active-events migration it applies only to hackathon submissions and dispatches asynchronously with leases and retries. | A free GitHub Actions scheduler is delayed occasionally; it is acceptable for in-app reminders, not strict-timing or safety-critical work. |
+| Transactional outbox | The outbox couples hackathon submission reminder intent to an opportunity write and dispatches it asynchronously with leases and retries. It always writes an in-app notification and can add a Resend email channel with a per-job delivery record. | GitHub Actions and the Resend free tier have limits; this is acceptable for personal deadline reminders, not strict-timing or safety-critical work. |
 | Vercel AI SDK with Gemini/Ollama | Provider abstraction permits a hosted or local model option. | LLM calls are slow, variable, and costly, so the feature is gated. |
 
 ### Deployment shape today
@@ -104,6 +106,7 @@ flowchart LR
 - Product analytics: PostHog when configured.
 - CI: GitHub Actions runs frontend build/tests, backend tests, architecture guardrails, and non-blocking dependency audits.
 - Reminder scheduling: an optional repository workflow posts to the token-protected dispatcher every 15 minutes. It is intentionally described as best-effort because the GitHub Actions free tier has no execution SLA.
+- Email delivery: an optional Resend API call runs only inside the leased dispatcher. It is server-only, disabled by default, and never blocks opportunity create/update requests.
 
 The exact environment contract lives in `.env.example` and `backend/.env.example`. Vercel must receive `REACT_APP_API_URL=https://futurestack-aeyn.onrender.com/api/v1` at build time. Secrets are backend-only; the browser receives only public configuration such as Clerk's publishable key and Supabase's anon key.
 
@@ -430,11 +433,21 @@ Idea voting is also enforced where concurrency exists: `idea_votes` has a `(idea
 
 ### Hackathon submission reminders: transactional outbox
 
-**Status: proposed, migration-gated.** The existing transactional outbox is implemented. Its restriction to hackathon submission dates becomes effective only after `20260716110000_rounds_drive_active_events.sql` is applied before the corresponding API/frontend deployment.
+**Status: available for in-app reminders; email is migration/config-gated.** The active-events migration has narrowed reminder intent to hackathon submission dates. The email channel requires the additional migration and server-side configuration in the next section.
 
-An insert or submission-deadline change on a **hackathon** writes 7-day and 1-day reminder jobs in the same database transaction. Internship applications and their completed application-close dates never enqueue this outbox. A changed submission deadline, owner, or category cancels obsolete queued or leased work before replacement jobs are queued. A dispatcher leases due jobs with `FOR UPDATE SKIP LOCKED`, increments attempts, writes an idempotent `user_notifications` row, then conditionally marks the job completed, retryable, or dead; a missing conditional update is treated as a lost lease and is not counted as delivered. The unique keys on jobs and notifications make at-least-once dispatch safe for the current in-app delivery result.
+An insert or submission-deadline change on a **hackathon** writes 7-day and 1-day reminder jobs in the same database transaction. Internship applications and their completed application-close dates never enqueue this outbox. A changed submission deadline, owner, or category cancels obsolete queued or leased work before replacement jobs are queued. A dispatcher leases due jobs with `FOR UPDATE SKIP LOCKED`, increments attempts, writes an idempotent `user_notifications` row, then conditionally marks the job completed, retryable, or dead; a missing conditional update is treated as a lost lease and is not counted as delivered.
 
-The free implementation deliberately separates *durable work* from *best-effort scheduling*. `.github/workflows/dispatch-reminders.yml` posts to the token-protected dispatcher every 15 minutes only when repository secrets exist. GitHub Actions can be delayed, so I would say in an interview: “That trade-off is fine for personal in-app deadline reminders; for strict timing, I would use an always-on scheduler or dedicated worker and alert on queue age.” It is not an email sender, and it does not claim an execution SLA. See [ADR-004](adr/ADR-004-transactional-outbox.md).
+The free implementation deliberately separates *durable work* from *best-effort scheduling*. `.github/workflows/dispatch-reminders.yml` posts to the token-protected dispatcher every 15 minutes only when repository secrets exist. GitHub Actions can be delayed, so I would say in an interview: “That trade-off is fine for personal deadline reminders; for strict timing, I would use an always-on scheduler or dedicated worker and alert on queue age.” It does not claim an execution SLA. See [ADR-004](adr/ADR-004-transactional-outbox.md).
+
+### Optional Resend email delivery
+
+The email channel follows [ADR-007](adr/ADR-007-optional-email-reminders.md). It runs **after** the idempotent in-app notification is written and only when all three backend-only values are present: `REMINDER_EMAILS_ENABLED=true`, `RESEND_API_KEY`, and `REMINDER_EMAIL_FROM`. A missing user account email is a successful skip; it does not retry or prevent the in-app reminder. A configured Resend failure is retryable through the existing job lease and backoff, then appears in the existing dead-letter view.
+
+Before enabling it, apply [`20260716120000_optional_email_reminders.sql`](../supabase/migrations/20260716120000_optional_email_reminders.sql). The migration adds `notification_email_deliveries`, keyed by `notification_job_id`, so a persisted `sent` result prevents re-sending a completed job. The Resend request also carries `Idempotency-Key: deadline-reminder/<job-id>` to cover the failure window where Resend accepts a message but the worker fails before it records the provider response. Resend keeps this key for 24 hours, so the channel is still at-least-once rather than an absolute delivery guarantee.
+
+This stays within Resend's free transactional plan as of July 16, 2026: 3,000 emails per month, 100 per day, and one custom domain. Start with `onboarding@resend.dev` only to test delivery to the account owner's email; verify a custom domain before enabling reminders for other users. Check [Resend pricing](https://resend.com/pricing/) before rollout because provider quotas can change. Do not put the API key in Vercel or any `REACT_APP_*` variable.
+
+**What we deliberately do not do yet:** per-user email opt-in/unsubscribe preferences, open/click tracking, provider webhooks, or a permanent email audit/event stream. Those become necessary when email is a user promise rather than a best-effort convenience. The first upgrade is Resend webhooks plus delivery-event reconciliation; the next is per-user channel preferences and a dedicated scheduler/worker.
 
 ### Read-only share links
 
@@ -517,7 +530,7 @@ I would add structured logs with correlation IDs, distributed traces from browse
 | Realtime | Broad database-change subscription followed by full refetch. | Filtered user events and query invalidation. | Broadcast/event service with tenant channels, backpressure, idempotent versions, and presence only where needed. |
 | File handling | Application-level uploads and document metadata. | Direct-to-object-storage signed uploads, strict validation and scanning. | CDN, asynchronous scanning/processing, lifecycle tiers, regional strategy. |
 | AI analysis | Synchronous request with multiple LLM calls. | Durable job queue, status polling/events, retries, idempotency key, spend limits. | Separate worker pool, provider failover, per-tenant quotas, evaluation/quality monitoring. |
-| Hackathon submission reminders (after migration) | Transactional outbox, leased batches, in-app notifications, GitHub Actions best-effort scheduler. | Monitor queue age/dead jobs and move timing-sensitive dispatch to a dedicated scheduler/worker. | Independently scalable workers, provider-backed notification channels, per-tenant preferences, and delivery audit events. |
+| Hackathon submission reminders | Transactional outbox, leased batches, in-app notifications, optional Resend email with a per-job sent record, GitHub Actions best-effort scheduler. | Monitor queue age/dead jobs, Resend failures, and daily quota; add a dedicated scheduler/worker for time-sensitive delivery. | Independently scalable workers, provider webhooks, per-tenant channel preferences, and delivery-event audit streams. |
 | Secrets and encryption | Environment secrets and AES-GCM application encryption. | Managed secret store and KMS-backed envelope encryption. | Rotation, audit trails, separate keys/tenants where required, least-privilege service identities. |
 
 ### Database-specific plan
@@ -528,7 +541,7 @@ For analytics, I would replace application loops with parameterized SQL aggregat
 
 ### Consistency and asynchronous work
 
-The current CRUD paths are synchronous because a user expects immediate feedback. The active-events migration narrows the existing job pattern—state, unique idempotency key, attempt count, lease, error reason, retry, and dead-letter state—to hackathon submission reminders. Their current output is an in-app notification; the GitHub workflow only wakes dispatch and is not the durable queue itself.
+The current CRUD paths are synchronous because a user expects immediate feedback. The active-events migration narrows the existing job pattern—state, unique idempotency key, attempt count, lease, error reason, retry, and dead-letter state—to hackathon submission reminders. Their durable baseline is an in-app notification. When explicitly enabled, the worker adds an optional Resend email after that notification and records the provider message ID per job; the GitHub workflow only wakes dispatch and is not the durable queue itself.
 
 Other operations that can take seconds or call external services—AI evaluation, malware scanning, large report exports, and real email/push delivery—should use the same pattern. The UI should show queued/running/completed/failed states instead of holding an HTTP request open, and a future worker should add a trace ID and observable queue-age SLO.
 
@@ -562,7 +575,7 @@ Choose interview-round synchronization, secure sharing, or the reminder outbox. 
 
 **“What would you build next?”**
 
-Start with measured operational readiness: wire the in-app reminder outbox only after its migration, token, and scheduler secrets are configured; add queue-age/dead-letter alerts; then move AI work into a durable job flow before enabling it. Tie the answer to measured need rather than a random feature list.
+Start with measured operational readiness: apply the optional email migration, configure the Resend sender and backend secrets, test with one owner address, then monitor queue age/dead jobs and provider failures. Next add queue-age alerts and move AI work into a durable job flow. Tie the answer to measured need rather than a random feature list.
 
 ### Architecture and API
 
@@ -639,7 +652,7 @@ The authentication path distinguishes invalid tokens from database/bootstrap fai
 | AI pipeline and settings | `backend/src/lib/resume-agent/`, `backend/src/lib/llm/`, `backend/src/lib/apiKeyVault.js` |
 | Share security | `backend/src/lib/shareLinks.js`, share-link route modules |
 | Collaboration authorization and votes | `backend/src/routes/hackathons.js`, `supabase/migrations/20260716081332_idempotent_idea_votes.sql`, `supabase/migrations/20260716083209_team_memberships_and_invites.sql`, `supabase/migrations/20260716100000_review_hardening.sql` |
-| Reminder outbox | `backend/src/lib/reminderJobs.js`, `backend/src/routes/internal-jobs.js`, `.github/workflows/dispatch-reminders.yml`, `supabase/migrations/20260716082400_transactional_reminder_outbox.sql`, `supabase/migrations/20260716100000_review_hardening.sql` |
+| Reminder outbox and optional email | `backend/src/lib/reminderJobs.js`, `backend/src/lib/reminderEmail.js`, `backend/src/routes/internal-jobs.js`, `.github/workflows/dispatch-reminders.yml`, `supabase/migrations/20260716082400_transactional_reminder_outbox.sql`, `supabase/migrations/20260716120000_optional_email_reminders.sql` |
 | Active internship events | `src/components/rounds/`, `backend/src/routes/upcoming-rounds.js`, `supabase/migrations/20260716110000_rounds_drive_active_events.sql` |
 | SQL schema and policies | `docs/*.sql`, `supabase/migrations/` |
 | Tests and CI | `docs/TESTING.md`, `backend/tests/`, `.github/workflows/ci.yml` |

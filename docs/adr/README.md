@@ -32,8 +32,8 @@ Update an ADR's status only when its corresponding implementation is complete an
 - [ADR-003: Idempotent voting](ADR-003-idempotent-voting.md)
 - [ADR-004: Deadline reminder outbox](ADR-004-transactional-outbox.md)
 - [ADR-005: Team memberships](ADR-005-team-memberships.md)
+- [ADR-007: Optional email delivery for deadline reminders](ADR-007-optional-email-reminders.md)
 
 ## Proposed decisions
 
 - [ADR-006: Interview rounds as active internship events](ADR-006-interview-rounds-as-active-events.md)
-- [ADR-007: Optional email delivery for deadline reminders](ADR-007-optional-email-reminders.md)

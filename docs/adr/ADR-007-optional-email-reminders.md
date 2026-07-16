@@ -1,7 +1,7 @@
 # ADR-007: Optional email delivery for deadline reminders
 
 - Date written: 2026-07-16
-- Status: Proposed
+- Status: Accepted
 
 ## Problem
 
