@@ -131,6 +131,10 @@ const IdeaBrainstormingBoard = ({
                                 <div className="flex items-center gap-3">
                                     <button
                                         onClick={() => onVoteIdea(idea)}
+                                        aria-pressed={idea.current_user_voted}
+                                        aria-label={idea.current_user_voted
+                                            ? `Remove your vote; ${idea.vote_count || 0} votes`
+                                            : `Vote for this idea; ${idea.vote_count || 0} votes`}
                                         className={`flex items-center gap-1 transition-colors ${idea.current_user_voted
                                                 ? 'text-blue-500 dark:text-blue-400 hover:text-blue-400 dark:hover:text-blue-300'
                                                 : 'text-gray-600 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400'

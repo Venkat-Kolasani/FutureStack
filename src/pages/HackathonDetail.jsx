@@ -21,6 +21,10 @@ import TaskBoard from '../components/hackathons/TaskBoard';
 import SubmissionChecklist from '../components/hackathons/SubmissionChecklist';
 import { opportunityService, hackathonService } from '../services/api';
 
+export const mergeIdeaVoteResponse = (ideas, updated) => ideas.map((currentIdea) => (
+    currentIdea.id === updated.id ? { ...currentIdea, ...updated } : currentIdea
+));
+
 const tabs = [
     { id: 'overview', label: 'Overview', icon: FaInfoCircle },
     { id: 'team', label: 'Team', icon: FaUsers },
@@ -215,9 +219,7 @@ const HackathonDetail = () => {
             const updated = idea.current_user_voted
                 ? await hackathonService.removeIdeaVote(id, idea.id)
                 : await hackathonService.voteIdea(id, idea.id);
-            setIdeas(ideas.map((currentIdea) => (
-                currentIdea.id === idea.id ? { ...currentIdea, ...updated } : currentIdea
-            )));
+            setIdeas((currentIdeas) => mergeIdeaVoteResponse(currentIdeas, updated));
         } catch (error) {
             console.error('Error voting on idea:', error);
         }

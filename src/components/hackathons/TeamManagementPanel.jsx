@@ -340,7 +340,14 @@ const TeamManagementPanel = ({
                             <Button variant="secondary" type="button" onClick={copyInviteUrl}>
                                 Copy link
                             </Button>
-                            <Button variant="primary" type="button" onClick={() => setShowInviteModal(false)}>
+                            <Button
+                                variant="primary"
+                                type="button"
+                                onClick={() => {
+                                    setShowInviteModal(false);
+                                    setInviteUrl('');
+                                }}
+                            >
                                 Done
                             </Button>
                         </div>
