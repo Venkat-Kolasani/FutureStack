@@ -43,28 +43,30 @@ Setting this variable enables **local JWT verification** without network calls t
 
 ## API Endpoints
 
+All paths below are canonical `/api/v1` endpoints. The legacy `/api` prefix remains temporarily available with `Deprecation` and `Sunset` headers for existing clients.
+
 ### Public
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/health` | Liveness check |
-| GET | `/api/health/deps` | Supabase reachability (returns 503 if down) |
+| GET | `/api/v1/health` | Liveness check |
+| GET | `/api/v1/health/deps` | Supabase reachability (returns 503 if down) |
 
 ### Auth & user
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/me` | Current user (`userId`, `internalUserId`, `email`) |
+| GET | `/api/v1/me` | Current user (`userId`, `internalUserId`, `email`) |
 
 ### Opportunities
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/opportunities` | List all for user |
-| GET | `/api/opportunities/:id` | Single opportunity |
-| POST | `/api/opportunities` | Create |
-| PUT/PATCH | `/api/opportunities/:id` | Update |
-| DELETE | `/api/opportunities/:id` | Delete |
+| GET | `/api/v1/opportunities` | Paginated list for user |
+| GET | `/api/v1/opportunities/:id` | Single opportunity |
+| POST | `/api/v1/opportunities` | Create |
+| PUT/PATCH | `/api/v1/opportunities/:id` | Update |
+| DELETE | `/api/v1/opportunities/:id` | Delete |
 
 ### Interview rounds (internships)
 
@@ -72,10 +74,10 @@ Nested under opportunities. See [`../docs/interview-rounds.md`](../docs/intervie
 
 | Method | Endpoint | Notes |
 |--------|----------|-------|
-| GET | `/api/opportunities/:id/rounds` | Ordered by `round_number` |
-| POST | `/api/opportunities/:id/rounds` | Returns `{ round, opportunity, rounds }` |
-| PATCH | `/api/opportunities/:id/rounds/:roundId` | Syncs parent status |
-| DELETE | `/api/opportunities/:id/rounds/:roundId` | Re-syncs after delete |
+| GET | `/api/v1/opportunities/:id/rounds` | Ordered by `round_number` |
+| POST | `/api/v1/opportunities/:id/rounds` | Returns `{ round, opportunity, rounds }` |
+| PATCH | `/api/v1/opportunities/:id/rounds/:roundId` | Syncs parent status |
+| DELETE | `/api/v1/opportunities/:id/rounds/:roundId` | Re-syncs after delete |
 
 ### Interview prep (internships)
 
@@ -83,12 +85,12 @@ See [`../docs/interview-prep.md`](../docs/interview-prep.md). Requires `docs/int
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/interview-prep/:opportunityId` | Full graph: prep + questions + topics + behavioral |
-| POST | `/api/interview-prep/:opportunityId` | Create prep record |
-| PUT | `/api/interview-prep/:opportunityId` | Update research / reflection |
-| POST/PUT/DELETE | `/api/interview-prep/:opportunityId/questions/...` | Question bank |
-| POST/PUT/DELETE | `/api/interview-prep/:opportunityId/topics/...` | Technical topics |
-| POST/PUT/DELETE | `/api/interview-prep/:opportunityId/behavioral/...` | STAR entries |
+| GET | `/api/v1/interview-prep/:opportunityId` | Full graph: prep + questions + topics + behavioral |
+| POST | `/api/v1/interview-prep/:opportunityId` | Create prep record |
+| PUT | `/api/v1/interview-prep/:opportunityId` | Update research / reflection |
+| POST/PUT/DELETE | `/api/v1/interview-prep/:opportunityId/questions/...` | Question bank |
+| POST/PUT/DELETE | `/api/v1/interview-prep/:opportunityId/topics/...` | Technical topics |
+| POST/PUT/DELETE | `/api/v1/interview-prep/:opportunityId/behavioral/...` | STAR entries |
 
 ### Documents
 
@@ -96,15 +98,15 @@ See [`../docs/documents-and-ats.md`](../docs/documents-and-ats.md).
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/documents` | List user documents |
-| GET | `/api/documents/:id` | Single document |
-| GET | `/api/documents/by-opportunity/:opportunityId` | Linked to opportunity |
-| POST | `/api/documents` | Create (metadata / URL) |
-| POST | `/api/documents/upload` | Multipart file upload |
-| PATCH | `/api/documents/:id` | Update (incl. `ats_score`, `ats_analysis`) |
-| DELETE | `/api/documents/:id` | Delete |
-| POST | `/api/documents/:id/assign` | Link to opportunity |
-| DELETE | `/api/documents/:id/unassign/:opportunityId` | Unlink |
+| GET | `/api/v1/documents` | List user documents |
+| GET | `/api/v1/documents/:id` | Single document |
+| GET | `/api/v1/documents/by-opportunity/:opportunityId` | Linked to opportunity |
+| POST | `/api/v1/documents` | Create (metadata / URL) |
+| POST | `/api/v1/documents/upload` | Multipart file upload |
+| PATCH | `/api/v1/documents/:id` | Update (incl. `ats_score`, `ats_analysis`) |
+| DELETE | `/api/v1/documents/:id` | Delete |
+| POST | `/api/v1/documents/:id/assign` | Link to opportunity |
+| DELETE | `/api/v1/documents/:id/unassign/:opportunityId` | Unlink |
 
 ### AI Resume Checker and provider settings
 
@@ -113,8 +115,8 @@ Rate-limited on **POST** only (see `middleware/aiLimiter.js`). GET is unlimited.
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/api/documents/:id/ai-check` | Run AI resume check pipeline |
-| GET  | `/api/documents/:id/ai-check` | Fetch latest AI check result |
+| POST | `/api/v1/documents/:id/ai-check` | Run AI resume check pipeline |
+| GET  | `/api/v1/documents/:id/ai-check` | Fetch latest AI check result |
 
 Requires `GEMINI_API_KEY` (or `LLM_PROVIDER=ollama`). Set `RESUME_AI_ENABLED=false` to reject analysis requests. The frontend currently keeps its AI controls behind a separate feature flag; see [`../docs/PROJECT_STATUS.md`](../docs/PROJECT_STATUS.md).
 
@@ -142,17 +144,17 @@ Team collaboration workspace. Its UI lives in `src/pages/HackathonDetail.jsx` an
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET/POST/PUT | `/api/hackathons/:id/team` | Team CRUD |
-| POST/PUT/DELETE | `/api/hackathons/:id/team/members` | Members |
-| GET/POST/PUT/DELETE | `/api/hackathons/:id/ideas` | Brainstorming + vote |
-| GET/POST/PUT/DELETE | `/api/hackathons/:id/tasks` | Task board |
-| GET/POST/PUT/DELETE | `/api/hackathons/:id/checklist` | Submission checklist |
+| GET/POST/PUT | `/api/v1/hackathons/:id/team` | Team CRUD |
+| POST/PUT/DELETE | `/api/v1/hackathons/:id/team/members` | Members |
+| GET/POST/PUT/DELETE | `/api/v1/hackathons/:id/ideas` | Brainstorming + vote |
+| GET/POST/PUT/DELETE | `/api/v1/hackathons/:id/tasks` | Task board |
+| GET/POST/PUT/DELETE | `/api/v1/hackathons/:id/checklist` | Submission checklist |
 
 ### Analytics
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/analytics` | Dashboard stats and chart data |
+| GET | `/api/v1/analytics` | Dashboard stats and chart data |
 
 ## Testing
 
@@ -169,18 +171,18 @@ No real Clerk or Supabase credentials needed — tests use mocks.
 
 ```bash
 # Health check (no auth)
-curl http://localhost:3001/api/health
+curl http://localhost:3001/api/v1/health
 
 # Dependency check
-curl http://localhost:3001/api/health/deps
+curl http://localhost:3001/api/v1/health/deps
 
 # Get opportunities (requires token)
 curl -H "Authorization: Bearer YOUR_CLERK_TOKEN" \
-  http://localhost:3001/api/opportunities
+  http://localhost:3001/api/v1/opportunities
 
 # Get interview prep for an internship
 curl -H "Authorization: Bearer YOUR_CLERK_TOKEN" \
-  http://localhost:3001/api/interview-prep/OPPORTUNITY_UUID
+  http://localhost:3001/api/v1/interview-prep/OPPORTUNITY_UUID
 ```
 
 ## Deploy to Render

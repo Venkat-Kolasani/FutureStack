@@ -27,6 +27,48 @@ describe('Opportunities API', () => {
         expect(res.status).toBe(401);
     });
 
+    it('GET /api/v1/opportunities returns a paginated response', async () => {
+        const rows = [
+            {
+                id: '00000000-0000-4000-8000-000000000002',
+                user_id: TEST_AUTH.internalUserId,
+                title: 'Newest',
+                created_at: '2026-07-16T10:00:00.000Z',
+            },
+            {
+                id: '00000000-0000-4000-8000-000000000001',
+                user_id: TEST_AUTH.internalUserId,
+                title: 'Older',
+                created_at: '2026-07-15T10:00:00.000Z',
+            },
+        ];
+        const chain = createChain({ data: rows, error: null });
+        mockFrom.mockReturnValue(chain);
+
+        const res = await request(app)
+            .get('/api/v1/opportunities?limit=1')
+            .set(authHeader);
+
+        expect(res.status).toBe(200);
+        expect(res.body.items).toEqual([expect.objectContaining({ title: 'Newest' })]);
+        expect(res.body.nextCursor).toEqual(expect.any(String));
+        expect(chain.limit).toHaveBeenCalledWith(2);
+        expect(chain.order).toHaveBeenNthCalledWith(1, 'created_at', { ascending: false });
+        expect(chain.order).toHaveBeenNthCalledWith(2, 'id', { ascending: false });
+    });
+
+    it('GET /api/v1/opportunities rejects an invalid cursor', async () => {
+        const res = await request(app)
+            .get('/api/v1/opportunities?cursor=not-a-cursor')
+            .set(authHeader);
+
+        expect(res.status).toBe(400);
+        expect(res.body.error).toBe('Validation Error');
+        expect(res.body.details).toEqual(
+            expect.arrayContaining([expect.objectContaining({ field: 'cursor' })])
+        );
+    });
+
     it('POST /api/opportunities returns 400 for invalid body', async () => {
         const res = await request(app)
             .post('/api/opportunities')

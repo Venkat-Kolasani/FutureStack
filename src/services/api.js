@@ -2,7 +2,10 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { analytics } from '../lib/analytics';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+const configuredApiUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = configuredApiUrl.replace(/\/$/, '').endsWith('/v1')
+    ? configuredApiUrl.replace(/\/$/, '')
+    : `${configuredApiUrl.replace(/\/$/, '')}/v1`;
 
 const api = axios.create({
     baseURL: API_BASE_URL,
@@ -144,6 +147,11 @@ export const roundService = {
 export const opportunityService = {
     getAll: async () => {
         const response = await api.get('/opportunities');
+        return response.data.items;
+    },
+
+    getPage: async (params = {}) => {
+        const response = await api.get('/opportunities', { params });
         return response.data;
     },
 

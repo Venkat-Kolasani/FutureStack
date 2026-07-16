@@ -20,6 +20,22 @@ describe('Health endpoints', () => {
         expect(res.body).toHaveProperty('timestamp');
     });
 
+    it('GET /api/v1/health returns ok and emits a request ID', async () => {
+        const res = await request(app).get('/api/v1/health');
+
+        expect(res.status).toBe(200);
+        expect(res.headers['x-request-id']).toEqual(expect.any(String));
+        expect(res.headers.deprecation).toBeUndefined();
+    });
+
+    it('legacy API responses include deprecation headers', async () => {
+        const res = await request(app).get('/api/health');
+
+        expect(res.status).toBe(200);
+        expect(res.headers.deprecation).toBe('true');
+        expect(res.headers.sunset).toBeDefined();
+    });
+
     it('GET /api/health/deps returns ok when supabase is healthy', async () => {
         const res = await request(app).get('/api/health/deps');
 

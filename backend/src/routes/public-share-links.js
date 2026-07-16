@@ -1,5 +1,6 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
+const { ipKeyGenerator } = require('express-rate-limit');
 const { supabase } = require('../lib/supabase');
 const { validate } = require('../middleware/validate');
 const {
@@ -19,8 +20,8 @@ const PUBLIC_SHARE_FIELDS =
     'id, token_hash, snapshot, snapshot_type, expires_at, is_active, view_count, passcode_hash, passcode_salt, created_at, updated_at';
 
 const publicShareReadLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 120,
+    windowMs: 60 * 1000,
+    max: 30,
     standardHeaders: true,
     legacyHeaders: false,
     handler: (req, res) => {
@@ -32,11 +33,14 @@ const publicShareReadLimiter = rateLimit({
 });
 
 const publicShareVerifyLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 15,
+    windowMs: 60 * 1000,
+    max: 5,
     standardHeaders: true,
     legacyHeaders: false,
-    keyGenerator: (req) => `${req.params.token}:${req.ip}`,
+    keyGenerator: (req) => {
+        const ip = req.ips?.[0] || req.ip;
+        return `${req.params.token}:${ipKeyGenerator(ip)}`;
+    },
     handler: (req, res) => {
         res.status(429).json({
             error: 'Passcode Rate Limit Exceeded',

@@ -3,8 +3,8 @@
 const rateLimit = require('express-rate-limit');
 const { ipKeyGenerator } = require('express-rate-limit');
 
-const windowMs = parseInt(process.env.AI_CHECK_RATE_LIMIT_WINDOW_MS || String(15 * 60 * 1000), 10);
-const defaultMax = process.env.NODE_ENV === 'development' ? '30' : '10';
+const windowMs = parseInt(process.env.AI_CHECK_RATE_LIMIT_WINDOW_MS || String(60 * 1000), 10);
+const defaultMax = '5';
 const max = parseInt(process.env.AI_CHECK_RATE_LIMIT_MAX || defaultMax, 10);
 
 /**

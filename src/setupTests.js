@@ -32,7 +32,7 @@ Object.defineProperty(window, 'matchMedia', {
 process.env.REACT_APP_CLERK_PUBLISHABLE_KEY =
     process.env.REACT_APP_CLERK_PUBLISHABLE_KEY || 'pk_test_ci_placeholder';
 process.env.REACT_APP_API_URL =
-    process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+    process.env.REACT_APP_API_URL || 'http://localhost:3001/api/v1';
 
 jest.mock('@clerk/clerk-react', () => ({
     ClerkProvider: ({ children }) => children,

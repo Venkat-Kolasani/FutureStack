@@ -1,7 +1,12 @@
 const express = require('express');
 const { supabase } = require('../lib/supabase');
 const { validate } = require('../middleware/validate');
-const { createOpportunitySchema, updateOpportunitySchema, idParamSchema } = require('../validation/schemas');
+const {
+    createOpportunitySchema,
+    updateOpportunitySchema,
+    idParamSchema,
+    opportunityListQuerySchema,
+} = require('../validation/schemas');
 const opportunityRoundsRouter = require('./opportunity-rounds');
 const upcomingRoundsRouter = require('./upcoming-rounds');
 
@@ -53,21 +58,76 @@ function logAudit(action, userId, resourceId = null, outcome = 'success', detail
     }));
 }
 
+function encodeCursor(opportunity) {
+    return Buffer.from(JSON.stringify({
+        createdAt: new Date(opportunity.created_at).toISOString(),
+        id: opportunity.id,
+    })).toString('base64url');
+}
+
+function decodeCursor(cursor) {
+    try {
+        const parsed = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8'));
+        const createdAt = new Date(parsed.createdAt);
+
+        if (
+            !parsed || typeof parsed.id !== 'string' ||
+            !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(parsed.id) ||
+            Number.isNaN(createdAt.getTime()) ||
+            createdAt.toISOString() !== parsed.createdAt
+        ) {
+            return null;
+        }
+
+        return { createdAt: parsed.createdAt, id: parsed.id };
+    } catch {
+        return null;
+    }
+}
+
 /**
  * GET /api/opportunities
  * Get all opportunities for the authenticated user
  */
-router.get('/', async (req, res) => {
+router.get('/', validate(opportunityListQuerySchema, 'query'), async (req, res) => {
     try {
-        const { data, error } = await supabase
+        const { limit, cursor, status, category } = req.query;
+        const decodedCursor = cursor ? decodeCursor(cursor) : null;
+
+        if (cursor && !decodedCursor) {
+            return res.status(400).json({
+                error: 'Validation Error',
+                message: 'cursor must be a valid opportunity cursor',
+                details: [{ field: 'cursor', message: 'cursor is invalid or malformed' }],
+            });
+        }
+
+        let query = supabase
             .from('opportunities')
             .select('*')
-            .eq('user_id', req.auth.internalUserId)
-            .order('created_at', { ascending: false });
+            .eq('user_id', req.auth.internalUserId);
+
+        if (status) query = query.eq('status', status);
+        if (category) query = query.eq('category', category);
+        if (decodedCursor) {
+            query = query.or(
+                `created_at.lt.${decodedCursor.createdAt},and(created_at.eq.${decodedCursor.createdAt},id.lt.${decodedCursor.id})`
+            );
+        }
+
+        const { data, error } = await query
+            .order('created_at', { ascending: false })
+            .order('id', { ascending: false })
+            .limit(limit + 1);
 
         if (error) throw error;
 
-        res.json(data);
+        const rows = data || [];
+        const hasNextPage = rows.length > limit;
+        const items = hasNextPage ? rows.slice(0, limit) : rows;
+        const nextCursor = hasNextPage ? encodeCursor(items[items.length - 1]) : null;
+
+        res.json({ items, nextCursor });
     } catch (error) {
         return handleRouteError(res, 'FETCH_OPPORTUNITIES', error, 'Failed to fetch opportunities');
     }

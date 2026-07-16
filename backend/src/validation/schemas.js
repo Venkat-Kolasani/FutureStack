@@ -170,6 +170,25 @@ const idParamSchema = Joi.object({
         })
 });
 
+const opportunityListQuerySchema = Joi.object({
+    limit: Joi.number()
+        .integer()
+        .min(1)
+        .max(100)
+        .default(25)
+        .messages({
+            'number.base': 'limit must be a number',
+            'number.integer': 'limit must be an integer',
+            'number.min': 'limit must be at least 1',
+            'number.max': 'limit cannot exceed 100',
+        }),
+    cursor: Joi.string().trim().max(512).optional(),
+    status: Joi.string()
+        .valid('applied', 'interviewed', 'shortlisted', 'selected', 'rejected', 'ghosted')
+        .optional(),
+    category: Joi.string().valid('internship', 'hackathon').optional(),
+});
+
 // =============================================================================
 // HACKATHON TEAM COLLABORATION SCHEMAS
 // =============================================================================
@@ -464,6 +483,7 @@ module.exports = {
     createOpportunitySchema,
     updateOpportunitySchema,
     idParamSchema,
+    opportunityListQuerySchema,
     // Hackathon team collaboration
     createTeamSchema,
     updateTeamSchema,
