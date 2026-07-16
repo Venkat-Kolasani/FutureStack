@@ -1,8 +1,9 @@
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { analytics } from '../lib/analytics';
+import { getDefaultApiUrl } from '../config/apiUrl';
 
-const configuredApiUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+const configuredApiUrl = process.env.REACT_APP_API_URL || getDefaultApiUrl(process.env.NODE_ENV);
 const API_BASE_URL = configuredApiUrl.replace(/\/$/, '').endsWith('/v1')
     ? configuredApiUrl.replace(/\/$/, '')
     : `${configuredApiUrl.replace(/\/$/, '')}/v1`;

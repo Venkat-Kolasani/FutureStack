@@ -2,7 +2,7 @@
 
 FutureTracker is a full-stack career-application workspace for students and early-career professionals. It brings internships, hackathons, interview preparation, documents, deadlines, and application insights into one focused workflow.
 
-[Live app](https://futuretracker.online) · [API](https://futurestack-api.onrender.com/api/v1/health) · [Documentation](docs/DOCUMENTATION.md) · [Contributing](CONTRIBUTING.md)
+[Live app](https://futuretracker.online) · [API health](https://futurestack-aeyn.onrender.com/api/v1/health) · [Documentation](docs/DOCUMENTATION.md) · [Contributing](CONTRIBUTING.md)
 
 ## Project status
 
@@ -85,7 +85,7 @@ The checked-in templates are the complete configuration reference: [`.env.exampl
 | `.env` | `REACT_APP_CLERK_PUBLISHABLE_KEY`, `REACT_APP_API_URL`, `REACT_APP_SUPABASE_URL`, `REACT_APP_SUPABASE_ANON_KEY` |
 | `backend/.env` | `CLERK_SECRET_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `CORS_ORIGIN` |
 
-For production, also set `CLERK_JWT_PUBLIC_KEY` for local JWT verification. Share links need `SHARE_LINK_ENCRYPTION_KEY`. Account invites use `FRONTEND_URL`; the optional reminder dispatcher uses `JOB_DISPATCH_TOKEN`, with `JOB_ADMIN_USER_IDS` controlling the dead-letter view. The optional AI pipeline is configured only in `backend/.env` with `RESUME_AI_ENABLED`, provider/model values, and either a server Gemini key or user-managed BYOK settings. Never expose service-role, Clerk secret, job-dispatch, or AI keys in frontend variables.
+For production, set Vercel's build-time `REACT_APP_API_URL` to `https://futurestack-aeyn.onrender.com/api/v1` and redeploy the frontend. Also set `CLERK_JWT_PUBLIC_KEY` for local JWT verification. Share links need `SHARE_LINK_ENCRYPTION_KEY`. Account invites use `FRONTEND_URL`; the optional reminder dispatcher uses `JOB_DISPATCH_TOKEN`, with `JOB_ADMIN_USER_IDS` controlling the dead-letter view. The optional AI pipeline is configured only in `backend/.env` with `RESUME_AI_ENABLED`, provider/model values, and either a server Gemini key or user-managed BYOK settings. Never expose service-role, Clerk secret, job-dispatch, or AI keys in frontend variables.
 
 ## Database setup
 
@@ -133,6 +133,8 @@ All endpoints except health checks and public-share reads require a Clerk bearer
 | In-app notifications | `/api/v1/notifications` |
 
 The complete endpoint list, request expectations, and curl examples are in [backend/README.md](backend/README.md).
+
+Current production checks: [liveness](https://futurestack-aeyn.onrender.com/api/v1/health) and [dependencies](https://futurestack-aeyn.onrender.com/api/v1/health/deps).
 
 ## Documentation
 

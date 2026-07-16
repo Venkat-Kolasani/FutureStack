@@ -87,14 +87,14 @@ flowchart LR
 ### Deployment shape today
 
 - Frontend: React app intended for Vercel.
-- API: Express service intended for Render.
+- API: Express service on Render at `https://futurestack-aeyn.onrender.com/api/v1`; liveness is `/health` and dependency readiness is `/health/deps`.
 - Identity: Clerk.
 - Database, storage, and optional realtime: Supabase.
 - Product analytics: PostHog when configured.
 - CI: GitHub Actions runs frontend build/tests, backend tests, architecture guardrails, and non-blocking dependency audits.
 - Reminder scheduling: an optional repository workflow posts to the token-protected dispatcher every 15 minutes. It is intentionally described as best-effort because the GitHub Actions free tier has no execution SLA.
 
-The exact environment contract lives in `.env.example` and `backend/.env.example`. Secrets are backend-only; the browser receives only public configuration such as Clerk's publishable key and Supabase's anon key.
+The exact environment contract lives in `.env.example` and `backend/.env.example`. Vercel must receive `REACT_APP_API_URL=https://futurestack-aeyn.onrender.com/api/v1` at build time. Secrets are backend-only; the browser receives only public configuration such as Clerk's publishable key and Supabase's anon key.
 
 ## 4. Frontend architecture
 

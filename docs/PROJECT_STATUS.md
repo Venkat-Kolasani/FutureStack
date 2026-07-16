@@ -12,7 +12,7 @@ This is the source of truth for the repository's product status. It distinguishe
 | Interview rounds | Available | Internship-only multi-round timeline with automatic parent-status synchronization. |
 | Interview preparation | Available | Research, questions, technical topics, STAR stories, and reflections per internship. |
 | Documents and ATS guidance | Available | Document vault, opportunity links, PDF/DOCX text extraction, and client-side rule-based ATS hints. |
-| Hackathon collaboration | Implemented, migration-gated | Account-backed owner/editor/viewer access, hashed single-use invites, idempotent ideas/votes, tasks, and a checklist. Apply the three July 16 collaboration migrations before enabling it in a database. |
+| Hackathon collaboration | Implemented, migration-gated | Account-backed owner/editor/viewer access, hashed single-use invites, idempotent ideas/votes, tasks, and a checklist. Apply the four July 16 collaboration migrations before enabling it in a database. |
 | API contract | Available | `/api/v1` is canonical. Legacy `/api` clients receive deprecation and sunset headers; opportunity lists use cursor pagination. |
 | In-app deadline reminders | Implemented, scheduler-gated | A transactional outbox, leased dispatcher, retries, and dead-letter visibility are implemented. The optional free GitHub Actions scheduler needs secrets and is best-effort; no email delivery is claimed. |
 | Read-only share links | Available | Expiring or revocable snapshots with optional passcode verification. |

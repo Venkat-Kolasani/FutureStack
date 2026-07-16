@@ -195,8 +195,14 @@ No real Clerk or Supabase credentials needed — tests use mocks.
 # Health check (no auth)
 curl http://localhost:3001/api/v1/health
 
+# Production liveness check
+curl https://futurestack-aeyn.onrender.com/api/v1/health
+
 # Dependency check
 curl http://localhost:3001/api/v1/health/deps
+
+# Production dependency check
+curl https://futurestack-aeyn.onrender.com/api/v1/health/deps
 
 # Get opportunities (requires token)
 curl -H "Authorization: Bearer YOUR_CLERK_TOKEN" \

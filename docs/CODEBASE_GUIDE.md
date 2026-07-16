@@ -9,7 +9,9 @@ A full-stack React + Express app that helps students track internships and hacka
 | Environment | URL |
 |-------------|-----|
 | Frontend | [futuretracker.online](https://futuretracker.online) |
-| Backend API | [futurestack-api.onrender.com/api/v1](https://futurestack-api.onrender.com/api/v1) |
+| Backend API | [futurestack-aeyn.onrender.com/api/v1](https://futurestack-aeyn.onrender.com/api/v1) |
+| API liveness | [GET /api/v1/health](https://futurestack-aeyn.onrender.com/api/v1/health) |
+| Dependency readiness | [GET /api/v1/health/deps](https://futurestack-aeyn.onrender.com/api/v1/health/deps) |
 | Service status | [UptimeRobot](https://stats.uptimerobot.com/ArICmEg95Y) |
 
 ---
