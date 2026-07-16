@@ -37,3 +37,4 @@ Update an ADR's status only when its corresponding implementation is complete an
 ## Proposed decisions
 
 - [ADR-006: Interview rounds as active internship events](ADR-006-interview-rounds-as-active-events.md)
+- [ADR-008: User-controlled email reminder preference](ADR-008-user-controlled-email-reminders.md)
