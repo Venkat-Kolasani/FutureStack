@@ -74,7 +74,7 @@ const Footer = () => {
 
             {/* Large Branding Text */}
             <div className="mt-20 select-none pointer-events-none w-full overflow-hidden flex justify-center">
-                <h1 className="text-[10vw] leading-none font-bold text-orange-600/15 dark:text-white/5 text-center whitespace-nowrap">
+                <h1 className="text-[10vw] leading-none font-bold text-orange-600/20 dark:text-white/10 text-center whitespace-nowrap">
                     FUTURE TRACKER
                 </h1>
             </div>
