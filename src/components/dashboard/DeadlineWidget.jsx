@@ -9,9 +9,9 @@ const DeadlineWidget = ({ deadlines, onDelete }) => {
       <Card className="p-4 sm:p-6">
         <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
           <FaClock className="mr-2 text-blue-400" />
-          Upcoming Deadlines
+          Upcoming Hackathon Deadlines
         </h3>
-        <p className="text-gray-600 dark:text-gray-400 text-center py-4 text-sm sm:text-base">No upcoming deadlines</p>
+        <p className="text-gray-600 dark:text-gray-400 text-center py-4 text-sm sm:text-base">No upcoming hackathon deadlines</p>
       </Card>
     );
   }
@@ -20,7 +20,7 @@ const DeadlineWidget = ({ deadlines, onDelete }) => {
     <Card className="p-4 sm:p-6">
       <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
         <FaClock className="mr-2 text-blue-400" />
-        Upcoming Deadlines
+        Upcoming Hackathon Deadlines
       </h3>
       <div className="space-y-2 sm:space-y-3">
         {deadlines.map((opportunity) => {

@@ -7,22 +7,25 @@
  * - Inline editing of member roles
  */
 import React, { useState } from 'react';
-import { FaPlus, FaTrash, FaUsers, FaUserPlus, FaEdit, FaCheck, FaTimes } from 'react-icons/fa';
+import { FaPlus, FaTrash, FaUsers, FaUserPlus, FaEdit, FaCheck, FaTimes, FaLink } from 'react-icons/fa';
 import Button from '../common/Button';
 import Modal from '../common/Modal';
 
 const TeamManagementPanel = ({
     team,
     members,
+    access,
     onCreateTeam,
     onUpdateTeam,
     onAddMember,
     onUpdateMember,
     onRemoveMember,
+    onCreateInvite,
     isLoading
 }) => {
     const [showCreateTeamModal, setShowCreateTeamModal] = useState(false);
     const [showAddMemberModal, setShowAddMemberModal] = useState(false);
+    const [showInviteModal, setShowInviteModal] = useState(false);
     const [editingMemberId, setEditingMemberId] = useState(null);
     const [editingRole, setEditingRole] = useState('');
 
@@ -32,6 +35,10 @@ const TeamManagementPanel = ({
     const [memberName, setMemberName] = useState('');
     const [memberRole, setMemberRole] = useState('');
     const [memberEmail, setMemberEmail] = useState('');
+    const [inviteRole, setInviteRole] = useState('editor');
+    const [inviteUrl, setInviteUrl] = useState('');
+
+    const canManageTeam = access?.role === 'owner';
 
     const handleCreateTeam = async (e) => {
         e.preventDefault();
@@ -72,6 +79,20 @@ const TeamManagementPanel = ({
     const handleCancelEdit = () => {
         setEditingMemberId(null);
         setEditingRole('');
+    };
+
+    const handleCreateInvite = async (event) => {
+        event.preventDefault();
+        const result = await onCreateInvite({ role: inviteRole, expiresInHours: 24 * 7 });
+        if (result?.inviteUrl) setInviteUrl(result.inviteUrl);
+    };
+
+    const copyInviteUrl = async () => {
+        try {
+            await navigator.clipboard.writeText(inviteUrl);
+        } catch {
+            // The read-only input remains available in browsers without clipboard permission.
+        }
     };
 
     // If no team exists, show create team prompt
@@ -154,10 +175,18 @@ const TeamManagementPanel = ({
                         <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">{team.description}</p>
                     )}
                 </div>
-                <Button variant="secondary" onClick={() => setShowAddMemberModal(true)}>
-                    <FaUserPlus className="mr-2" />
-                    Add Member
-                </Button>
+                {canManageTeam && (
+                    <div className="flex flex-wrap gap-2">
+                        <Button variant="secondary" onClick={() => setShowInviteModal(true)}>
+                            <FaLink className="mr-2" />
+                            Invite account
+                        </Button>
+                        <Button variant="secondary" onClick={() => setShowAddMemberModal(true)}>
+                            <FaUserPlus className="mr-2" />
+                            Add roster member
+                        </Button>
+                    </div>
+                )}
             </div>
 
             {/* Members List */}
@@ -204,23 +233,28 @@ const TeamManagementPanel = ({
                                     ) : (
                                         <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2">
                                             {member.role || 'Member'}
-                                            <button
-                                                onClick={() => handleStartEditRole(member)}
-                                                className="text-gray-500 hover:text-gray-300"
-                                            >
-                                                <FaEdit size={10} />
-                                            </button>
+                                            {canManageTeam && (
+                                                <button
+                                                    onClick={() => handleStartEditRole(member)}
+                                                    className="text-gray-500 hover:text-gray-300"
+                                                    aria-label={`Edit ${member.name}'s roster role`}
+                                                >
+                                                    <FaEdit size={10} />
+                                                </button>
+                                            )}
                                         </p>
                                     )}
                                 </div>
                             </div>
-                            <button
-                                onClick={() => onRemoveMember(member.id)}
-                                className="text-gray-500 hover:text-red-400 transition-colors p-2"
-                                title="Remove member"
-                            >
-                                <FaTrash size={14} />
-                            </button>
+                            {canManageTeam && (
+                                <button
+                                    onClick={() => onRemoveMember(member.id)}
+                                    className="text-gray-500 hover:text-red-400 transition-colors p-2"
+                                    title="Remove roster member"
+                                >
+                                    <FaTrash size={14} />
+                                </button>
+                            )}
                         </div>
                     ))}
                 </div>
@@ -281,6 +315,69 @@ const TeamManagementPanel = ({
                         </Button>
                     </div>
                 </form>
+            </Modal>
+
+            <Modal
+                isOpen={showInviteModal}
+                onClose={() => {
+                    setShowInviteModal(false);
+                    setInviteUrl('');
+                }}
+                title="Invite a FutureStack account"
+            >
+                {inviteUrl ? (
+                    <div className="space-y-4">
+                        <p className="text-sm text-gray-300">
+                            This single-use link expires in seven days. Share it only with the intended collaborator.
+                        </p>
+                        <input
+                            value={inviteUrl}
+                            readOnly
+                            aria-label="Team invite link"
+                            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-gray-200"
+                        />
+                        <div className="flex justify-end gap-3">
+                            <Button variant="secondary" type="button" onClick={copyInviteUrl}>
+                                Copy link
+                            </Button>
+                            <Button
+                                variant="primary"
+                                type="button"
+                                onClick={() => {
+                                    setShowInviteModal(false);
+                                    setInviteUrl('');
+                                }}
+                            >
+                                Done
+                            </Button>
+                        </div>
+                    </div>
+                ) : (
+                    <form onSubmit={handleCreateInvite}>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2" htmlFor="account-role">
+                                Workspace role
+                            </label>
+                            <select
+                                id="account-role"
+                                value={inviteRole}
+                                onChange={(event) => setInviteRole(event.target.value)}
+                                className="w-full px-4 py-2.5 bg-[#151515] border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            >
+                                <option value="editor">Editor — can update ideas, tasks, and checklist</option>
+                                <option value="viewer">Viewer — can view the workspace and vote</option>
+                            </select>
+                        </div>
+                        <div className="flex justify-end gap-3 mt-6">
+                            <Button variant="secondary" type="button" onClick={() => setShowInviteModal(false)}>
+                                Cancel
+                            </Button>
+                            <Button variant="primary" type="submit" disabled={isLoading}>
+                                Create invite
+                            </Button>
+                        </div>
+                    </form>
+                )}
             </Modal>
         </div>
     );

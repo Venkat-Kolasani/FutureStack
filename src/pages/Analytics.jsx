@@ -433,11 +433,11 @@ const Analytics = () => {
                     </Card>
                 </div>
 
-                {/* Deadline Heatmap */}
+                {/* Hackathon submission deadline heatmap */}
                 <Card className="p-6 mb-8">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                         <FaCalendarAlt className="text-amber-400" />
-                        Deadline Heatmap (Next 30 Days)
+                        Hackathon Submission Heatmap (Next 30 Days)
                     </h3>
                     <div className="grid grid-cols-7 gap-2">
                         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
@@ -471,7 +471,7 @@ const Analytics = () => {
                                 <div
                                     key={item.date}
                                     className={`aspect-square rounded-lg ${bgColor} flex items-center justify-center transition-all hover:scale-105 cursor-pointer group relative`}
-                                    title={`${item.date}: ${item.count} deadline${item.count !== 1 ? 's' : ''}`}
+                                    title={`${item.date}: ${item.count} submission${item.count !== 1 ? 's' : ''}`}
                                 >
                                     <span className="text-xs text-gray-700 dark:text-gray-300">{item.day}</span>
                                     {item.count > 0 && (

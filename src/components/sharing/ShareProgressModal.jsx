@@ -8,7 +8,7 @@ import { shareLinkService } from '../../services/api';
 const FIELD_OPTIONS = [
   { key: 'status', label: 'Status' },
   { key: 'description', label: 'Description' },
-  { key: 'deadline', label: 'Deadline' },
+  { key: 'deadline', label: 'Hackathon submission deadline' },
   { key: 'applicationLink', label: 'Application link' },
   { key: 'rounds', label: 'Interview rounds' },
   { key: 'dateApplied', label: 'Date applied' },

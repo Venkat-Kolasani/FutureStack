@@ -7,12 +7,15 @@ function createChain(result = { data: null, error: null }) {
         select: jest.fn(() => chain),
         insert: jest.fn(() => chain),
         update: jest.fn(() => chain),
+        upsert: jest.fn(() => chain),
         delete: jest.fn(() => chain),
         eq: jest.fn(() => chain),
+        or: jest.fn(() => chain),
         in: jest.fn(() => chain),
         order: jest.fn(() => chain),
         limit: jest.fn(() => chain),
         single: jest.fn(() => Promise.resolve(result)),
+        maybeSingle: jest.fn(() => Promise.resolve(result)),
         then: (resolve, reject) => Promise.resolve(result).then(resolve, reject),
     };
 

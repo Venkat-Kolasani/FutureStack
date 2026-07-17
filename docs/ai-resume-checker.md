@@ -22,7 +22,7 @@ The pipeline is inspired by and adapted from **[interviewstreet/hiring-agent](ht
 and data model.
 
 ```
-Browser → POST /api/documents/:id/ai-check
+Browser → POST /api/v1/documents/:id/ai-check
               ↓ requireAuth (Clerk JWT)
               ↓ aiCheckRunLimiter on POST only (30/15 min dev, 10/15 min prod, per user)
          routes/resume-checker.js
@@ -103,7 +103,7 @@ installing `@ai-sdk/openai`.
 
 `POST` is protected by Clerk JWT auth and the AI rate limiter. `GET` (load saved results) is auth-only with no AI rate limit.
 
-### `POST /api/documents/:id/ai-check`
+### `POST /api/v1/documents/:id/ai-check`
 
 Trigger a new AI resume check for the given document.
 
@@ -121,7 +121,7 @@ Trigger a new AI resume check for the given document.
 - `500` – pipeline failure (persisted in DB with `status='failed'`)
 - `503` – AI checker disabled (`RESUME_AI_ENABLED=false`)
 
-### `GET /api/documents/:id/ai-check`
+### `GET /api/v1/documents/:id/ai-check`
 
 Fetch the latest AI check result for a document without triggering a new run.
 

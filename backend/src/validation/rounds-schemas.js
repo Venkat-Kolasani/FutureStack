@@ -40,6 +40,14 @@ const createRoundSchema = Joi.object({
             'date.format': 'Scheduled date must be a valid ISO date'
         }),
 
+    scheduled_time: Joi.string()
+        .pattern(/^([01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/)
+        .allow(null, '')
+        .optional()
+        .messages({
+            'string.pattern.base': 'Scheduled time must use 24-hour HH:MM format'
+        }),
+
     result: Joi.string()
         .valid(...ROUND_RESULTS)
         .default('pending')
@@ -72,6 +80,14 @@ const updateRoundSchema = Joi.object({
         .optional()
         .messages({
             'date.format': 'Scheduled date must be a valid ISO date'
+        }),
+
+    scheduled_time: Joi.string()
+        .pattern(/^([01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/)
+        .allow(null, '')
+        .optional()
+        .messages({
+            'string.pattern.base': 'Scheduled time must use 24-hour HH:MM format'
         }),
 
     result: Joi.string()

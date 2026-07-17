@@ -150,6 +150,7 @@ describe('Share Links API', () => {
                 description: 'Work on APIs and infrastructure.',
                 link: 'https://example.com/apply',
                 deadline: '2026-07-01',
+                applied_on: '2026-06-01',
                 category: 'internship',
                 status: 'rejected',
                 created_at: '2026-06-01T00:00:00.000Z',
@@ -192,9 +193,10 @@ describe('Share Links API', () => {
         expect(insertedShare.token_ciphertext).toEqual(expect.any(String));
         expect(insertedShare.snapshot.opportunities[0]).toMatchObject({
             description: 'Work on APIs and infrastructure.',
-            deadline: '2026-07-01',
+            dateApplied: '2026-06-01',
             applicationLink: 'https://example.com/apply',
         });
+        expect(insertedShare.snapshot.opportunities[0]).not.toHaveProperty('deadline');
         expect(JSON.stringify(insertedShare.snapshot)).not.toContain('must never leak');
         expect(mockFrom).toHaveBeenCalledWith('opportunities');
         expect(mockFrom).toHaveBeenCalledWith('opportunity_rounds');
@@ -218,6 +220,7 @@ describe('Share Links API', () => {
                 round_number: 1,
                 round_type: 'oa',
                 scheduled_date: '2026-06-10',
+                scheduled_time: '15:00:00',
                 result: 'cleared',
                 notes: 'private notes',
             },
@@ -249,12 +252,14 @@ describe('Share Links API', () => {
                 roundNumber: 1,
                 roundType: 'oa',
                 scheduledDate: '2026-06-10',
+                scheduledTime: '15:00:00',
                 result: 'cleared',
             },
             {
                 roundNumber: 2,
                 roundType: 'technical',
                 scheduledDate: null,
+                scheduledTime: null,
                 result: 'pending',
             },
         ]);

@@ -6,16 +6,18 @@
 
 `opportunities.status` alone (`applied`, `shortlisted`, `interviewed`, …) cannot represent real hiring flows:
 
-- Users need to record **each round** (OA, technical, HR, final) with type, date, result, and notes.
+- Users need to record **each round** (OA, technical, HR, final) with type, scheduled date/time, result, and notes.
 - Users need to see **where they failed** (`Rejected at Round 2`) or **what is next** (`Round 3 · In progress`).
 - Kanban and analytics must stay consistent without a separate `current_stage` column.
+
+`scheduled_time` is migration-gated by `20260716110000_rounds_drive_active_events.sql`; apply it before deploying the corresponding API and UI change.
 
 ## Solution overview
 
 | Layer | What we built |
 |-------|----------------|
 | **Database** | `opportunity_rounds` table + `current_round_number` / `rejected_round_number` on `opportunities` |
-| **Backend** | Nested REST routes under `/api/opportunities/:id/rounds` + `syncOpportunityFromRounds()` |
+| **Backend** | Nested REST routes under `/api/v1/opportunities/:id/rounds` + `syncOpportunityFromRounds()` |
 | **Frontend** | `RoundTimeline`, `AddRoundModal`, `roundService` in `api.js`, internship detail drawer + card badges |
 
 **Scope:** internships only (`category === 'internship'`). Hackathons use the collaboration workspace.
@@ -28,10 +30,10 @@
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/opportunities/:opportunityId/rounds` | List rounds (ordered by `round_number`) |
-| POST | `/api/opportunities/:opportunityId/rounds` | Create round (auto `round_number` if omitted) |
-| PATCH | `/api/opportunities/:opportunityId/rounds/:roundId` | Update type, date, result, notes |
-| DELETE | `/api/opportunities/:opportunityId/rounds/:roundId` | Delete round; re-sync parent opportunity |
+| GET | `/api/v1/opportunities/:opportunityId/rounds` | List rounds (ordered by `round_number`) |
+| POST | `/api/v1/opportunities/:opportunityId/rounds` | Create round (auto `round_number` if omitted) |
+| PATCH | `/api/v1/opportunities/:opportunityId/rounds/:roundId` | Update type, scheduled date/time, result, notes |
+| DELETE | `/api/v1/opportunities/:opportunityId/rounds/:roundId` | Delete round; re-sync parent opportunity |
 
 ### Mutation response shape (POST / PATCH / DELETE)
 
@@ -140,7 +142,7 @@ src/services/api.js           # roundService
 
 ## Analytics & reports
 
-`GET /api/analytics` includes `pipelineAnalytics` — built server-side from internship opportunities and their rounds in **one batched query** (no per-internship round fetches).
+`GET /api/v1/analytics` includes `pipelineAnalytics` — built server-side from internship opportunities and their rounds in **one batched query** (no per-internship round fetches).
 
 | Field | Meaning |
 |-------|---------|

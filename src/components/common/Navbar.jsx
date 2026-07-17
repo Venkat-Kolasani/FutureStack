@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { FaBars, FaTimes } from 'react-icons/fa';
+import { FaBars, FaBell, FaTimes } from 'react-icons/fa';
 import { UserButton } from '@clerk/clerk-react';
 import ThemeToggle from './ThemeToggle';
 
@@ -53,6 +53,17 @@ const Navbar = () => {
                 {link.label}
               </Link>
             ))}
+            <Link
+              to="/notifications"
+              aria-label="Notifications"
+              title="Notifications"
+              className={`rounded-lg p-2 transition-colors ${isActive('/notifications')
+                ? 'bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300'
+                : 'text-gray-600 hover:bg-black/5 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-white/10 dark:hover:text-white'
+                }`}
+            >
+              <FaBell aria-hidden="true" />
+            </Link>
             <ThemeToggle />
             {/* User Button for profile and logout */}
             <UserButton
@@ -97,6 +108,16 @@ const Navbar = () => {
                 {link.label}
               </Link>
             ))}
+            <Link
+              to="/notifications"
+              onClick={() => setIsOpen(false)}
+              className={`block py-3 px-4 rounded-md text-base font-medium transition-colors ${isActive('/notifications')
+                ? 'bg-white dark:bg-black/5 dark:bg-white/10 text-gray-900 dark:text-white font-semibold'
+                : 'text-gray-600 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/10 hover:text-gray-900 dark:hover:text-white'
+                }`}
+            >
+              Notifications
+            </Link>
             {/* User profile at bottom of mobile menu */}
             <div className="pt-3 mt-2 border-t border-gray-200 dark:border-white/10 flex items-center gap-3 px-4 py-3">
               <UserButton
@@ -117,4 +138,3 @@ const Navbar = () => {
 };
 
 export default Navbar;
-

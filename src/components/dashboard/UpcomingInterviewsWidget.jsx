@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaLayerGroup, FaCalendarCheck } from 'react-icons/fa';
 import Card from '../common/Card';
-import { formatDate, getDaysRemaining } from '../../utils/dateHelpers';
+import { formatDate, formatTime, getDaysRemaining } from '../../utils/dateHelpers';
 import { getRoundTypeLabel } from '../../utils/roundHelpers';
 
 const UpcomingInterviewsWidget = ({ interviews = [], loading = false }) => {
@@ -70,6 +70,7 @@ const UpcomingInterviewsWidget = ({ interviews = [], loading = false }) => {
                 </p>
                 <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                   {formatDate(item.scheduledDate)}
+                  {item.scheduledTime && ` · ${formatTime(item.scheduledTime)}`}
                   {days === 0 && ' · Today'}
                   {days === 1 && ' · Tomorrow'}
                   {days > 1 && ` · In ${days} days`}

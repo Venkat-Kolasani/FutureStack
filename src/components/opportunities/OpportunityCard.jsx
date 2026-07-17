@@ -37,8 +37,10 @@ const categoryColors = {
  * @param {Function} [props.onShare] - Callback when Share is clicked (receives full opportunity)
  */
 const OpportunityCard = ({ opportunity, onView, onEdit, onDelete, onShare }) => {
-  const daysRemaining = getDaysRemaining(opportunity.deadline);
-  const overdue = isOverdue(opportunity.deadline);
+  const isHackathon = opportunity.category === 'hackathon';
+  const hasSubmissionDeadline = isHackathon && Boolean(opportunity.deadline);
+  const daysRemaining = hasSubmissionDeadline ? getDaysRemaining(opportunity.deadline) : null;
+  const overdue = hasSubmissionDeadline && isOverdue(opportunity.deadline);
   const roundSummary = getRoundSummaryLabel(opportunity);
   const campusModeLabel = getCampusModeLabel(opportunity.campus_mode);
 
@@ -101,17 +103,23 @@ const OpportunityCard = ({ opportunity, onView, onEdit, onDelete, onShare }) => 
             </p>
           )}
 
-          {/* Deadline */}
+          {/* Internship applications are tracked after applying; only hackathon
+              submissions have active deadlines. */}
           <div className="mb-3">
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Deadline: <span className="font-medium text-gray-700 dark:text-gray-300">{formatDate(opportunity.deadline)}</span>
+              {isHackathon ? 'Submission deadline:' : 'Applied on:'}{' '}
+              <span className="font-medium text-gray-700 dark:text-gray-300">
+                {isHackathon ? formatDate(opportunity.deadline) || 'Not set' : formatDate(opportunity.applied_on)}
+              </span>
             </p>
-            <p className={`text-sm font-medium ${overdue ? 'text-red-400' : 'text-gray-700 dark:text-gray-300'}`}>
-              {overdue
-                ? `Overdue by ${Math.abs(daysRemaining)} days`
-                : `${daysRemaining} days remaining`
-              }
-            </p>
+            {hasSubmissionDeadline && (
+              <p className={`text-sm font-medium ${overdue ? 'text-red-400' : 'text-gray-700 dark:text-gray-300'}`}>
+                {overdue
+                  ? `Overdue by ${Math.abs(daysRemaining)} days`
+                  : `${daysRemaining} days remaining`
+                }
+              </p>
+            )}
           </div>
 
           {/* Status Badge */}

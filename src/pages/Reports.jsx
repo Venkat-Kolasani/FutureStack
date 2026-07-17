@@ -438,8 +438,12 @@ const Reports = () => {
                               <span className="text-gray-700 dark:text-gray-300 capitalize">{opp.category}</span>
                             </span>
                             <span>
-                              <span className="text-gray-500">Deadline · </span>
-                              <span className="text-gray-700 dark:text-gray-300">{formatDate(opp.deadline)}</span>
+                              <span className="text-gray-500">
+                                {opp.category === 'hackathon' ? 'Submission deadline · ' : 'Applied on · '}
+                              </span>
+                              <span className="text-gray-700 dark:text-gray-300">
+                                {formatDate(opp.category === 'hackathon' ? opp.deadline : opp.applied_on)}
+                              </span>
                             </span>
                           </div>
 

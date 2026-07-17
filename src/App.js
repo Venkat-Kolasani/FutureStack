@@ -29,6 +29,7 @@ const Dashboard = lazy(() => import('./pages/Dashboard'));
 const InternshipList = lazy(() => import('./pages/InternshipList'));
 const HackathonList = lazy(() => import('./pages/HackathonList'));
 const HackathonDetail = lazy(() => import('./pages/HackathonDetail'));
+const AcceptTeamInvite = lazy(() => import('./pages/AcceptTeamInvite'));
 const InterviewPrepDetail = lazy(() => import('./pages/InterviewPrepDetail'));
 const AddOpportunity = lazy(() => import('./pages/AddOpportunity'));
 const EditOpportunity = lazy(() => import('./pages/EditOpportunity'));
@@ -37,6 +38,7 @@ const Calendar = lazy(() => import('./pages/Calendar'));
 const Reports = lazy(() => import('./pages/Reports'));
 const Analytics = lazy(() => import('./pages/Analytics'));
 const Documents = lazy(() => import('./pages/Documents'));
+const Notifications = lazy(() => import('./pages/Notifications'));
 const PublicSharePage = lazy(() => import('./pages/PublicSharePage'));
 
 // Loading fallback component for Suspense
@@ -50,6 +52,7 @@ function AppContent() {
   const location = useLocation();
   const isHomePage = location.pathname === '/';
   const isPublicSharePage = location.pathname.startsWith('/share/');
+  const isTeamInvitePage = location.pathname.startsWith('/hackathons/invites/');
   const { user, isSignedIn } = useUser();
   const { isDark } = useTheme();
 
@@ -64,8 +67,13 @@ function AppContent() {
       return;
     }
 
+    if (isTeamInvitePage) {
+      trackPageView('/hackathons/invites/[token]');
+      return;
+    }
+
     trackPageView(location.pathname);
-  }, [location.pathname, isPublicSharePage]);
+  }, [location.pathname, isPublicSharePage, isTeamInvitePage]);
 
   // Identify user when signed in
   useEffect(() => {
@@ -86,7 +94,7 @@ function AppContent() {
         Skip to main content
       </a>
 
-      {!isHomePage && !isPublicSharePage && <Navbar />}
+      {!isHomePage && !isPublicSharePage && !isTeamInvitePage && <Navbar />}
 
       <main id="main-content" role="main">
         <Suspense fallback={<PageLoader />}>
@@ -106,6 +114,11 @@ function AppContent() {
             <Route path="/hackathons" element={
               <ProtectedRoute>
                 <HackathonList />
+              </ProtectedRoute>
+            } />
+            <Route path="/hackathons/invites/:token" element={
+              <ProtectedRoute>
+                <AcceptTeamInvite />
               </ProtectedRoute>
             } />
             <Route path="/hackathons/:id" element={
@@ -151,6 +164,11 @@ function AppContent() {
             <Route path="/documents" element={
               <ProtectedRoute>
                 <Documents />
+              </ProtectedRoute>
+            } />
+            <Route path="/notifications" element={
+              <ProtectedRoute>
+                <Notifications />
               </ProtectedRoute>
             } />
           </Routes>

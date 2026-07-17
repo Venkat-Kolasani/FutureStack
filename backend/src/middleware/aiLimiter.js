@@ -3,9 +3,14 @@
 const rateLimit = require('express-rate-limit');
 const { ipKeyGenerator } = require('express-rate-limit');
 
-const windowMs = parseInt(process.env.AI_CHECK_RATE_LIMIT_WINDOW_MS || String(15 * 60 * 1000), 10);
-const defaultMax = process.env.NODE_ENV === 'development' ? '30' : '10';
+const windowMs = parseInt(process.env.AI_CHECK_RATE_LIMIT_WINDOW_MS || String(60 * 1000), 10);
+const defaultMax = '5';
 const max = parseInt(process.env.AI_CHECK_RATE_LIMIT_MAX || defaultMax, 10);
+
+function formatWindow(windowMs) {
+    const minutes = Math.round(windowMs / 60000);
+    return `${minutes} minute${minutes === 1 ? '' : 's'}`;
+}
 
 /**
  * Rate limit for POST /api/documents/:id/ai-check only (LLM pipeline runs).
@@ -33,13 +38,13 @@ const aiCheckRunLimiter = rateLimit({
         res.status(429).json({
             error: 'AI Rate Limit Exceeded',
             code: 'AI_CHECK_RATE_LIMIT',
-            message: `You have reached the limit for AI resume checks (${max} per ${Math.round(windowMs / 60000)} minutes). Please wait before running another analysis.`,
+            message: `You have reached the limit for AI resume checks (${max} per ${formatWindow(windowMs)}). Please wait before running another analysis.`,
             retryAfter: resetTime.toISOString(),
             retryAfterSeconds,
             limit: max,
-            window: `${Math.round(windowMs / 60000)} minutes`,
+            window: formatWindow(windowMs),
         });
     },
 });
 
-module.exports = { aiCheckRunLimiter };
+module.exports = { aiCheckRunLimiter, formatWindow };

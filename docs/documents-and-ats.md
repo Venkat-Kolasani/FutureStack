@@ -25,7 +25,7 @@ ATS-related columns on `documents`:
 | `ats_analyzed_at` | `TIMESTAMPTZ` | Last analysis timestamp |
 | `ats_analysis` | `JSONB` | Full breakdown (sections, suggestions, keyword hints) |
 
-### API (`/api/documents`)
+### API (`/api/v1/documents`)
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -85,7 +85,7 @@ sequenceDiagram
     participant U as User
     participant UI as DocumentUpload
     participant ATS as atsScorer.js
-    participant API as POST/PATCH /api/documents
+    participant API as POST/PATCH /api/v1/documents
 
     U->>UI: Select PDF or DOCX
     UI->>ATS: analyzeFile(file)

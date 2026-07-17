@@ -1,8 +1,12 @@
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { analytics } from '../lib/analytics';
+import { getDefaultApiUrl } from '../config/apiUrl';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+const configuredApiUrl = process.env.REACT_APP_API_URL || getDefaultApiUrl(process.env.NODE_ENV);
+const API_BASE_URL = configuredApiUrl.replace(/\/$/, '').endsWith('/v1')
+    ? configuredApiUrl.replace(/\/$/, '')
+    : `${configuredApiUrl.replace(/\/$/, '')}/v1`;
 
 const api = axios.create({
     baseURL: API_BASE_URL,
@@ -143,7 +147,31 @@ export const roundService = {
 
 export const opportunityService = {
     getAll: async () => {
-        const response = await api.get('/opportunities');
+        const items = [];
+        let cursor = null;
+
+        do {
+            const response = await api.get('/opportunities', {
+                params: {
+                    limit: 100,
+                    ...(cursor ? { cursor } : {}),
+                },
+            });
+            const pageItems = response.data?.items;
+
+            if (!Array.isArray(pageItems)) {
+                throw new Error('Invalid opportunities response');
+            }
+
+            items.push(...pageItems);
+            cursor = response.data.nextCursor || null;
+        } while (cursor);
+
+        return items;
+    },
+
+    getPage: async (params = {}) => {
+        const response = await api.get('/opportunities', { params });
         return response.data;
     },
 
@@ -335,6 +363,30 @@ export const healthCheck = async () => {
     return response.data;
 };
 
+export const notificationService = {
+    list: async ({ limit = 25 } = {}) => {
+        const response = await api.get('/notifications', { params: { limit } });
+        return response.data.notifications;
+    },
+
+    markRead: async (notificationId) => {
+        const response = await api.patch(`/notifications/${notificationId}/read`);
+        return response.data;
+    },
+};
+
+export const notificationPreferenceService = {
+    get: async () => {
+        const response = await api.get('/notification-preferences');
+        return response.data;
+    },
+
+    update: async ({ deadlineEmailEnabled }) => {
+        const response = await api.put('/notification-preferences', { deadlineEmailEnabled });
+        return response.data;
+    },
+};
+
 // =============================================================================
 // HACKATHON TEAM COLLABORATION SERVICE
 // =============================================================================
@@ -353,6 +405,16 @@ export const hackathonService = {
 
     updateTeam: async (opportunityId, data) => {
         const response = await api.put(`/hackathons/${opportunityId}/team`, data);
+        return response.data;
+    },
+
+    createInvite: async (opportunityId, data = {}) => {
+        const response = await api.post(`/hackathons/${opportunityId}/invites`, data);
+        return response.data;
+    },
+
+    acceptInvite: async (token) => {
+        const response = await api.post(`/hackathons/invites/${token}/accept`);
         return response.data;
     },
 
@@ -394,7 +456,12 @@ export const hackathonService = {
     },
 
     voteIdea: async (opportunityId, ideaId) => {
-        const response = await api.post(`/hackathons/${opportunityId}/ideas/${ideaId}/vote`);
+        const response = await api.put(`/hackathons/${opportunityId}/ideas/${ideaId}/vote`);
+        return response.data;
+    },
+
+    removeIdeaVote: async (opportunityId, ideaId) => {
+        const response = await api.delete(`/hackathons/${opportunityId}/ideas/${ideaId}/vote`);
         return response.data;
     },
 

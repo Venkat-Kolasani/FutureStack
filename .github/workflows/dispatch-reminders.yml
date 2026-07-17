@@ -1,0 +1,26 @@
+name: Dispatch reminder jobs
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      JOB_DISPATCH_URL: ${{ secrets.JOB_DISPATCH_URL }}
+      JOB_DISPATCH_TOKEN: ${{ secrets.JOB_DISPATCH_TOKEN }}
+    steps:
+      - name: Dispatch due reminder jobs
+        if: ${{ env.JOB_DISPATCH_URL != '' && env.JOB_DISPATCH_TOKEN != '' }}
+        run: |
+          curl --fail-with-body --show-error --silent \
+            --request POST "$JOB_DISPATCH_URL" \
+            --header "Authorization: Bearer $JOB_DISPATCH_TOKEN" \
+            --header "Content-Type: application/json" \
+            --data '{"limit":10}'

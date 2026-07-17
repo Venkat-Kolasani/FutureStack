@@ -188,8 +188,13 @@ export const generatePDF = (
     const details = [
       `Category: ${opp.category.charAt(0).toUpperCase() + opp.category.slice(1)}`,
       `Status: ${opp.status.charAt(0).toUpperCase() + opp.status.slice(1)}`,
-      `Deadline: ${formatDate(opp.deadline)}`,
     ];
+
+    details.push(
+      opp.category === 'hackathon'
+        ? `Submission deadline: ${formatDate(opp.deadline)}`
+        : `Applied on: ${formatDate(opp.applied_on)}`
+    );
 
     const campusLabel = getCampusModeLabel(opp.campus_mode);
     if (campusLabel) {

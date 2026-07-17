@@ -1,4 +1,5 @@
 const express = require('express');
+const { createHash, randomBytes } = require('crypto');
 const { supabase } = require('../lib/supabase');
 const { validate } = require('../middleware/validate');
 const {
@@ -12,7 +13,10 @@ const {
     updateTaskSchema,
     createChecklistItemSchema,
     updateChecklistItemSchema,
-    idParamSchema
+    idParamSchema,
+    hackathonIdeaParamsSchema,
+    createTeamInviteSchema,
+    teamInviteTokenParamsSchema,
 } = require('../validation/schemas');
 
 const router = express.Router();
@@ -55,27 +59,183 @@ async function verifyHackathonOwnership(opportunityId, userId) {
 }
 
 /**
- * Helper: Get team for an opportunity
+ * Role order for account-backed workspace authorization.
  */
-async function getTeamForOpportunity(opportunityId, userId) {
+const ROLE_RANK = Object.freeze({ viewer: 1, editor: 2, owner: 3 });
+
+function tableMissing(error) {
+    return error?.code === '42P01';
+}
+
+function isNotFound(error) {
+    return error?.code === 'PGRST116';
+}
+
+/**
+ * Find a team without granting access. Callers must check membership before
+ * returning workspace data or mutating it.
+ */
+async function findTeamForOpportunity(opportunityId) {
     const { data, error } = await supabase
         .from('hackathon_teams')
         .select('*')
         .eq('opportunity_id', opportunityId)
-        .eq('user_id', userId)
         .single();
 
-    // Handle table not existing (migration not run)
-    if (error && error.code === '42P01') {
+    if (tableMissing(error)) {
         return { team: null, error: { ...error, tableNotExists: true } };
     }
 
     return { team: data, error };
 }
 
+/**
+ * Resolve a caller's access to a team. The service-role database client makes
+ * this explicit check the authorization boundary; no client may query these
+ * tables directly.
+ */
+async function getTeamForOpportunity(opportunityId, userId, minimumRole = 'editor') {
+    const { team, error: teamError } = await findTeamForOpportunity(opportunityId);
+    if (isNotFound(teamError)) return { team: null, membership: null, error: null };
+    if (teamError || !team) return { team, membership: null, error: teamError };
+
+    const { data: membership, error: membershipError } = await supabase
+        .from('team_memberships')
+        .select('team_id, user_id, role, accepted_at, created_at')
+        .eq('team_id', team.id)
+        .eq('user_id', userId)
+        .single();
+
+    if (tableMissing(membershipError)) {
+        return { team: null, membership: null, error: { ...membershipError, tableNotExists: true } };
+    }
+
+    if (membershipError) {
+        return { team: null, membership: null, error: membershipError };
+    }
+
+    if (
+        !membership ||
+        !ROLE_RANK[membership.role] ||
+        ROLE_RANK[membership.role] < ROLE_RANK[minimumRole]
+    ) {
+        return {
+            team: null,
+            membership: null,
+            error: { accessDenied: true },
+        };
+    }
+
+    return { team, membership, error: null };
+}
+
+function sendTeamAccessError(res, error, notFoundMessage = 'Team not found') {
+    if (error?.tableNotExists) {
+        return res.status(503).json({
+            error: 'Database tables not set up. Apply the versioned collaboration migrations in Supabase.',
+            code: 'TABLES_NOT_EXIST',
+        });
+    }
+
+    if (error?.accessDenied || isNotFound(error)) {
+        return res.status(403).json({ error: 'You do not have permission to access this team' });
+    }
+
+    if (error) throw error;
+    return res.status(404).json({ error: notFoundMessage });
+}
+
+function hashInviteToken(token) {
+    return createHash('sha256').update(token).digest('hex');
+}
+
+function inviteUrlFor(token) {
+    const frontendOrigin = (process.env.FRONTEND_URL || process.env.CORS_ORIGIN || 'http://localhost:3000')
+        .split(',')[0]
+        .trim()
+        .replace(/\/$/, '');
+    return `${frontendOrigin}/hackathons/invites/${token}`;
+}
+
 // =============================================================================
 // TEAM MANAGEMENT
 // =============================================================================
+
+/**
+ * POST /api/hackathons/invites/:token/accept
+ * Redeem a hashed, single-use invite for the authenticated account.
+ */
+router.post('/invites/:token/accept', validate(teamInviteTokenParamsSchema, 'params'), async (req, res) => {
+    try {
+        const { token } = req.params;
+        const { data, error } = await supabase.rpc('accept_team_invite', {
+            p_token_hash: hashInviteToken(token),
+            p_user_id: req.auth.internalUserId,
+        });
+
+        if (error) throw error;
+
+        const invitation = Array.isArray(data) ? data[0] : data;
+        if (!invitation) {
+            return res.status(404).json({ error: 'This invite is invalid, expired, or already used' });
+        }
+
+        logAudit('ACCEPT_TEAM_INVITE', req.auth.internalUserId, invitation.team_id, 'success', {
+            role: invitation.role,
+        });
+        return res.json({
+            teamId: invitation.team_id,
+            opportunityId: invitation.opportunity_id,
+            role: invitation.role,
+        });
+    } catch (error) {
+        console.error('Error accepting team invite:', error.message);
+        return res.status(500).json({ error: 'Failed to accept team invite' });
+    }
+});
+
+/**
+ * POST /api/hackathons/:opportunityId/invites
+ * Owners create an expiring invite link. Only its SHA-256 hash reaches Postgres.
+ */
+router.post('/:opportunityId/invites', validate(createTeamInviteSchema), async (req, res) => {
+    try {
+        const { opportunityId } = req.params;
+        const { role, expiresInHours } = req.body;
+        const { team, error: teamError } = await getTeamForOpportunity(
+            opportunityId,
+            req.auth.internalUserId,
+            'owner'
+        );
+
+        if (!team) return sendTeamAccessError(res, teamError, 'Team not found. Create a team first.');
+
+        const token = randomBytes(32).toString('base64url');
+        const expiresAt = new Date(Date.now() + expiresInHours * 60 * 60 * 1000).toISOString();
+        const { data, error } = await supabase
+            .from('team_invites')
+            .insert({
+                team_id: team.id,
+                token_hash: hashInviteToken(token),
+                role,
+                invited_by: req.auth.internalUserId,
+                expires_at: expiresAt,
+            })
+            .select('id, role, expires_at, created_at')
+            .single();
+
+        if (error) throw error;
+
+        logAudit('CREATE_TEAM_INVITE', req.auth.internalUserId, data.id, 'success', { role });
+        return res.status(201).json({
+            invite: data,
+            inviteUrl: inviteUrlFor(token),
+        });
+    } catch (error) {
+        console.error('Error creating team invite:', error.message);
+        return res.status(500).json({ error: 'Failed to create team invite' });
+    }
+});
 
 /**
  * GET /api/hackathons/:opportunityId/team
@@ -85,28 +245,14 @@ router.get('/:opportunityId/team', async (req, res) => {
     try {
         const { opportunityId } = req.params;
 
-        const ownership = await verifyHackathonOwnership(opportunityId, req.auth.internalUserId);
-        if (!ownership.valid) {
-            return res.status(404).json({ error: ownership.error });
-        }
+        const { team, membership, error } = await getTeamForOpportunity(
+            opportunityId,
+            req.auth.internalUserId,
+            'viewer'
+        );
 
-        const { team, error } = await getTeamForOpportunity(opportunityId, req.auth.internalUserId);
-
-        // Handle missing tables (migration not run)
-        if (error && error.tableNotExists) {
-            return res.status(503).json({
-                error: 'Database tables not set up. Please run the hackathon-collaboration-migration.sql in Supabase.',
-                code: 'TABLES_NOT_EXIST'
-            });
-        }
-
-        if (error && error.code !== 'PGRST116') {
-            throw error;
-        }
-
-        if (!team) {
-            return res.json({ team: null, members: [] });
-        }
+        if (!team && !error) return res.json({ team: null, members: [], access: null });
+        if (!team) return sendTeamAccessError(res, error, 'Team not found');
 
         // Fetch members
         const { data: members, error: membersError } = await supabase
@@ -117,7 +263,7 @@ router.get('/:opportunityId/team', async (req, res) => {
 
         if (membersError) throw membersError;
 
-        res.json({ team, members: members || [] });
+        res.json({ team, members: members || [], access: { role: membership.role } });
     } catch (error) {
         console.error('Error fetching team:', error.message);
         res.status(500).json({ error: 'Failed to fetch team' });
@@ -138,8 +284,12 @@ router.post('/:opportunityId/team', validate(createTeamSchema), async (req, res)
             return res.status(404).json({ error: ownership.error });
         }
 
-        // Check if team already exists
-        const { team: existingTeam } = await getTeamForOpportunity(opportunityId, req.auth.internalUserId);
+        // Check irrespective of caller membership: each hackathon has exactly one team.
+        const { team: existingTeam, error: existingTeamError } = await findTeamForOpportunity(opportunityId);
+        if (existingTeamError && !isNotFound(existingTeamError)) {
+            if (existingTeamError.tableNotExists) return sendTeamAccessError(res, existingTeamError);
+            throw existingTeamError;
+        }
         if (existingTeam) {
             return res.status(400).json({ error: 'Team already exists for this hackathon' });
         }
@@ -158,7 +308,7 @@ router.post('/:opportunityId/team', validate(createTeamSchema), async (req, res)
         if (error) throw error;
 
         logAudit('CREATE_HACKATHON_TEAM', req.auth.internalUserId, data.id, 'success');
-        res.status(201).json({ team: data, members: [] });
+        res.status(201).json({ team: data, members: [], access: { role: 'owner' } });
     } catch (error) {
         console.error('Error creating team:', error.message);
         res.status(500).json({ error: 'Failed to create team' });
@@ -174,10 +324,12 @@ router.put('/:opportunityId/team', validate(updateTeamSchema), async (req, res) 
         const { opportunityId } = req.params;
         const { name, description } = req.body;
 
-        const ownership = await verifyHackathonOwnership(opportunityId, req.auth.internalUserId);
-        if (!ownership.valid) {
-            return res.status(404).json({ error: ownership.error });
-        }
+        const { team, error: teamError } = await getTeamForOpportunity(
+            opportunityId,
+            req.auth.internalUserId,
+            'owner'
+        );
+        if (!team) return sendTeamAccessError(res, teamError);
 
         const updateData = {};
         if (name !== undefined) updateData.name = name;
@@ -186,8 +338,7 @@ router.put('/:opportunityId/team', validate(updateTeamSchema), async (req, res) 
         const { data, error } = await supabase
             .from('hackathon_teams')
             .update(updateData)
-            .eq('opportunity_id', opportunityId)
-            .eq('user_id', req.auth.internalUserId)
+            .eq('id', team.id)
             .select()
             .single();
 
@@ -219,9 +370,13 @@ router.post('/:opportunityId/team/members', validate(createTeamMemberSchema), as
         const { opportunityId } = req.params;
         const { name, role, email } = req.body;
 
-        const { team, error: teamError } = await getTeamForOpportunity(opportunityId, req.auth.internalUserId);
+        const { team, error: teamError } = await getTeamForOpportunity(
+            opportunityId,
+            req.auth.internalUserId,
+            'owner'
+        );
         if (!team) {
-            return res.status(404).json({ error: 'Team not found. Create a team first.' });
+            return sendTeamAccessError(res, teamError, 'Team not found. Create a team first.');
         }
 
         const { data, error } = await supabase
@@ -254,9 +409,13 @@ router.put('/:opportunityId/team/members/:memberId', validate(updateTeamMemberSc
         const { opportunityId, memberId } = req.params;
         const { name, role, email } = req.body;
 
-        const { team } = await getTeamForOpportunity(opportunityId, req.auth.internalUserId);
+        const { team, error: teamError } = await getTeamForOpportunity(
+            opportunityId,
+            req.auth.internalUserId,
+            'owner'
+        );
         if (!team) {
-            return res.status(404).json({ error: 'Team not found' });
+            return sendTeamAccessError(res, teamError);
         }
 
         const updateData = {};
@@ -294,9 +453,13 @@ router.delete('/:opportunityId/team/members/:memberId', async (req, res) => {
     try {
         const { opportunityId, memberId } = req.params;
 
-        const { team } = await getTeamForOpportunity(opportunityId, req.auth.internalUserId);
+        const { team, error: teamError } = await getTeamForOpportunity(
+            opportunityId,
+            req.auth.internalUserId,
+            'owner'
+        );
         if (!team) {
-            return res.status(404).json({ error: 'Team not found' });
+            return sendTeamAccessError(res, teamError);
         }
 
         const { error, count } = await supabase
@@ -331,20 +494,40 @@ router.get('/:opportunityId/ideas', async (req, res) => {
     try {
         const { opportunityId } = req.params;
 
-        const { team } = await getTeamForOpportunity(opportunityId, req.auth.internalUserId);
+        const { team, error: teamError } = await getTeamForOpportunity(
+            opportunityId,
+            req.auth.internalUserId,
+            'viewer'
+        );
         if (!team) {
-            return res.json([]);
+            if (!teamError) return res.json([]);
+            return sendTeamAccessError(res, teamError);
         }
 
         const { data, error } = await supabase
             .from('brainstorm_ideas')
             .select('*')
             .eq('team_id', team.id)
-            .order('votes', { ascending: false });
+            .order('vote_count', { ascending: false });
 
         if (error) throw error;
 
-        res.json(data || []);
+        const ideas = data || [];
+        if (!ideas.length) return res.json([]);
+
+        const { data: userVotes, error: userVotesError } = await supabase
+            .from('idea_votes')
+            .select('idea_id')
+            .eq('user_id', req.auth.internalUserId)
+            .in('idea_id', ideas.map((idea) => idea.id));
+
+        if (userVotesError) throw userVotesError;
+
+        const votedIdeaIds = new Set((userVotes || []).map((vote) => vote.idea_id));
+        return res.json(ideas.map((idea) => ({
+            ...idea,
+            current_user_voted: votedIdeaIds.has(idea.id),
+        })));
     } catch (error) {
         console.error('Error fetching ideas:', error.message);
         res.status(500).json({ error: 'Failed to fetch ideas' });
@@ -360,9 +543,13 @@ router.post('/:opportunityId/ideas', validate(createIdeaSchema), async (req, res
         const { opportunityId } = req.params;
         const { title, description, category } = req.body;
 
-        const { team } = await getTeamForOpportunity(opportunityId, req.auth.internalUserId);
+        const { team, error: teamError } = await getTeamForOpportunity(
+            opportunityId,
+            req.auth.internalUserId,
+            'editor'
+        );
         if (!team) {
-            return res.status(404).json({ error: 'Team not found. Create a team first.' });
+            return sendTeamAccessError(res, teamError, 'Team not found. Create a team first.');
         }
 
         const { data, error } = await supabase
@@ -393,18 +580,21 @@ router.post('/:opportunityId/ideas', validate(createIdeaSchema), async (req, res
 router.put('/:opportunityId/ideas/:ideaId', validate(updateIdeaSchema), async (req, res) => {
     try {
         const { opportunityId, ideaId } = req.params;
-        const { title, description, category, votes, is_selected } = req.body;
+        const { title, description, category, is_selected } = req.body;
 
-        const { team } = await getTeamForOpportunity(opportunityId, req.auth.internalUserId);
+        const { team, error: teamError } = await getTeamForOpportunity(
+            opportunityId,
+            req.auth.internalUserId,
+            'editor'
+        );
         if (!team) {
-            return res.status(404).json({ error: 'Team not found' });
+            return sendTeamAccessError(res, teamError);
         }
 
         const updateData = {};
         if (title !== undefined) updateData.title = title;
         if (description !== undefined) updateData.description = description;
         if (category !== undefined) updateData.category = category;
-        if (votes !== undefined) updateData.votes = votes;
         if (is_selected !== undefined) updateData.is_selected = is_selected;
 
         const { data, error } = await supabase
@@ -437,9 +627,13 @@ router.delete('/:opportunityId/ideas/:ideaId', async (req, res) => {
     try {
         const { opportunityId, ideaId } = req.params;
 
-        const { team } = await getTeamForOpportunity(opportunityId, req.auth.internalUserId);
+        const { team, error: teamError } = await getTeamForOpportunity(
+            opportunityId,
+            req.auth.internalUserId,
+            'editor'
+        );
         if (!team) {
-            return res.status(404).json({ error: 'Team not found' });
+            return sendTeamAccessError(res, teamError);
         }
 
         const { error, count } = await supabase
@@ -462,47 +656,80 @@ router.delete('/:opportunityId/ideas/:ideaId', async (req, res) => {
     }
 });
 
-/**
- * POST /api/hackathons/:opportunityId/ideas/:ideaId/vote
- * Toggle vote (increment by 1)
- */
-router.post('/:opportunityId/ideas/:ideaId/vote', async (req, res) => {
+async function voteIdea(req, res) {
     try {
         const { opportunityId, ideaId } = req.params;
 
-        const { team } = await getTeamForOpportunity(opportunityId, req.auth.internalUserId);
+        const { team, error: teamError } = await getTeamForOpportunity(
+            opportunityId,
+            req.auth.internalUserId,
+            'viewer'
+        );
         if (!team) {
-            return res.status(404).json({ error: 'Team not found' });
+            return sendTeamAccessError(res, teamError);
         }
 
-        // Get current votes and increment
-        const { data: idea, error: fetchError } = await supabase
-            .from('brainstorm_ideas')
-            .select('votes')
-            .eq('id', ideaId)
-            .eq('team_id', team.id)
-            .single();
-
-        if (fetchError || !idea) {
-            return res.status(404).json({ error: 'Idea not found' });
-        }
-
-        const { data, error } = await supabase
-            .from('brainstorm_ideas')
-            .update({ votes: (idea.votes || 0) + 1 })
-            .eq('id', ideaId)
-            .eq('team_id', team.id)
-            .select()
-            .single();
+        const { data, error } = await supabase.rpc('cast_idea_vote', {
+            p_idea_id: ideaId,
+            p_team_id: team.id,
+            p_user_id: req.auth.internalUserId,
+        });
 
         if (error) throw error;
 
-        res.json(data);
+        const vote = Array.isArray(data) ? data[0] : data;
+        if (!vote) return res.status(404).json({ error: 'Idea not found' });
+
+        return res.json({
+            id: vote.idea_id,
+            vote_count: vote.vote_count,
+            current_user_voted: true,
+            created: vote.created,
+        });
     } catch (error) {
         console.error('Error voting on idea:', error.message);
-        res.status(500).json({ error: 'Failed to vote on idea' });
+        return res.status(500).json({ error: 'Failed to vote on idea' });
     }
-});
+}
+
+async function removeIdeaVote(req, res) {
+    try {
+        const { opportunityId, ideaId } = req.params;
+
+        const { team, error: teamError } = await getTeamForOpportunity(
+            opportunityId,
+            req.auth.internalUserId,
+            'viewer'
+        );
+        if (!team) return sendTeamAccessError(res, teamError);
+
+        const { data, error } = await supabase.rpc('remove_idea_vote', {
+            p_idea_id: ideaId,
+            p_team_id: team.id,
+            p_user_id: req.auth.internalUserId,
+        });
+
+        if (error) throw error;
+
+        const vote = Array.isArray(data) ? data[0] : data;
+        if (!vote) return res.status(404).json({ error: 'Idea not found' });
+
+        return res.json({
+            id: vote.idea_id,
+            vote_count: vote.vote_count,
+            current_user_voted: false,
+            removed: vote.removed,
+        });
+    } catch (error) {
+        console.error('Error removing idea vote:', error.message);
+        return res.status(500).json({ error: 'Failed to remove idea vote' });
+    }
+}
+
+router.put('/:opportunityId/ideas/:ideaId/vote', validate(hackathonIdeaParamsSchema, 'params'), voteIdea);
+router.delete('/:opportunityId/ideas/:ideaId/vote', validate(hackathonIdeaParamsSchema, 'params'), removeIdeaVote);
+// Preserve the pre-v1 method while existing clients migrate to idempotent PUT.
+router.post('/:opportunityId/ideas/:ideaId/vote', validate(hackathonIdeaParamsSchema, 'params'), voteIdea);
 
 // =============================================================================
 // HACKATHON TASKS
@@ -516,9 +743,14 @@ router.get('/:opportunityId/tasks', async (req, res) => {
     try {
         const { opportunityId } = req.params;
 
-        const { team } = await getTeamForOpportunity(opportunityId, req.auth.internalUserId);
+        const { team, error: teamError } = await getTeamForOpportunity(
+            opportunityId,
+            req.auth.internalUserId,
+            'viewer'
+        );
         if (!team) {
-            return res.json([]);
+            if (!teamError) return res.json([]);
+            return sendTeamAccessError(res, teamError);
         }
 
         const { data, error } = await supabase
@@ -545,9 +777,13 @@ router.post('/:opportunityId/tasks', validate(createTaskSchema), async (req, res
         const { opportunityId } = req.params;
         const { title, description, assigned_to, status, priority, due_date } = req.body;
 
-        const { team } = await getTeamForOpportunity(opportunityId, req.auth.internalUserId);
+        const { team, error: teamError } = await getTeamForOpportunity(
+            opportunityId,
+            req.auth.internalUserId,
+            'editor'
+        );
         if (!team) {
-            return res.status(404).json({ error: 'Team not found. Create a team first.' });
+            return sendTeamAccessError(res, teamError, 'Team not found. Create a team first.');
         }
 
         const { data, error } = await supabase
@@ -583,9 +819,13 @@ router.put('/:opportunityId/tasks/:taskId', validate(updateTaskSchema), async (r
         const { opportunityId, taskId } = req.params;
         const { title, description, assigned_to, status, priority, due_date } = req.body;
 
-        const { team } = await getTeamForOpportunity(opportunityId, req.auth.internalUserId);
+        const { team, error: teamError } = await getTeamForOpportunity(
+            opportunityId,
+            req.auth.internalUserId,
+            'editor'
+        );
         if (!team) {
-            return res.status(404).json({ error: 'Team not found' });
+            return sendTeamAccessError(res, teamError);
         }
 
         const updateData = {};
@@ -626,9 +866,13 @@ router.delete('/:opportunityId/tasks/:taskId', async (req, res) => {
     try {
         const { opportunityId, taskId } = req.params;
 
-        const { team } = await getTeamForOpportunity(opportunityId, req.auth.internalUserId);
+        const { team, error: teamError } = await getTeamForOpportunity(
+            opportunityId,
+            req.auth.internalUserId,
+            'editor'
+        );
         if (!team) {
-            return res.status(404).json({ error: 'Team not found' });
+            return sendTeamAccessError(res, teamError);
         }
 
         const { error, count } = await supabase
@@ -663,9 +907,14 @@ router.get('/:opportunityId/checklist', async (req, res) => {
     try {
         const { opportunityId } = req.params;
 
-        const { team } = await getTeamForOpportunity(opportunityId, req.auth.internalUserId);
+        const { team, error: teamError } = await getTeamForOpportunity(
+            opportunityId,
+            req.auth.internalUserId,
+            'viewer'
+        );
         if (!team) {
-            return res.json([]);
+            if (!teamError) return res.json([]);
+            return sendTeamAccessError(res, teamError);
         }
 
         const { data, error } = await supabase
@@ -692,9 +941,13 @@ router.post('/:opportunityId/checklist', validate(createChecklistItemSchema), as
         const { opportunityId } = req.params;
         const { title, sort_order } = req.body;
 
-        const { team } = await getTeamForOpportunity(opportunityId, req.auth.internalUserId);
+        const { team, error: teamError } = await getTeamForOpportunity(
+            opportunityId,
+            req.auth.internalUserId,
+            'editor'
+        );
         if (!team) {
-            return res.status(404).json({ error: 'Team not found. Create a team first.' });
+            return sendTeamAccessError(res, teamError, 'Team not found. Create a team first.');
         }
 
         // Get max sort_order if not provided
@@ -740,9 +993,13 @@ router.put('/:opportunityId/checklist/:itemId', validate(updateChecklistItemSche
         const { opportunityId, itemId } = req.params;
         const { title, is_completed, sort_order } = req.body;
 
-        const { team } = await getTeamForOpportunity(opportunityId, req.auth.internalUserId);
+        const { team, error: teamError } = await getTeamForOpportunity(
+            opportunityId,
+            req.auth.internalUserId,
+            'editor'
+        );
         if (!team) {
-            return res.status(404).json({ error: 'Team not found' });
+            return sendTeamAccessError(res, teamError);
         }
 
         const updateData = {};
@@ -783,9 +1040,13 @@ router.delete('/:opportunityId/checklist/:itemId', async (req, res) => {
     try {
         const { opportunityId, itemId } = req.params;
 
-        const { team } = await getTeamForOpportunity(opportunityId, req.auth.internalUserId);
+        const { team, error: teamError } = await getTeamForOpportunity(
+            opportunityId,
+            req.auth.internalUserId,
+            'editor'
+        );
         if (!team) {
-            return res.status(404).json({ error: 'Team not found' });
+            return sendTeamAccessError(res, teamError);
         }
 
         const { error, count } = await supabase

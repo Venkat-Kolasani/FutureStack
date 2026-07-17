@@ -27,6 +27,115 @@ describe('Opportunities API', () => {
         expect(res.status).toBe(401);
     });
 
+    it('GET /api/v1/opportunities returns a paginated response', async () => {
+        const rows = [
+            {
+                id: '00000000-0000-4000-8000-000000000002',
+                user_id: TEST_AUTH.internalUserId,
+                title: 'Newest',
+                created_at: '2026-07-16T10:00:00.000Z',
+            },
+            {
+                id: '00000000-0000-4000-8000-000000000001',
+                user_id: TEST_AUTH.internalUserId,
+                title: 'Older',
+                created_at: '2026-07-15T10:00:00.000Z',
+            },
+        ];
+        const chain = createChain({ data: rows, error: null });
+        mockFrom.mockReturnValue(chain);
+
+        const res = await request(app)
+            .get('/api/v1/opportunities?limit=1')
+            .set(authHeader);
+
+        expect(res.status).toBe(200);
+        expect(res.body.items).toEqual([expect.objectContaining({ title: 'Newest' })]);
+        expect(res.body.nextCursor).toEqual(expect.any(String));
+        expect(chain.limit).toHaveBeenCalledWith(2);
+        expect(chain.order).toHaveBeenNthCalledWith(1, 'created_at', { ascending: false });
+        expect(chain.order).toHaveBeenNthCalledWith(2, 'id', { ascending: false });
+    });
+
+    it('GET /api/v1/opportunities rejects an invalid cursor', async () => {
+        const res = await request(app)
+            .get('/api/v1/opportunities?cursor=not-a-cursor')
+            .set(authHeader);
+
+        expect(res.status).toBe(400);
+        expect(res.body.error).toBe('Validation Error');
+        expect(res.body.details).toEqual(
+            expect.arrayContaining([expect.objectContaining({ field: 'cursor' })])
+        );
+    });
+
+    it('preserves microsecond precision in the opportunity cursor', async () => {
+        const firstPage = createChain({
+            data: [
+                {
+                    id: '00000000-0000-4000-8000-000000000002',
+                    user_id: TEST_AUTH.internalUserId,
+                    title: 'Newest',
+                    created_at: '2026-07-16T10:00:00.123456+00:00',
+                },
+                {
+                    id: '00000000-0000-4000-8000-000000000001',
+                    user_id: TEST_AUTH.internalUserId,
+                    title: 'Older',
+                    created_at: '2026-07-16T09:00:00.000000+00:00',
+                },
+            ],
+            error: null,
+        });
+        const nextPage = createChain({ data: [], error: null });
+        mockFrom.mockReturnValueOnce(firstPage).mockReturnValueOnce(nextPage);
+
+        const firstResponse = await request(app)
+            .get('/api/v1/opportunities?limit=1')
+            .set(authHeader);
+        const decodedCursor = JSON.parse(Buffer.from(firstResponse.body.nextCursor, 'base64url').toString('utf8'));
+
+        expect(decodedCursor.createdAt).toBe('2026-07-16T10:00:00.123456+00:00');
+
+        const secondResponse = await request(app)
+            .get(`/api/v1/opportunities?cursor=${encodeURIComponent(firstResponse.body.nextCursor)}`)
+            .set(authHeader);
+
+        expect(secondResponse.status).toBe(200);
+        expect(nextPage.or).toHaveBeenCalledWith(expect.stringContaining('2026-07-16T10:00:00.123456+00:00'));
+    });
+
+    it('GET /api/v1/opportunities/:id rejects an invalid identifier before database access', async () => {
+        const res = await request(app)
+            .get('/api/v1/opportunities/not-a-uuid')
+            .set(authHeader);
+
+        expect(res.status).toBe(400);
+        expect(mockFrom).not.toHaveBeenCalled();
+    });
+
+    it('GET /api/v1/opportunities/:id permits an invited hackathon collaborator only', async () => {
+        const sharedHackathon = {
+            id: '00000000-0000-4000-8000-000000000040',
+            user_id: '00000000-0000-4000-8000-000000000041',
+            title: 'Shared hackathon',
+            category: 'hackathon',
+        };
+
+        mockFrom
+            .mockReturnValueOnce(createChain({ data: null, error: { code: 'PGRST116' } }))
+            .mockReturnValueOnce(createChain({ data: { team_id: '00000000-0000-4000-8000-000000000042' }, error: null }))
+            .mockReturnValueOnce(createChain({ data: sharedHackathon, error: null }));
+
+        const res = await request(app)
+            .get(`/api/v1/opportunities/${sharedHackathon.id}`)
+            .set(authHeader);
+
+        expect(res.status).toBe(200);
+        expect(res.body).toEqual(sharedHackathon);
+        expect(mockFrom).toHaveBeenNthCalledWith(2, 'team_memberships');
+    });
+
     it('POST /api/opportunities returns 400 for invalid body', async () => {
         const res = await request(app)
             .post('/api/opportunities')
@@ -49,9 +158,8 @@ describe('Opportunities API', () => {
             category: 'internship',
         };
 
-        mockFrom.mockReturnValue(
-            createChain({ data: created, error: null })
-        );
+        const chain = createChain({ data: created, error: null });
+        mockFrom.mockReturnValue(chain);
 
         const res = await request(app)
             .post('/api/opportunities')
@@ -60,11 +168,19 @@ describe('Opportunities API', () => {
                 title: 'Backend Intern',
                 category: 'internship',
                 link: 'https://example.com/jobs/1',
+                deadline: '2026-08-01',
+                applied_on: '2026-07-16',
             });
 
         expect(res.status).toBe(201);
         expect(res.body.title).toBe('Backend Intern');
         expect(mockFrom).toHaveBeenCalledWith('opportunities');
+        expect(chain.insert).toHaveBeenCalledWith(
+            expect.objectContaining({
+                deadline: null,
+                applied_on: '2026-07-16',
+            })
+        );
     });
 
     it('POST /api/opportunities accepts campus_mode', async () => {
@@ -94,6 +210,33 @@ describe('Opportunities API', () => {
         expect(chain.insert).toHaveBeenCalledWith(
             expect.objectContaining({ campus_mode: 'on_campus' })
         );
+    });
+
+    it('POST /api/opportunities does not assign an applied date to a hackathon', async () => {
+        const chain = createChain({
+            data: { id: 'opp-hackathon', title: 'Build Week', category: 'hackathon' },
+            error: null,
+        });
+        mockFrom.mockReturnValue(chain);
+
+        const res = await request(app)
+            .post('/api/opportunities')
+            .set(authHeader)
+            .send({
+                title: 'Build Week',
+                category: 'hackathon',
+                deadline: '2026-08-01',
+                applied_on: '2026-07-16',
+            });
+
+        expect(res.status).toBe(201);
+        expect(chain.insert).toHaveBeenCalledWith(
+            expect.objectContaining({
+                deadline: expect.any(Date),
+                applied_on: null,
+            })
+        );
+        expect(chain.insert.mock.calls[0][0].deadline.toISOString().slice(0, 10)).toBe('2026-08-01');
     });
 
     it('POST /api/opportunities rejects invalid campus_mode', async () => {
@@ -131,6 +274,30 @@ describe('Opportunities API', () => {
 
         expect(res.status).toBe(200);
         expect(chain.update).toHaveBeenCalledWith({ campus_mode: null });
+    });
+
+    it('PATCH /api/opportunities/:id clears a deadline when changing to an internship', async () => {
+        const chain = createChain({
+            data: {
+                id: '00000000-0000-4000-8000-000000000001',
+                category: 'internship',
+                deadline: null,
+            },
+            error: null,
+        });
+        mockFrom.mockReturnValue(chain);
+
+        const res = await request(app)
+            .patch('/api/opportunities/00000000-0000-4000-8000-000000000001')
+            .set(authHeader)
+            .send({ category: 'internship', deadline: null, applied_on: '2026-07-16' });
+
+        expect(res.status).toBe(200);
+        expect(chain.update).toHaveBeenCalledWith({
+            category: 'internship',
+            applied_on: '2026-07-16',
+            deadline: null,
+        });
     });
 
     it('PATCH /api/opportunities/:id returns 404 when not found', async () => {

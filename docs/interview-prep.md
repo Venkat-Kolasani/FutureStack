@@ -19,7 +19,7 @@ Interview **round tracking** (`opportunity_rounds`) answers *where you are in th
 | Layer | What we built |
 |-------|----------------|
 | **Database** | `interview_prep`, `interview_questions`, `technical_topics`, `behavioral_prep` — see [`interview-prep-migration.sql`](interview-prep-migration.sql) |
-| **Backend** | `/api/interview-prep/*` routes with Zod validation and internship-only guards |
+| **Backend** | `/api/v1/interview-prep/*` routes with Zod validation and internship-only guards |
 | **Frontend** | `InterviewPrepDetail` page + six panel components under `src/components/interview-prep/` |
 | **Entry point** | Internship detail drawer → **Interview Prep** → `/internships/:id/prep` |
 
@@ -113,13 +113,13 @@ Run in Supabase SQL Editor:
 docs/interview-prep-migration.sql
 ```
 
-If tables are missing, `GET /api/interview-prep/:opportunityId` returns **503** with `code: "TABLES_NOT_EXIST"`.
+If tables are missing, `GET /api/v1/interview-prep/:opportunityId` returns **503** with `code: "TABLES_NOT_EXIST"`.
 
 ---
 
 ## API
 
-Base path: `/api/interview-prep` (auth required).
+Base path: `/api/v1/interview-prep` (auth required).
 
 ### Main prep record
 
@@ -190,8 +190,8 @@ Child panels call `interviewPrepService` mutations and update local React state 
 
 | Feature | Table / route | Answers |
 |---------|---------------|---------|
-| **Interview rounds** | `opportunity_rounds`, `/api/opportunities/:id/rounds` | Which round are you in? Cleared / pending / rejected? |
-| **Interview prep** | `interview_prep` + children, `/api/interview-prep/:id` | What are you studying? What will you say? |
+| **Interview rounds** | `opportunity_rounds`, `/api/v1/opportunities/:id/rounds` | Which round are you in? Cleared / pending / rejected? |
+| **Interview prep** | `interview_prep` + children, `/api/v1/interview-prep/:id` | What are you studying? What will you say? |
 
 Use both together: rounds for pipeline status on the Kanban board; prep for study materials per company.
 

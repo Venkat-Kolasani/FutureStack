@@ -45,7 +45,7 @@ router.get('/upcoming', validate(upcomingRoundsQuerySchema, 'query'), async (req
         const { data, error } = await supabase
             .from('opportunity_rounds')
             .select(
-                'id, opportunity_id, round_number, round_type, scheduled_date, result, opportunities!inner(id, title, category)'
+                'id, opportunity_id, round_number, round_type, scheduled_date, scheduled_time, result, opportunities!inner(id, title, category)'
             )
             .eq('user_id', userId)
             .eq('result', 'pending')
@@ -54,6 +54,7 @@ router.get('/upcoming', validate(upcomingRoundsQuerySchema, 'query'), async (req
             .gte('scheduled_date', from)
             .lte('scheduled_date', to)
             .order('scheduled_date', { ascending: true })
+            .order('scheduled_time', { ascending: true, nullsFirst: false })
             .order('round_number', { ascending: true })
             .limit(UPCOMING_ROUNDS_MAX_RESULTS);
 
@@ -66,6 +67,7 @@ router.get('/upcoming', validate(upcomingRoundsQuerySchema, 'query'), async (req
             roundNumber: row.round_number,
             roundType: row.round_type,
             scheduledDate: row.scheduled_date,
+            scheduledTime: row.scheduled_time,
             result: row.result,
         }));
 

@@ -9,7 +9,7 @@
         "test": "jest",
         "test:ci": "jest --ci --coverage",
         "db:migrate:ai": "node scripts/apply-ai-migrations.js",
-        "smoke:deps": "curl -fsS http://localhost:3001/api/health/deps | node -e \"const fs=require('fs');const d=JSON.parse(fs.readFileSync(0,'utf8'));if(d.status!=='ok'){console.error(JSON.stringify(d,null,2));process.exit(1)};console.log('Dependency health OK')\""
+        "smoke:deps": "curl -fsS http://localhost:3001/api/v1/health/deps | node -e \"const fs=require('fs');const d=JSON.parse(fs.readFileSync(0,'utf8'));if(d.status!=='ok'){console.error(JSON.stringify(d,null,2));process.exit(1)};console.log('Dependency health OK')\""
     },
     "keywords": [
         "express",

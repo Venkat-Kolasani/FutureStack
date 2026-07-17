@@ -19,6 +19,166 @@
   }
 }
 
+/*
+ * Light-mode accessibility guardrails
+ *
+ * Several shared components use Tailwind's 200–400 text shades for status
+ * labels and secondary text. Those shades are intended for dark surfaces and
+ * do not meet readable contrast on the app's light backgrounds. Keep the
+ * component structure and visual hierarchy intact, but map those utility
+ * classes to their accessible light-surface equivalents.
+ */
+html:not(.dark) {
+  color-scheme: light;
+  --light-text-muted: #4b5563;
+  --light-text-blue: #1d4ed8;
+  --light-text-cyan: #0e7490;
+  --light-text-emerald: #047857;
+  --light-text-green: #15803d;
+  --light-text-indigo: #4338ca;
+  --light-text-orange: #c2410c;
+  --light-text-pink: #be185d;
+  --light-text-purple: #7e22ce;
+  --light-text-red: #b91c1c;
+  --light-text-teal: #0f766e;
+  --light-text-violet: #6d28d9;
+  --light-text-yellow: #a16207;
+}
+
+:where(html:not(.dark)) .text-gray-200,
+:where(html:not(.dark)) .text-gray-300,
+:where(html:not(.dark)) .text-gray-400,
+:where(html:not(.dark)) .text-gray-500,
+:where(html:not(.dark)) .text-slate-200,
+:where(html:not(.dark)) .text-slate-300 {
+  color: var(--light-text-muted);
+}
+
+:where(html:not(.dark)) .text-blue-200,
+:where(html:not(.dark)) .text-blue-300,
+:where(html:not(.dark)) .text-blue-400 {
+  color: var(--light-text-blue);
+}
+
+:where(html:not(.dark)) .text-cyan-400 {
+  color: var(--light-text-cyan);
+}
+
+:where(html:not(.dark)) .text-emerald-300,
+:where(html:not(.dark)) .text-emerald-400 {
+  color: var(--light-text-emerald);
+}
+
+:where(html:not(.dark)) .text-green-200,
+:where(html:not(.dark)) .text-green-300,
+:where(html:not(.dark)) .text-green-400,
+:where(html:not(.dark)) .text-green-500 {
+  color: var(--light-text-green);
+}
+
+:where(html:not(.dark)) .text-indigo-200,
+:where(html:not(.dark)) .text-indigo-300,
+:where(html:not(.dark)) .text-indigo-400 {
+  color: var(--light-text-indigo);
+}
+
+:where(html:not(.dark)) .text-orange-400 {
+  color: var(--light-text-orange);
+}
+
+:where(html:not(.dark)) .text-pink-400 {
+  color: var(--light-text-pink);
+}
+
+:where(html:not(.dark)) .text-purple-200,
+:where(html:not(.dark)) .text-purple-300,
+:where(html:not(.dark)) .text-purple-400,
+:where(html:not(.dark)) .text-purple-500 {
+  color: var(--light-text-purple);
+}
+
+:where(html:not(.dark)) .text-red-200,
+:where(html:not(.dark)) .text-red-300,
+:where(html:not(.dark)) .text-red-400 {
+  color: var(--light-text-red);
+}
+
+:where(html:not(.dark)) .text-teal-400 {
+  color: var(--light-text-teal);
+}
+
+:where(html:not(.dark)) .text-violet-200,
+:where(html:not(.dark)) .text-violet-300,
+:where(html:not(.dark)) .text-violet-400 {
+  color: var(--light-text-violet);
+}
+
+:where(html:not(.dark)) .text-yellow-300,
+:where(html:not(.dark)) .text-yellow-400,
+:where(html:not(.dark)) .text-amber-200,
+:where(html:not(.dark)) .text-amber-300,
+:where(html:not(.dark)) .text-amber-400 {
+  color: var(--light-text-yellow);
+}
+
+html:not(.dark) :is(
+  [class~="hover:text-gray-200"],
+  [class~="hover:text-gray-300"],
+  [class~="hover:text-gray-400"],
+  [class~="hover:text-gray-500"]
+):hover {
+  color: var(--light-text-muted);
+}
+
+html:not(.dark) :is(
+  [class~="hover:text-blue-200"],
+  [class~="hover:text-blue-300"],
+  [class~="hover:text-blue-400"]
+):hover {
+  color: var(--light-text-blue);
+}
+
+html:not(.dark) :is(
+  [class~="hover:text-green-200"],
+  [class~="hover:text-green-300"],
+  [class~="hover:text-green-400"]
+):hover {
+  color: var(--light-text-green);
+}
+
+html:not(.dark) :is(
+  [class~="hover:text-red-200"],
+  [class~="hover:text-red-300"],
+  [class~="hover:text-red-400"]
+):hover {
+  color: var(--light-text-red);
+}
+
+html:not(.dark) :is(
+  [class~="hover:text-violet-200"],
+  [class~="hover:text-violet-300"],
+  [class~="hover:text-violet-400"]
+):hover {
+  color: var(--light-text-violet);
+}
+
+html:not(.dark) :is(
+  [class~="hover:text-yellow-200"],
+  [class~="hover:text-yellow-300"],
+  [class~="hover:text-yellow-400"],
+  [class~="hover:text-amber-200"],
+  [class~="hover:text-amber-300"],
+  [class~="hover:text-amber-400"]
+):hover {
+  color: var(--light-text-yellow);
+}
+
+html:not(.dark) input::placeholder,
+html:not(.dark) textarea::placeholder {
+  color: var(--light-text-muted);
+  opacity: 1;
+}
+
 html {
   scroll-behavior: smooth;
 }

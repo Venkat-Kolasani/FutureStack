@@ -1,0 +1,8 @@
+# FutureStack persistent context
+
+- Primary goal: build a credible, interview-ready system-design project, not a collection of unused services.
+- Keep production dependencies and deployment within free tiers unless the user explicitly approves cost.
+- `docs/DOCUMENTATION.md` is the single source of preparation for interviews. It must explain shipped behavior, deliberate non-decisions, trade-offs, evidence, failure modes, and user/traffic-based scale triggers.
+- Write dated ADRs before architecture implementation and keep their status current.
+- Prefer a modular monolith until metrics justify a distributed component. Never claim planned work is shipped.
+- Preserve user changes already present in the working tree. Use focused commits, comprehensive verification, and push only after checks pass.

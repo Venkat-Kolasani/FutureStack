@@ -293,10 +293,10 @@ const InterviewPrepDetail = () => {
                                 <span className={`text-sm px-3 py-1 rounded-full border ${statusColors[internship.status] || statusColors.applied}`}>
                                     {internship.status?.charAt(0).toUpperCase() + internship.status?.slice(1)}
                                 </span>
-                                {internship.deadline && (
+                                {internship.applied_on && (
                                     <span className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-1">
                                         <FaCalendar size={12} />
-                                        {new Date(internship.deadline).toLocaleDateString()}
+                                        Applied {new Date(`${internship.applied_on}T12:00:00`).toLocaleDateString()}
                                     </span>
                                 )}
                                 {internship.link && (

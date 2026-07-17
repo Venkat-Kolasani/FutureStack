@@ -14,6 +14,7 @@ import {
 const emptyForm = {
   round_type: 'oa',
   scheduled_date: '',
+  scheduled_time: '',
   result: 'pending',
   notes: '',
 };
@@ -49,6 +50,7 @@ const AddRoundModal = ({
       setForm({
         round_type: initialRound.round_type || 'oa',
         scheduled_date: initialRound.scheduled_date || '',
+        scheduled_time: initialRound.scheduled_time || '',
         result: initialRound.result || 'pending',
         notes: initialRound.notes || '',
       });
@@ -73,6 +75,7 @@ const AddRoundModal = ({
       result: form.result,
       notes: form.notes.trim() || null,
       scheduled_date: form.scheduled_date || null,
+      scheduled_time: form.scheduled_time || null,
     };
     await onSubmit(payload);
   };
@@ -115,6 +118,21 @@ const AddRoundModal = ({
               </option>
             ))}
           </select>
+        </div>
+
+        <div>
+          <label htmlFor="scheduled_time" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Scheduled time
+            <span className="ml-1 font-normal text-gray-500">(optional)</span>
+          </label>
+          <input
+            id="scheduled_time"
+            type="time"
+            value={form.scheduled_time}
+            onChange={handleChange('scheduled_time')}
+            disabled={saving}
+            className="w-full rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-black/40 px-3 py-2.5 text-gray-900 dark:text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500/50 disabled:opacity-60 [color-scheme:dark]"
+          />
         </div>
 
         <div>

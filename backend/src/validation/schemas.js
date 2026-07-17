@@ -44,6 +44,15 @@ const createOpportunitySchema = Joi.object({
             'date.format': 'Deadline must be a valid ISO date format'
         }),
 
+    applied_on: Joi.date()
+        .iso()
+        .raw()
+        .allow(null)
+        .optional()
+        .messages({
+            'date.format': 'Applied on must be a valid ISO date format'
+        }),
+
     category: Joi.string()
         .valid('internship', 'hackathon')
         .allow(null)
@@ -122,6 +131,15 @@ const updateOpportunitySchema = Joi.object({
             'date.format': 'Deadline must be a valid ISO date format'
         }),
 
+    applied_on: Joi.date()
+        .iso()
+        .raw()
+        .allow(null)
+        .optional()
+        .messages({
+            'date.format': 'Applied on must be a valid ISO date format'
+        }),
+
     category: Joi.string()
         .valid('internship', 'hackathon')
         .allow(null)
@@ -168,6 +186,39 @@ const idParamSchema = Joi.object({
             'string.uuid': 'Invalid opportunity ID format',
             'any.required': 'Opportunity ID is required'
         })
+});
+
+const opportunityListQuerySchema = Joi.object({
+    limit: Joi.number()
+        .integer()
+        .min(1)
+        .max(100)
+        .default(25)
+        .messages({
+            'number.base': 'limit must be a number',
+            'number.integer': 'limit must be an integer',
+            'number.min': 'limit must be at least 1',
+            'number.max': 'limit cannot exceed 100',
+        }),
+    cursor: Joi.string().trim().max(512).optional(),
+    status: Joi.string()
+        .valid('applied', 'interviewed', 'shortlisted', 'selected', 'rejected', 'ghosted')
+        .optional(),
+    category: Joi.string().valid('internship', 'hackathon').optional(),
+});
+
+const hackathonIdeaParamsSchema = Joi.object({
+    opportunityId: Joi.string().uuid().required(),
+    ideaId: Joi.string().uuid().required(),
+});
+
+const teamInviteTokenParamsSchema = Joi.object({
+    token: Joi.string()
+        .pattern(/^[A-Za-z0-9_-]{43}$/)
+        .required()
+        .messages({
+            'string.pattern.base': 'Invalid invite token format',
+        }),
 });
 
 // =============================================================================
@@ -223,6 +274,11 @@ const updateTeamSchema = Joi.object({
             'string.max': 'Description cannot exceed 500 characters'
         })
 }).min(1);
+
+const createTeamInviteSchema = Joi.object({
+    role: Joi.string().valid('editor', 'viewer').default('editor'),
+    expiresInHours: Joi.number().integer().min(1).max(24 * 30).default(24 * 7),
+});
 
 /**
  * Validation schema for creating a team member
@@ -328,11 +384,6 @@ const updateIdeaSchema = Joi.object({
 
     category: Joi.string()
         .valid('feature', 'design', 'tech', 'other')
-        .optional(),
-
-    votes: Joi.number()
-        .integer()
-        .min(0)
         .optional(),
 
     is_selected: Joi.boolean()
@@ -464,9 +515,13 @@ module.exports = {
     createOpportunitySchema,
     updateOpportunitySchema,
     idParamSchema,
+    opportunityListQuerySchema,
+    hackathonIdeaParamsSchema,
+    teamInviteTokenParamsSchema,
     // Hackathon team collaboration
     createTeamSchema,
     updateTeamSchema,
+    createTeamInviteSchema,
     createTeamMemberSchema,
     updateTeamMemberSchema,
     createIdeaSchema,
