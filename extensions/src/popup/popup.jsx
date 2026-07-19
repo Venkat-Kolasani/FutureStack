@@ -34,13 +34,13 @@ export default function Popup() {
           target: { tabId: tab.id },
           files: ['src/content.js'],
         });
-        chrome.tabs.sendMessage(tab.id, { type: 'GET_PAGE_METADATA' }, (resp) => {
-          if (chrome.runtime.lastError) return;
-          if (resp) setData(prev => ({ ...prev, ...resp, link: resp.link || fallbackLink }));
-        });
       } catch (e) {
         console.warn('FutureTracker: could not inject content script', e);
       }
+      chrome.tabs.sendMessage(tab.id, { type: 'GET_PAGE_METADATA' }, (resp) => {
+        if (chrome.runtime.lastError) return;
+        if (resp) setData(prev => ({ ...prev, ...resp, link: resp.link || fallbackLink }));
+      });
     });
   }, []);
 
@@ -107,7 +107,7 @@ export default function Popup() {
         <span style={{ background: '#ffffff', color: '#000000', fontWeight: 'bold', padding: '4px 8px', borderRadius: '4px', fontSize: '14px', marginRight: '8px' }}>F</span>
         <span style={{ fontWeight: 'bold', fontSize: '16px' }}>FutureTracker</span>
       </div>
-      <label>Title</label>
+      <label htmlFor="ft-title">Title</label>
       <input
         id="ft-title"
         value={data.title}
@@ -117,23 +117,26 @@ export default function Popup() {
         placeholder="Job title or role"
         style={inputStyle}
       />
-      <label>Description</label>
+      <label htmlFor="ft-description">Description</label>
       <textarea
+        id="ft-description"
         value={data.description}
         onChange={(e) => setData({ ...data, description: e.target.value })}
         placeholder="Optional description"
         style={{ ...inputStyle, height: '72px', resize: 'vertical' }}
       />
-      <label>URL</label>
+      <label htmlFor="ft-url">URL</label>
       <input
+        id="ft-url"
         value={data.link}
         readOnly
         style={{ ...inputStyle, color: '#71717a', marginBottom: '12px' }}
       />
       <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
         <div style={{ flex: 1 }}>
-          <label>Category</label>
+          <label htmlFor="ft-category">Category</label>
           <select
+            id="ft-category"
             value={data.category}
             onChange={(e) => setData({ ...data, category: e.target.value })}
             style={selectStyle}
@@ -143,8 +146,9 @@ export default function Popup() {
           </select>
         </div>
         <div style={{ flex: 1 }}>
-          <label>Status</label>
+          <label htmlFor="ft-status">Status</label>
           <select
+            id="ft-status"
             value={data.status}
             onChange={(e) => setData({ ...data, status: e.target.value })}
             style={selectStyle}

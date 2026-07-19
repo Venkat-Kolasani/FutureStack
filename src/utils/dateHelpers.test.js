@@ -22,6 +22,10 @@ describe('dateHelpers', () => {
         it('returns negative days for past deadlines', () => {
             expect(getDaysRemaining('2026-06-01')).toBe(-7);
         });
+
+        it('returns 0 for invalid dates', () => {
+            expect(getDaysRemaining('invalid-date')).toBe(0);
+        });
     });
 
     describe('isOverdue', () => {

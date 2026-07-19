@@ -21,7 +21,7 @@ export const getDaysRemaining = (deadline) => {
   today.setHours(0, 0, 0, 0);
 
   const deadlineDate = parseLocalDate(deadline);
-  if (!deadlineDate) return 0;
+  if (!deadlineDate || Number.isNaN(deadlineDate.getTime())) return 0;
   deadlineDate.setHours(0, 0, 0, 0);
 
   const diffTime = deadlineDate.getTime() - today.getTime();
