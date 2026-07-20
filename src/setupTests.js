@@ -15,19 +15,21 @@ class IntersectionObserverMock {
 }
 global.IntersectionObserver = IntersectionObserverMock;
 
-Object.defineProperty(window, 'matchMedia', {
-    writable: true,
-    value: (query) => ({
+// Mock window.matchMedia (required by ThemeContext and framer-motion)
+// Using global assignment instead of Object.defineProperty so CRA does not reset it
+global.matchMedia = function(query) {
+    return {
         matches: false,
         media: query,
         onchange: null,
-        addEventListener: () => {},
-        removeEventListener: () => {},
-        addListener: () => {},
-        removeListener: () => {},
-        dispatchEvent: () => false,
-    }),
-});
+        addEventListener: function() {},
+        removeEventListener: function() {},
+        addListener: function() {},
+        removeListener: function() {},
+        dispatchEvent: function() { return false; },
+    };
+};
+window.matchMedia = global.matchMedia;
 
 process.env.REACT_APP_CLERK_PUBLISHABLE_KEY =
     process.env.REACT_APP_CLERK_PUBLISHABLE_KEY || 'pk_test_ci_placeholder';
@@ -59,4 +61,19 @@ jest.mock('./lib/analytics', () => ({
         opportunityUpdated: jest.fn(),
         opportunityDeleted: jest.fn(),
     },
+}));
+
+// Mock framer-motion to avoid jsdom animation issues
+jest.mock('framer-motion', () => ({
+    motion: new Proxy({}, {
+        get: (_, tag) => {
+            const React = require('react');
+            return React.forwardRef(({ children, ...props }, ref) =>
+                React.createElement(tag, { ...props, ref }, children)
+            );
+        }
+    }),
+    AnimatePresence: ({ children }) => children,
+    useAnimation: () => ({ start: () => {}, stop: () => {} }),
+    useInView: () => [null, false],
 }));

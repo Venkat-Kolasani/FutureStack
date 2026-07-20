@@ -19,6 +19,9 @@
 .DS_Store
 .env
 backend/.env
+extensions/.env
+extensions/node_modules
+extensions/dist
 .env.local
 .env.development.local
 .env.test.local
