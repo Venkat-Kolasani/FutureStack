@@ -1,12 +1,13 @@
 # Project Status
 
-Last reviewed: July 16, 2026
+Last reviewed: July 20, 2026
 
 This is the source of truth for the repository's product status. It distinguishes code that is available in the app from code that is intentionally gated or planned.
 
 | Capability | Status | Notes |
 | --- | --- | --- |
 | Opportunity tracking | Available | Create, edit, delete, search, filter, and classify internship and hackathon opportunities. |
+| Chrome MV3 opportunity saver | Implemented, configuration-gated | A Chrome popup injects metadata collection on demand, obtains a Clerk extension session, and saves a reviewed opportunity through the API. It requires the documented extension build/load, Clerk allowed-origin, and backend CORS setup. |
 | Active-event dashboard, calendar, status board, reports | Implemented, deployment pending | `20260716110000_rounds_drive_active_events.sql` is applied and verified in production. Deploying the matching API/frontend release changes internship display to applied date, makes pending rounds the active events, and reserves deadline views for hackathon submissions. |
 | Light and dark theme | Available | Persisted user preference with themed Clerk UI and app-wide contrast work. |
 | Interview rounds | Available; scheduled-time release pending | The existing internship-only multi-round timeline synchronizes parent status. The production schema has optional scheduled time; the matching application release is pending. |

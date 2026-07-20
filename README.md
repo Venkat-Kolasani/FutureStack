@@ -6,11 +6,12 @@ FutureTracker is a full-stack career-application workspace for students and earl
 
 ## Project status
 
-The core product is actively implemented and includes opportunity tracking, protected sharing, interview workflows, document management, analytics, and a light/dark theme. The AI Resume Checker pipeline is implemented on the backend, but its frontend entry points are currently disabled behind a feature flag while rollout readiness is completed. See [the project status](docs/PROJECT_STATUS.md) for the authoritative feature matrix.
+The core product is actively implemented and includes opportunity tracking, a Chrome MV3 quick-save extension, protected sharing, interview workflows, document management, analytics, and a light/dark theme. The AI Resume Checker pipeline is implemented on the backend, but its frontend entry points are currently disabled behind a feature flag while rollout readiness is completed. See [the project status](docs/PROJECT_STATUS.md) for the authoritative feature matrix.
 
 ## What it does
 
 - Track internships from application date to final outcome, and track hackathons through submission.
+- Capture the current page's title, Open Graph description, and URL in the Chrome extension, review the fields, and save the opportunity with the signed-in user's Clerk session.
 - Manage upcoming interview rounds and hackathon submission deadlines in the dashboard, calendar, Kanban board, and PDF reports.
 - Record multi-round interview progress, including an optional scheduled time, and keep the parent opportunity status in sync.
 - Prepare for internship interviews with research, questions, technical topics, STAR stories, and reflections.
@@ -26,7 +27,7 @@ The applied-date, scheduled-time, and hackathon-only reminder semantics are migr
 
 | Area | Technologies |
 | --- | --- |
-| Frontend | React 19, React Router 7, Tailwind CSS, Framer Motion, Recharts |
+| Frontend | React 19, React Router 7, Tailwind CSS, Framer Motion, Recharts, Chrome MV3 extension (Vite + CRXJS) |
 | API | Node.js, Express, Joi validation, Helmet, rate limiting |
 | Identity and data | Clerk, Supabase PostgreSQL, Row-Level Security, Supabase Realtime |
 | Documents and AI | pdfjs-dist, mammoth, pdf-parse, Vercel AI SDK, Gemini or Ollama |
@@ -86,8 +87,11 @@ The checked-in templates are the complete configuration reference: [`.env.exampl
 | --- | --- |
 | `.env` | `REACT_APP_CLERK_PUBLISHABLE_KEY`, `REACT_APP_API_URL`, `REACT_APP_SUPABASE_URL`, `REACT_APP_SUPABASE_ANON_KEY` |
 | `backend/.env` | `CLERK_SECRET_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `CORS_ORIGIN` |
+| `extensions/.env` | `VITE_CLERK_PUBLISHABLE_KEY`, `VITE_API_BASE`, `VITE_SYNC_HOST` |
 
 For production, set Vercel's build-time `REACT_APP_API_URL` to `https://futurestack-aeyn.onrender.com/api/v1` and redeploy the frontend. Also set `CLERK_JWT_PUBLIC_KEY` for local JWT verification. Share links need `SHARE_LINK_ENCRYPTION_KEY`. Account invites use `FRONTEND_URL`; the optional reminder dispatcher uses `JOB_DISPATCH_TOKEN`, with `JOB_ADMIN_USER_IDS` controlling the dead-letter view. Optional Resend delivery is backend-only: after applying its migration, set `REMINDER_EMAILS_ENABLED=true`, `RESEND_API_KEY`, and `REMINDER_EMAIL_FROM` on Render. The optional AI pipeline is configured only in `backend/.env` with `RESUME_AI_ENABLED`, provider/model values, and either a server Gemini key or user-managed BYOK settings. Never expose service-role, Clerk secret, job-dispatch, Resend, or AI keys in frontend variables.
+
+The Chrome extension is built and loaded separately; its Clerk publishable key, API base URL, and session sync host belong in `extensions/.env`. To enable authenticated saves, add its deterministic `chrome-extension://` origin to Clerk's allowed origins and to backend `CORS_ORIGIN`. Follow the complete [extension setup and manual test guide](extensions/readme.md).
 
 ## Database setup
 
@@ -120,6 +124,7 @@ npm run test:ci
 npm run build
 npm run check:architecture
 (cd backend && npm test)
+(cd extensions && npm ci && npm test && npm run build)
 ```
 
 The architecture check protects the frontend/API boundary. Feature-specific commands and smoke tests are documented in [docs/TESTING.md](docs/TESTING.md).
@@ -155,6 +160,7 @@ Current production checks: [liveness](https://futurestack-aeyn.onrender.com/api/
 | [Architecture guide](docs/DOCUMENTATION.md) | System design and deployment model |
 | [Architecture decisions](docs/adr/README.md) | Decision records and interview-ready trade-offs |
 | [Testing guide](docs/TESTING.md) | Commands, focused test suites, and manual checks |
+| [Chrome extension guide](extensions/readme.md) | MV3 setup, Clerk/CORS configuration, build, and manual save flow |
 | [Security guide](docs/SECURITY.md) | Deployment controls and security assumptions |
 | [Interview rounds](docs/interview-rounds.md) | Multi-round pipeline and parent-status synchronization |
 | [Interview preparation](docs/interview-prep.md) | Prep workspace data model and API |

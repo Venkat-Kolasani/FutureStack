@@ -38,6 +38,7 @@ export REACT_APP_API_URL=http://localhost:3001/api/v1
 | Interview rounds (`backend/src/routes/opportunity-rounds.js`, `src/components/rounds/*`) | `cd backend && npm test -- rounds`, manual flow in [`docs/interview-rounds.md`](interview-rounds.md#testing) |
 | Interview prep (`backend/src/routes/interview-prep.js`, `src/components/interview-prep/*`) | `cd backend && npm test -- interview-prep`, manual flow in [`docs/interview-prep.md`](interview-prep.md#testing) |
 | ATS scorer (`src/utils/atsScorer.js`, `DocumentUpload.jsx`) | `npm test -- atsScorer`, upload PDF/DOCX on `/documents` |
+| Chrome extension (`extensions/**`) | `cd extensions && npm ci && npm test && npm run build`; follow the extension manual flow below |
 
 ### Backend route changes require tests
 
@@ -116,6 +117,16 @@ See [`docs/documents-and-ats.md`](documents-and-ats.md).
 ```bash
 npm test -- atsScorer
 ```
+
+### Chrome MV3 extension (if you changed `extensions/`)
+
+1. Configure `extensions/.env` with the Clerk publishable key, API base URL, and sync host.
+2. Confirm the extension's deterministic `chrome-extension://` origin is allowed in Clerk and backend `CORS_ORIGIN`.
+3. Run `cd extensions && npm ci && npm test && npm run build`.
+4. In `chrome://extensions`, enable Developer mode and load `extensions/dist`.
+5. While signed in at the sync host, open a public opportunity page, open the popup, review the prefilled title/description/URL, save, and confirm the opportunity in the dashboard.
+
+See [`extensions/readme.md`](../extensions/readme.md) for the complete setup and example listing pages.
 
 ## What CI runs
 

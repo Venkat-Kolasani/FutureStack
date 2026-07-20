@@ -4,7 +4,7 @@ Quick orientation for contributors, reviewers, and technical interviews. Read th
 
 ## What is FutureTracker?
 
-A full-stack React + Express app that helps students track internships and hackathons: Kanban status board, analytics, documents, multi-round interview pipelines, per-internship prep workspaces, and hackathon team collaboration.
+A full-stack React + Express app that helps students track internships and hackathons: Kanban status board, analytics, documents, multi-round interview pipelines, per-internship prep workspaces, hackathon team collaboration, and a Chrome MV3 opportunity saver.
 
 | Environment | URL |
 |-------------|-----|
@@ -35,6 +35,10 @@ FutureStack/
 │       ├── routes/               # REST handlers per domain
 │       ├── validation/           # Zod/Joi-style request schemas
 │       └── lib/                  # Supabase admin client, sync helpers
+├── extensions/                   # Chrome MV3 opportunity saver
+│   ├── src/content.js            # On-demand page metadata listener
+│   ├── src/popup/                # Clerk-backed review and save UI
+│   └── readme.md                 # Setup, Clerk/CORS, and manual test guide
 ├── docs/                         # Feature guides, migrations, testing
 └── scripts/                      # architecture-check, verify-rounds-schema
 ```
@@ -152,6 +156,7 @@ Always add new endpoints here — pages should not construct URLs manually.
 | Architecture & challenges | [`DOCUMENTATION.md`](DOCUMENTATION.md) | `supabase-schema.sql` |
 | Testing & CI | [`TESTING.md`](TESTING.md) | — |
 | Security | [`SECURITY.md`](SECURITY.md) | — |
+| Chrome MV3 opportunity saver | [`../extensions/readme.md`](../extensions/readme.md) | — |
 
 ---
 
@@ -165,6 +170,7 @@ Always add new endpoints here — pages should not construct URLs manually.
 | API contract | `/api/v1` is canonical; the legacy `/api` mount has a dated deprecation response. Opportunity lists use stable cursor pagination. |
 | Collaboration | `team_memberships` authorizes owner/editor/viewer access; name-only roster entries remain display data. Idea votes are unique per account in PostgreSQL. |
 | Dates and reminders | The active-events migration makes internships track `applied_on` plus pending rounds, and limits new outbox jobs to hackathon submission dates. Until then, production retains its prior generic deadline behavior. The optional free GitHub Actions trigger is best-effort, so it is not suitable for strict deadlines. |
+| Chrome extension | The MV3 popup extracts metadata only after the user opens it, then saves through the authenticated API. It is separately built and loaded, and needs the documented Clerk origin and CORS configuration. |
 | Quality gates | CI builds/tests frontend and backend, runs architecture guardrails, and performs informational dependency audits. |
 
 When explaining the project in an interview, lead with **realtime Kanban + RLS challenge**, then **round save latency fix**, then **interview prep** or **ATS scorer** depending on the role.

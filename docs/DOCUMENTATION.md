@@ -1,12 +1,12 @@
 # FutureTracker: Interview Preparation Guide
 
-Last reviewed against the repository: July 16, 2026
+Last reviewed against the repository: July 20, 2026
 
 This is the single, interview-focused source of truth for FutureTracker. It explains what the product does, how the current implementation works, why the important choices were made, the trade-offs they create, and how the design would evolve for millions of users. It is deliberately candid: a strong interview answer distinguishes shipped behavior from a production-scale plan.
 
 ## 1. The 60-second answer
 
-**FutureTracker is a full-stack career-application workspace for students and early-career professionals.** It lets a user manage internships and hackathons, track deadlines on a calendar and Kanban board, record multi-round interviews, prepare for interviews, manage application documents, view analytics, collaborate on hackathons, and selectively share a read-only progress snapshot.
+**FutureTracker is a full-stack career-application workspace for students and early-career professionals.** It lets a user manage internships and hackathons, capture a listing from the current browser tab with a Chrome extension, track deadlines on a calendar and Kanban board, record multi-round interviews, prepare for interviews, manage application documents, view analytics, collaborate on hackathons, and selectively share a read-only progress snapshot.
 
 The application is a React single-page app backed by an Express API. Clerk handles identity; the API validates Clerk JWTs and enforces user ownership; Supabase provides PostgreSQL, storage, and limited realtime refreshes. I chose an API boundary rather than frontend database CRUD so authentication, validation, business rules, and sensitive operations are centralized. The design is intentionally modular: each domain has a route module, validation schemas, focused UI components, migration SQL, and tests.
 
@@ -32,7 +32,7 @@ Career applications are fragmented across job boards, messages, spreadsheets, do
 ### Primary user flow
 
 1. A user signs in with Clerk.
-2. They add an internship or hackathon with title, link, deadline, status, notes, and campus mode.
+2. They can add an internship or hackathon directly, or use the Chrome MV3 extension to prefill title, description, and link from the active tab before saving.
 3. The dashboard, calendar, list, and Kanban board present the same opportunity data in different task-oriented views.
 4. For an internship, the user can add interview rounds and preparation material. Round outcomes synchronize the parent opportunity status.
 5. The user uploads or links a resume/cover letter, receives client-side ATS-style feedback for supported files, and assigns documents to applications.
@@ -44,6 +44,7 @@ Career applications are fragmented across job boards, messages, spreadsheets, do
 | Capability | Current state | Important interview detail |
 | --- | --- | --- |
 | Opportunity CRUD, dashboard, calendar, reports, analytics | Available in the current release | The applied active-events migration uses `applied_on` for internships and reserves active `deadline` behavior for hackathon submissions; all mutations go through the Express API. |
+| Chrome MV3 opportunity saver | Implemented, configuration-gated | The popup injects metadata extraction only when opened, lets users review fields, obtains a Clerk token through the extension sync host, and posts through the supported legacy `POST /api/opportunities` compatibility mount. Manual loading plus Clerk allowed-origin and CORS configuration remain deployment steps. |
 | Light and dark theme | Available | Theme preference is managed in React context and applied to Clerk appearance as well as app UI. |
 | Interview rounds and preparation | Available | Rounds are internship-only, synchronize derived parent fields server-side, and can hold an optional scheduled date/time. |
 | Documents and ATS hints | Available | ATS analysis is rule-based and runs in the browser; it is not an official ATS score. |
@@ -71,8 +72,10 @@ If migration verification fails, do not deploy the application code. The additiv
 ```mermaid
 flowchart LR
   U["User browser"] --> R["React SPA"]
+  U --> X["Chrome MV3 extension"]
   R -->|"Clerk session"| C["Clerk"]
-  R -->|"Bearer JWT over HTTPS"| A["Express API /api/v1"]
+  R -->|"Bearer JWT over HTTPS"| A["Express API /api/v1 + legacy /api"]
+  X -->|"Clerk JWT"| A
   A -->|"verify JWT and resolve internal user"| C
   A -->|"user-scoped service-role queries"| DB[("Supabase PostgreSQL")]
   R -. "current status-board refresh events" .-> RT["Supabase Realtime"]
@@ -101,6 +104,7 @@ flowchart LR
 ### Deployment shape today
 
 - Frontend: React app intended for Vercel.
+- Chrome extension: a separately built MV3 bundle, loaded from `extensions/dist`; it uses Clerk's extension session sync and the same authenticated API boundary after its allowed origin and CORS entry are configured.
 - API: Express service on Render at `https://futurestack-aeyn.onrender.com/api/v1`; liveness is `/health` and dependency readiness is `/health/deps`.
 - Identity: Clerk.
 - Database, storage, and optional realtime: Supabase.
@@ -109,7 +113,7 @@ flowchart LR
 - Reminder scheduling: an optional repository workflow posts to the token-protected dispatcher every 15 minutes. It is intentionally described as best-effort because the GitHub Actions free tier has no execution SLA.
 - Email delivery: an optional Resend API call runs only inside the leased dispatcher. It is server-only, never blocks opportunity create/update requests, and is selected per user from the website notification page.
 
-The exact environment contract lives in `.env.example` and `backend/.env.example`. Vercel must receive `REACT_APP_API_URL=https://futurestack-aeyn.onrender.com/api/v1` at build time. Secrets are backend-only; the browser receives only public configuration such as Clerk's publishable key and Supabase's anon key.
+The exact environment contract lives in `.env.example`, `backend/.env.example`, and `extensions/.env.example`. Vercel must receive `REACT_APP_API_URL=https://futurestack-aeyn.onrender.com/api/v1` at build time. Secrets are backend-only; the browser and extension receive only public configuration such as Clerk's publishable key and Supabase's anon key.
 
 ## 4. Frontend architecture
 
@@ -497,7 +501,7 @@ The public endpoint returns only the snapshot after token/passcode checks. This 
 
 ### Tests that exist
 
-The repository includes frontend tests for route/render behavior and pure helpers such as date, opportunity, and ATS scoring utilities. Backend tests cover health, opportunities, analytics, documents, interview prep, rounds, share links, validation middleware, round synchronization, AI key vault behavior, resume-agent logic, and GitHub enrichment.
+The repository includes frontend tests for route/render behavior and pure helpers such as date, opportunity, and ATS scoring utilities. The Chrome extension has focused metadata-extraction tests and a production build. Backend tests cover health, opportunities, analytics, documents, interview prep, rounds, share links, validation middleware, round synchronization, AI key vault behavior, resume-agent logic, and GitHub enrichment.
 
 Before a release or PR, the standard checks are:
 
@@ -506,9 +510,10 @@ npm run test:ci
 npm run build
 npm run check:architecture
 (cd backend && npm test)
+(cd extensions && npm ci && npm test && npm run build)
 ```
 
-`check:architecture` enforces the frontend API boundary. Tests mock Clerk and Supabase, so they do not require live secrets. Manual smoke checks remain important for sign-in, pages changed, an expected error case, upload flows, public share behavior, and responsive UI. The repository does not yet have a disposable PostgreSQL-backed concurrency suite for the vote functions; ADR-003 defines that required release-gate coverage, so the invariant must not be described as end-to-end concurrency-tested until that fixture is added.
+`check:architecture` enforces the frontend API boundary. Tests mock Clerk and Supabase, so they do not require live secrets. Manual smoke checks remain important for sign-in, pages changed, an expected error case, upload flows, public share behavior, responsive UI, and the extension's sign-in → save → dashboard path once its Clerk/CORS configuration is present. The repository does not yet have a disposable PostgreSQL-backed concurrency suite for the vote functions; ADR-003 defines that required release-gate coverage, so the invariant must not be described as end-to-end concurrency-tested until that fixture is added.
 
 ### Observability today
 
