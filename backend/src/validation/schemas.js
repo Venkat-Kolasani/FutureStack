@@ -28,12 +28,12 @@ const createOpportunitySchema = Joi.object({
     link: Joi.string()
         .trim()
         .uri({ scheme: ['http', 'https'] })
-        .max(500)
+        .max(2048)
         .allow(null, '')
         .optional()
         .messages({
             'string.uri': 'Link must be a valid URL (http or https)',
-            'string.max': 'Link cannot exceed 500 characters'
+            'string.max': 'Link cannot exceed 2048 characters'
         }),
 
     deadline: Joi.date()
@@ -115,12 +115,12 @@ const updateOpportunitySchema = Joi.object({
     link: Joi.string()
         .trim()
         .uri({ scheme: ['http', 'https'] })
-        .max(500)
+        .max(2048)
         .allow(null, '')
         .optional()
         .messages({
             'string.uri': 'Link must be a valid URL (http or https)',
-            'string.max': 'Link cannot exceed 500 characters'
+            'string.max': 'Link cannot exceed 2048 characters'
         }),
 
     deadline: Joi.date()

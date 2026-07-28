@@ -59,6 +59,8 @@ app.use(helmet({
             frameSrc: ["'none'"]
         }
     },
+    // Allow browser + Chrome extension clients on other origins to read API responses
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
     hsts: {
         maxAge: 31536000,
         includeSubDomains: true,
@@ -73,10 +75,17 @@ app.use(helmet({
     }
 }));
 
+const EXTENSION_CORS_ORIGIN = 'chrome-extension://ocadhiiiainnijhhimhmpagfdmfcnfmj';
+
+const corsOrigins = new Set(
+    process.env.CORS_ORIGIN
+        ? process.env.CORS_ORIGIN.split(',').map((s) => s.trim()).filter(Boolean)
+        : ['http://localhost:3000']
+);
+corsOrigins.add(EXTENSION_CORS_ORIGIN);
+
 const corsOptions = {
-    origin: process.env.CORS_ORIGIN
-        ? process.env.CORS_ORIGIN.split(',').map(s => s.trim())
-        : ['http://localhost:3000'],
+    origin: [...corsOrigins],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']

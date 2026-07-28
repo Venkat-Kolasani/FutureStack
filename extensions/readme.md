@@ -34,7 +34,7 @@ VITE_SYNC_HOST=http://localhost:3000
 **Production:**
 VITE_CLERK_PUBLISHABLE_KEY=pk_live_your_key_here
 VITE_API_BASE=https://your-backend.onrender.com
-VITE_SYNC_HOST=https://futuretracker.online
+VITE_SYNC_HOST=https://clerk.your-domain.com
 
 ### 3. Build the extension
 ```bash

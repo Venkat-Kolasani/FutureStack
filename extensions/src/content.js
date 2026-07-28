@@ -1,7 +1,8 @@
 import { getPageMetadata } from './lib/metadata.js';
 
-// Listen for messages from popup
-chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+// Optional legacy entry for message-based scraping.
+// Popup now uses chrome.scripting.executeScript({ func }) instead.
+chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (msg.type !== 'GET_PAGE_METADATA') return false;
 
   sendResponse(getPageMetadata());

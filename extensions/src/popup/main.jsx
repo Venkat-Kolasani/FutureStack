@@ -7,6 +7,7 @@ createRoot(document.getElementById('root')).render(
   <ClerkProvider
     publishableKey={CLERK_PUBLISHABLE_KEY}
     syncHost={SYNC_HOST}
+    __experimental_syncHostListener
   >
     <Popup />
   </ClerkProvider>

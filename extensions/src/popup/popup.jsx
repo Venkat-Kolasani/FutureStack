@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@clerk/chrome-extension';
 import { saveOpportunity } from '../lib/api.js';
+import { scrapePageInTab } from '../lib/metadata.js';
 
 const inputStyle = {
   width: '100%',
@@ -23,24 +24,30 @@ export default function Popup() {
   const { isSignedIn, isLoaded, getToken } = useAuth();
   const [data, setData] = useState({ title: '', description: '', link: '', category: 'internship', status: 'applied' });
   const [saveStatus, setSaveStatus] = useState('idle');
+  const [saveError, setSaveError] = useState('');
 
   useEffect(() => {
     chrome.tabs.query({ active: true, currentWindow: true }, async ([tab]) => {
       if (!tab?.id) return;
       const fallbackLink = tab.url || '';
       setData(prev => ({ ...prev, link: fallbackLink }));
+
       try {
-        await chrome.scripting.executeScript({
+        const results = await chrome.scripting.executeScript({
           target: { tabId: tab.id },
-          files: ['src/content.js'],
+          func: scrapePageInTab,
         });
+        const resp = results?.[0]?.result;
+        if (resp) {
+          setData(prev => ({
+            ...prev,
+            ...resp,
+            link: resp.link || fallbackLink,
+          }));
+        }
       } catch (e) {
-        console.warn('FutureTracker: could not inject content script', e);
+        console.warn('FutureTracker: could not read page metadata', e);
       }
-      chrome.tabs.sendMessage(tab.id, { type: 'GET_PAGE_METADATA' }, (resp) => {
-        if (chrome.runtime.lastError) return;
-        if (resp) setData(prev => ({ ...prev, ...resp, link: resp.link || fallbackLink }));
-      });
     });
   }, []);
 
@@ -73,8 +80,10 @@ export default function Popup() {
       return;
     }
     setSaveStatus('saving');
+    setSaveError('');
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10000);
+    // Render free tier can cold-start past 10s
+    const timeout = setTimeout(() => controller.abort(), 30000);
     try {
       const token = await getToken();
       if (!token) {
@@ -94,6 +103,7 @@ export default function Popup() {
       if (e.name === 'AbortError') {
         setSaveStatus('timeout');
       } else {
+        setSaveError(e?.message || 'Failed to save. Try again.');
         setSaveStatus('error');
       }
     } finally {
@@ -171,7 +181,7 @@ export default function Popup() {
       </button>
       <div aria-live="polite" style={{ marginTop: '10px', textAlign: 'center', fontSize: '13px' }}>
         {saveStatus === 'saved' && <p style={{ color: '#22c55e' }}>✓ Saved successfully!</p>}
-        {saveStatus === 'error' && <p style={{ color: '#ef4444' }}>Failed to save. Try again.</p>}
+        {saveStatus === 'error' && <p style={{ color: '#ef4444' }}>{saveError || 'Failed to save. Try again.'}</p>}
         {saveStatus === 'timeout' && <p style={{ color: '#ef4444' }}>Request timed out. Try again.</p>}
         {saveStatus === 'missing-title' && <p style={{ color: '#ef4444' }}>Please enter a title!</p>}
         {saveStatus === 'auth-error' && <p style={{ color: '#ef4444' }}>Not signed in!</p>}

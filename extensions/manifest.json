@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "FutureTracker Saver",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Save job/internship listings to FutureTracker",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApfGYzPfQaRSMaqmuGZbW52+EOzfivBbIvsNAUa/gajIZjxk66JD6pRnipQfJ19eMhUouEzKpUMcC8LN89QJkjWiR01AuFaRD8aIiG7gNKSJZKQIfEQ/MhOtU0p/3uPjlhA/llXu2INRQ+9g7RKsXM06kJO44ZGcNhciwID0okl2z0b1cF7QNpsGEprthOZzdhJzgsHG+bMp4rUJiHcIn/PY+DFz+0qwWxsz3hkX+uhV5jyzRjaQoyC4sK777/ehndsznWvDTSaIExjEcc8Zh9imHGFDFieeZqoH49VGYjacIXmHLduUy5bf/qDWfh1EdcjpWsCpWiPBX20wDNpnpEwIDAQAB",
   "action": {
@@ -12,10 +12,11 @@
   "permissions": ["activeTab", "storage", "scripting", "cookies"],
   "host_permissions": [
     "https://futuretracker.online/*",
+    "https://clerk.futuretracker.online/*",
+    "https://*.clerk.accounts.dev/*",
     "https://*.onrender.com/*",
     "http://localhost:3000/*",
-    "http://localhost:3001/*",
-    "https://*.clerk.accounts.dev/*"
+    "http://localhost:3001/*"
   ],
   "background": { "service_worker": "src/background.js", "type": "module" }
 }
