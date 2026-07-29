@@ -13,18 +13,55 @@ const STATUS_OPTIONS = [
   { value: 'ghosted', label: 'Ghosted' },
 ];
 
+const CATEGORY_OPTIONS = [
+  { value: 'internship', label: 'Internship' },
+  { value: 'hackathon', label: 'Hackathon' },
+];
+
+const CAMPUS_OPTIONS = [
+  { value: '', label: 'Not set' },
+  { value: 'on_campus', label: 'On-campus' },
+  { value: 'off_campus', label: 'Off-campus' },
+];
+
 function BrandHeader({ subtitle }) {
   return (
     <header className="popup-header">
-      <div className="brand">
-        <div className="brand-mark" aria-hidden="true">F</div>
-        <div className="brand-copy">
-          <h1 className="brand-title">FutureTracker</h1>
-          {subtitle ? <p className="brand-subtitle">{subtitle}</p> : null}
-        </div>
+      <div className="brand-mark" aria-hidden="true">F</div>
+      <div className="brand-copy">
+        <h1 className="brand-title">FutureTracker</h1>
+        {subtitle ? <p className="brand-subtitle">{subtitle}</p> : null}
       </div>
-      <span className="header-badge">Extension</span>
     </header>
+  );
+}
+
+function SegmentedControl({ label, name, value, options, onChange }) {
+  const groupId = useId();
+
+  return (
+    <fieldset className="field">
+      <legend className="field-label" id={groupId}>
+        {label}
+      </legend>
+      <div className="segmented" role="radiogroup" aria-labelledby={groupId}>
+        {options.map((option) => {
+          const selected = value === option.value;
+          return (
+            <button
+              key={`${name}-${option.value || 'unset'}`}
+              type="button"
+              role="radio"
+              aria-checked={selected}
+              className={`segment${selected ? ' is-active' : ''}`}
+              onClick={() => onChange(option.value)}
+            >
+              {option.label}
+            </button>
+          );
+        })}
+      </div>
+    </fieldset>
   );
 }
 
@@ -41,6 +78,27 @@ function StatusMessage({ status, message }) {
   );
 }
 
+function LinkIcon() {
+  return (
+    <svg className="link-chip-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path
+        d="M6.5 9.5a3 3 0 0 0 4.24.06l1.7-1.7a3 3 0 0 0-4.24-4.24L7.5 4.3"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M9.5 6.5a3 3 0 0 0-4.24-.06l-1.7 1.7a3 3 0 0 0 4.24 4.24L8.5 11.7"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export default function Popup() {
   const { isSignedIn, isLoaded, getToken } = useAuth();
   const [data, setData] = useState({
@@ -49,6 +107,7 @@ export default function Popup() {
     link: '',
     category: 'internship',
     status: 'applied',
+    campus_mode: '',
   });
   const [metadataState, setMetadataState] = useState('loading');
   const [saveStatus, setSaveStatus] = useState('idle');
@@ -75,7 +134,8 @@ export default function Popup() {
         if (resp) {
           setData((prev) => ({
             ...prev,
-            ...resp,
+            title: resp.title || prev.title,
+            description: resp.description || prev.description,
             link: resp.link || fallbackLink,
           }));
         }
@@ -101,6 +161,7 @@ export default function Popup() {
     if (!data.title.trim()) {
       setSaveStatus('missing-title');
       setSaveError('Please enter a title.');
+      document.getElementById('ft-title')?.focus();
       return;
     }
 
@@ -114,7 +175,7 @@ export default function Popup() {
       const token = await getToken();
       if (!token) {
         setSaveStatus('auth-error');
-        setSaveError('Your session expired. Sign in again at futuretracker.online.');
+        setSaveError('Session expired. Sign in again at futuretracker.online.');
         return;
       }
 
@@ -126,6 +187,7 @@ export default function Popup() {
           link: data.link,
           category: data.category,
           status: data.status,
+          campus_mode: data.campus_mode || null,
         },
         controller.signal,
       );
@@ -149,11 +211,11 @@ export default function Popup() {
   if (!isLoaded) {
     return (
       <div className="popup">
-        <BrandHeader subtitle="Preparing your workspace" />
+        <BrandHeader subtitle="Checking session…" />
         <div className="popup-center" role="status" aria-live="polite">
           <div className="spinner" aria-hidden="true" />
           <p className="state-title">Loading</p>
-          <p className="state-copy">Checking your FutureTracker session…</p>
+          <p className="state-copy">Connecting to your FutureTracker account.</p>
         </div>
       </div>
     );
@@ -162,11 +224,11 @@ export default function Popup() {
   if (!isSignedIn) {
     return (
       <div className="popup">
-        <BrandHeader subtitle="Save opportunities from any job page" />
+        <BrandHeader subtitle="Quick save from any job page" />
         <div className="popup-center">
-          <p className="state-title">Sign in to save</p>
+          <p className="state-title">Sign in required</p>
           <p className="state-copy">
-            Open FutureTracker in your browser, sign in once, then return here to capture this listing.
+            Sign in once on the website, then return here to save this listing.
           </p>
           <a
             className="btn btn-primary"
@@ -174,16 +236,17 @@ export default function Popup() {
             target="_blank"
             rel="noreferrer"
           >
-            Go to futuretracker.online
+            Open FutureTracker
           </a>
         </div>
       </div>
     );
   }
 
+  const dashboardPath = data.category === 'hackathon' ? '/hackathons' : '/internships';
   const statusMessage =
     saveStatus === 'saved'
-      ? 'Saved successfully. View it on your FutureTracker dashboard.'
+      ? 'Saved. It’s on your FutureTracker board.'
       : saveStatus === 'missing-title'
         ? saveError
         : saveStatus === 'auth-error' || saveStatus === 'timeout' || saveStatus === 'error'
@@ -193,11 +256,7 @@ export default function Popup() {
   return (
     <div className="popup">
       <BrandHeader
-        subtitle={
-          metadataState === 'loading'
-            ? 'Reading this page…'
-            : 'Capture this opportunity'
-        }
+        subtitle={metadataState === 'loading' ? 'Reading page…' : 'Save this opportunity'}
       />
 
       <main className="popup-main">
@@ -211,7 +270,7 @@ export default function Popup() {
               className="field-input"
               value={data.title}
               onChange={(e) => updateField('title', e.target.value)}
-              placeholder="e.g. React Intern at ABC Company"
+              placeholder="Role or opportunity title"
               required
               aria-required="true"
               aria-invalid={saveStatus === 'missing-title'}
@@ -227,57 +286,43 @@ export default function Popup() {
 
           <div className="field">
             <label className="field-label" htmlFor="ft-description">
-              Description
+              Description <span className="optional">(optional)</span>
             </label>
             <textarea
               id="ft-description"
               className="field-textarea"
               value={data.description}
               onChange={(e) => updateField('description', e.target.value)}
-              placeholder="Brief description of the opportunity"
+              placeholder="Short notes or summary"
             />
           </div>
 
           <div className="field">
-            <label className="field-label" htmlFor="ft-url">
-              Link
-            </label>
-            <input
-              id="ft-url"
-              className="field-input field-input-readonly"
-              value={data.link}
-              readOnly
-              title={data.link}
-              aria-readonly="true"
-            />
-            <p className="field-hint">Captured from the current tab.</p>
+            <span className="field-label" id="ft-url-label">
+              Page link
+            </span>
+            <div className="link-chip" aria-labelledby="ft-url-label" title={data.link || 'No URL'}>
+              <LinkIcon />
+              <span className="link-chip-text">{data.link || 'No URL detected'}</span>
+            </div>
+            <span className="sr-only">{data.link}</span>
           </div>
 
-          <fieldset className="field">
-            <legend className="field-label">Category</legend>
-            <div className="radio-group" role="radiogroup" aria-label="Opportunity category">
-              <label className="radio-option">
-                <input
-                  type="radio"
-                  name="category"
-                  value="internship"
-                  checked={data.category === 'internship'}
-                  onChange={(e) => updateField('category', e.target.value)}
-                />
-                Internship
-              </label>
-              <label className="radio-option">
-                <input
-                  type="radio"
-                  name="category"
-                  value="hackathon"
-                  checked={data.category === 'hackathon'}
-                  onChange={(e) => updateField('category', e.target.value)}
-                />
-                Hackathon
-              </label>
-            </div>
-          </fieldset>
+          <SegmentedControl
+            label="Category"
+            name="category"
+            value={data.category}
+            options={CATEGORY_OPTIONS}
+            onChange={(value) => updateField('category', value)}
+          />
+
+          <SegmentedControl
+            label="Campus type"
+            name="campus_mode"
+            value={data.campus_mode}
+            options={CAMPUS_OPTIONS}
+            onChange={(value) => updateField('campus_mode', value)}
+          />
 
           <div className="field">
             <label className="field-label" htmlFor="ft-status">
@@ -304,17 +349,17 @@ export default function Popup() {
               disabled={saveStatus === 'saving'}
               aria-busy={saveStatus === 'saving'}
             >
-              {saveStatus === 'saving' ? 'Saving…' : 'Save Opportunity'}
+              {saveStatus === 'saving' ? 'Saving…' : 'Save opportunity'}
             </button>
 
             {saveStatus === 'saved' ? (
               <a
                 className="btn btn-secondary"
-                href="https://futuretracker.online/internships"
+                href={`https://futuretracker.online${dashboardPath}`}
                 target="_blank"
                 rel="noreferrer"
               >
-                Open dashboard
+                View on dashboard
               </a>
             ) : null}
 

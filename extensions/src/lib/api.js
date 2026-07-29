@@ -27,6 +27,13 @@ function sanitizeLink(link) {
   }
 }
 
+function sanitizeCampusMode(campusMode) {
+  if (campusMode === 'on_campus' || campusMode === 'off_campus') {
+    return campusMode;
+  }
+  return null;
+}
+
 function sanitizePayload(payload) {
   const title = String(payload.title || '').trim().slice(0, MAX_TITLE);
   const description = String(payload.description || '').trim().slice(0, MAX_DESCRIPTION);
@@ -38,6 +45,7 @@ function sanitizePayload(payload) {
     link,
     category: payload.category || 'internship',
     status: payload.status || 'applied',
+    campus_mode: sanitizeCampusMode(payload.campus_mode),
   };
 }
 
