@@ -65,3 +65,12 @@ li { margin: 0.4rem 0; }
   color: var(--muted); font-size: 0.9rem;
 }
 .disclaimer { font-size: 0.9rem; color: var(--muted); }
+
+.crumbs {
+  display: flex; flex-wrap: wrap; gap: 0.35rem; align-items: center;
+  font-size: 0.875rem; color: var(--muted); margin: 0 0 1rem;
+}
+.crumbs a { color: var(--muted); text-decoration: none; }
+.crumbs a:hover { color: var(--fg); }
+.crumbs [aria-current="page"] { color: var(--fg); }
+.crumbs .sep { opacity: 0.55; }
