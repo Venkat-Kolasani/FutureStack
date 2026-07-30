@@ -9,11 +9,15 @@ const SEO = ({
   image = 'https://futuretracker.online/og-image.png',
   noindex = false,
 }) => {
-  const siteTitle = 'FutureTracker';
-  const fullTitle = title ? `${title} | ${siteTitle}` : `${siteTitle} - Track Internships, Hackathons & Job Applications`;
-  const defaultDescription = 'Free opportunity tracker for students and developers. Organize job applications, track internship stages, never miss hackathon deadlines.';
+  const siteTitle = 'FutureTracker.online';
+  const fullTitle = title
+    ? `${title} | ${siteTitle}`
+    : `${siteTitle} — Free Internship, Hackathon & Job Application Tracker`;
+  const defaultDescription =
+    'FutureTracker.online is a free career workspace for students and developers. Track internships round-by-round, manage hackathons, and organize job applications — not affiliated with futuretracker.com.';
   const metaDescription = description || defaultDescription;
-  const defaultKeywords = 'job tracker, internship tracker, hackathon tracker, application tracker, career tracker, job application organizer, student tools, developer tools';
+  const defaultKeywords =
+    'FutureTracker.online, internship tracker, hackathon tracker, job application tracker, student career tracker, interview round tracker, application kanban';
   const metaKeywords = keywords || defaultKeywords;
   const baseUrl = 'https://futuretracker.online';
   const canonicalUrl = canonical ? `${baseUrl}${canonical}` : baseUrl;
@@ -41,7 +45,7 @@ const SEO = ({
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={metaDescription} />
       <meta property="og:image" content={image} />
-      <meta property="og:site_name" content={siteTitle} />
+      <meta property="og:site_name" content="FutureTracker.online" />
       <meta property="og:locale" content="en_US" />
 
       {/* Twitter - Use base URL for noindex pages */}

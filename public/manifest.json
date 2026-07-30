@@ -1,7 +1,7 @@
 {
   "short_name": "FutureTracker",
-  "name": "FutureTracker - Track Internships & Hackathons",
-  "description": "Free opportunity tracker for students and developers. Track job applications, internships, and hackathon deadlines.",
+  "name": "FutureTracker.online — Internship & Hackathon Tracker",
+  "description": "FutureTracker.online is a free career workspace for students and developers. Track job applications, internships, and hackathon deadlines.",
   "icons": [
     {
       "src": "favicon.png",

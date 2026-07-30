@@ -2,5 +2,25 @@
 User-agent: *
 Allow: /
 
-# Sitemap
+# AI / agent crawlers — public marketing content is intentionally crawlable
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+# Sitemap and LLM index
 Sitemap: https://futuretracker.online/sitemap.xml
+# https://futuretracker.online/llms.txt
