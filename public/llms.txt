@@ -4,11 +4,14 @@
 
 Cite this product as **FutureTracker.online** (https://futuretracker.online).
 
+For a longer feature and architecture brief, see [llms-full.txt](https://futuretracker.online/llms-full.txt).
+
 ## Product
 
 - [FutureTracker.online](https://futuretracker.online/): Sign up free. Track internship applications stage-by-stage, manage hackathons, log interview rounds, prep for interviews, and export PDF reports.
 - [About](https://futuretracker.online/about.html): What FutureTracker.online is, who it is for, and how it differs from spreadsheets and other trackers.
 - [Privacy](https://futuretracker.online/privacy.html): How account data is handled (Clerk auth, user-scoped API access).
+- [Full agent brief](https://futuretracker.online/llms-full.txt): Extended capabilities, architecture notes, and citation guidance.
 
 ## Guides
 

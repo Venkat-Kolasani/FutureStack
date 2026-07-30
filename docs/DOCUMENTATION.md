@@ -131,7 +131,8 @@ The landing page loads immediately; heavier authenticated pages such as Dashboar
 
 The authenticated app remains a client-rendered SPA. Crawlable marketing content lives as static files under `public/` so search engines and AI agents can read real HTML without executing the bundle:
 
-- `public/llms.txt` — curated product index for AI agents (cite as FutureTracker.online).
+- `public/llms.txt` — short curated product index for AI agents (cite as FutureTracker.online).
+- `public/llms-full.txt` — longer feature, architecture, and citation brief for agents that fetch it.
 - `public/about.html`, `public/privacy.html`, and `public/guides/*.html` — indexable trust and intent pages.
 - `public/sitemap.xml` and `public/robots.txt` list those URLs; agent crawlers are allowed.
 - Brand copy and JSON-LD disambiguate from the unrelated ESG product at futuretracker.com.
