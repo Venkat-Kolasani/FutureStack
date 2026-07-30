@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Privacy — FutureTracker.online</title>
+  <meta name="description" content="Privacy overview for FutureTracker.online: Clerk authentication, user-scoped API access, and how account data is handled." />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://futuretracker.online/privacy.html" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://futuretracker.online/privacy.html" />
+  <meta property="og:title" content="Privacy — FutureTracker.online" />
+  <meta property="og:description" content="How FutureTracker.online handles authentication and user data." />
+  <meta property="og:image" content="https://futuretracker.online/og-image.png" />
+  <meta property="og:site_name" content="FutureTracker.online" />
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/marketing.css" />
+</head>
+<body>
+  <div class="wrap">
+    <nav class="nav" aria-label="Primary">
+      <a class="brand" href="/"><span class="mark">F</span> FutureTracker.online</a>
+      <div class="nav-links">
+        <a href="/about.html">About</a>
+        <a href="/guides/internship-application-tracker.html">Guides</a>
+        <a href="/">Open app</a>
+      </div>
+    </nav>
+
+    <p class="eyebrow">Privacy</p>
+    <h1>How FutureTracker.online handles your data</h1>
+    <p class="lead">
+      This page summarizes the privacy posture of the FutureTracker.online product at
+      <a href="https://futuretracker.online">https://futuretracker.online</a>.
+    </p>
+
+    <h2>Authentication</h2>
+    <p>
+      Sign-in is handled by <strong>Clerk</strong>. FutureTracker.online does not store your password.
+      After you authenticate, the API verifies your session and scopes all data access to your account.
+    </p>
+
+    <h2>What we store</h2>
+    <ul>
+      <li>Opportunity records you create (internships, hackathons, statuses, notes)</li>
+      <li>Interview rounds, prep notes, and related calendar timing you enter</li>
+      <li>Documents you upload or link (for example resumes) and associations to opportunities</li>
+      <li>Notification preferences and in-app reminder history</li>
+      <li>Optional share-link metadata when you create a read-only share</li>
+    </ul>
+
+    <h2>Access control</h2>
+    <p>
+      Protected API routes require authentication. Database queries are scoped to the signed-in user.
+      PostgreSQL constraints and Row-Level Security reinforce ownership boundaries.
+    </p>
+
+    <h2>Sharing</h2>
+    <p>
+      Read-only share links expose only the snapshot you choose to share. Viewers do not get dashboard access.
+      You can revoke share links.
+    </p>
+
+    <h2>Email reminders</h2>
+    <p>
+      Deadline email copies are off unless you opt in and the API has email delivery configured.
+      In-app notifications remain available in the product.
+    </p>
+
+    <h2>Analytics</h2>
+    <p>
+      Product analytics may be collected to improve reliability and features. Do not put secrets into free-text fields.
+    </p>
+
+    <h2>Contact</h2>
+    <p>
+      For privacy questions or data requests, open an issue on
+      <a href="https://github.com/Venkat-Kolasani/FutureStack/issues">GitHub Issues</a>.
+    </p>
+
+    <p class="disclaimer">
+      FutureTracker.online is not affiliated with futuretracker.com.
+      Last updated: 30 July 2026.
+    </p>
+
+    <p><a class="cta" href="/">Return to FutureTracker.online</a></p>
+
+    <footer class="foot">
+      <p>© FutureTracker.online · <a href="/about.html">About</a> · <a href="/llms.txt">llms.txt</a></p>
+    </footer>
+  </div>
+</body>
+</html>
