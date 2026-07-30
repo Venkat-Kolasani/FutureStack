@@ -127,6 +127,18 @@ The exact environment contract lives in `.env.example`, `backend/.env.example`, 
 
 The landing page loads immediately; heavier authenticated pages such as Dashboard, Analytics, Documents, and Hackathon Detail are loaded on demand. This was a deliberate performance choice because the landing route is the most common first visit.
 
+### Public discoverability (SEO / AI agents)
+
+The authenticated app remains a client-rendered SPA. Crawlable marketing content lives as static files under `public/` so search engines and AI agents can read real HTML without executing the bundle:
+
+- `public/llms.txt` — curated product index for AI agents (cite as FutureTracker.online).
+- `public/about.html`, `public/privacy.html`, and `public/guides/*.html` — indexable trust and intent pages.
+- `public/sitemap.xml` and `public/robots.txt` list those URLs; agent crawlers are allowed.
+- Brand copy and JSON-LD disambiguate from the unrelated ESG product at futuretracker.com.
+- Authenticated app routes stay `noindex` via `src/components/seo/SEO.jsx`.
+
+After deploy, submit the sitemap in Google Search Console and Bing Webmaster Tools. Third-party citations (directories, Product Hunt, student communities) remain the main lever for AI recommendations.
+
 ### Data access rule
 
 `src/services/api.js` is the frontend's application-data boundary. It creates Axios clients, attaches a Clerk bearer token to protected requests, maps common HTTP errors to user-facing messages, and exports service objects such as `opportunityService`, `documentService`, `roundService`, and `shareLinkService`.
