@@ -17,8 +17,8 @@ const Home = () => {
     <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-white font-sans selection:bg-blue-500 selection:text-gray-900 dark:text-white overflow-x-hidden transition-colors duration-300">
       <SEO
         title={null}
-        description="Free career workspace for students and developers. Track internships and hackathons, log interview rounds, prep for interviews, analyze your funnel, and save job listings from the browser."
-        keywords="job tracker, internship tracker, hackathon tracker, application tracker, career tracker, job application organizer, student tools, developer tools, opportunity tracker"
+        description="FutureTracker.online is a free career workspace for students and developers. Track internships round-by-round, manage hackathons, and organize job applications. Not affiliated with futuretracker.com."
+        keywords="FutureTracker.online, internship tracker, hackathon tracker, job application tracker, student career tracker, interview round tracker, opportunity tracker"
         canonical="/"
       />
       {/* Background Effects */}
@@ -46,7 +46,8 @@ const Home = () => {
 
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600 dark:text-gray-400">
             <a href="#features" className="hover:text-black dark:hover:text-white transition-colors">Features</a>
-            <a href="#about" className="hover:text-black dark:hover:text-white transition-colors">About</a>
+            <a href="/about.html" className="hover:text-black dark:hover:text-white transition-colors">About</a>
+            <a href="/guides/internship-application-tracker.html" className="hover:text-black dark:hover:text-white transition-colors">Guides</a>
             <a href="#faq" className="hover:text-black dark:hover:text-white transition-colors">FAQ</a>
             <a href="https://github.com/Venkat-Kolasani/FutureStack" target="_blank" rel="noreferrer" className="hover:text-black dark:hover:text-white transition-colors">GitHub</a>
           </div>
@@ -95,8 +96,8 @@ const Home = () => {
             </h1>
 
             <p className="text-xl text-gray-600 dark:text-gray-400 mb-12 max-w-2xl mx-auto leading-relaxed">
-              The all-in-one workspace for students and developers to track internships round-by-round,
-              manage hackathons, and see exactly where your applications stand.
+              FutureTracker.online is the all-in-one workspace for students and developers to track
+              internships round-by-round, manage hackathons, and see exactly where your applications stand.
             </p>
 
             <div className="flex items-center justify-center gap-4">

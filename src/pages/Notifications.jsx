@@ -68,7 +68,11 @@ const Notifications = () => {
 
   return (
     <>
-      <SEO title="Notifications | FutureTracker" description="Manage FutureTracker reminder notifications and email preferences." />
+      <SEO
+        title="Notifications"
+        description="Manage FutureTracker.online reminder notifications and email preferences."
+        noindex={true}
+      />
       <div className="min-h-screen bg-gray-50 dark:bg-black px-4 py-8 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-4xl space-y-6">
           <div>
