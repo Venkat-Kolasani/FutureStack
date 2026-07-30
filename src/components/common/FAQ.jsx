@@ -48,8 +48,8 @@ const FAQ = () => {
             answer: "Spreadsheets are static and manual. FutureTracker provides distinct advantages: Kanban boards for visual stages, automated deadlines on a calendar, analytics to track your success rate, and specialized tools for hackathon team management—all key features that spreadsheets lack out of the box."
         },
         {
-            question: "How does it help manage opportunities?",
-            answer: "We use a stage-based tracking system (Kanban) that moves applications from 'Wishlist' to 'Offer'. You can attach documents, set interview dates, and add notes to each opportunity. For hackathons, you can manage team members, submission requirements, and project milestones in a dedicated view."
+            question: "How does interview tracking work?",
+            answer: "For each internship you log rounds (OA, technical, HR, and more) with optional scheduled times. Cleared, pending, and rejected rounds update the parent opportunity automatically. The dashboard highlights upcoming interviews; hackathon submission deadlines appear on the calendar separately."
         },
         {
             question: "Is FutureTracker really free?",
@@ -57,7 +57,7 @@ const FAQ = () => {
         },
         {
             question: "How do I get started?",
-            answer: "Simply sign up with your email or social account. Once logged in, you can immediately start adding your target companies to the tracker or creating your first hackathon project. No credit card required."
+            answer: "Sign up with email or a social account, add your first internship or hackathon, or install the Chrome extension from the repository docs to save from a job listing tab. No credit card required."
         }
     ];
 

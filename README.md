@@ -6,22 +6,22 @@ FutureTracker is a full-stack career-application workspace for students and earl
 
 ## Project status
 
-The core product is actively implemented and includes opportunity tracking, a Chrome MV3 quick-save extension, protected sharing, interview workflows, document management, analytics, and a light/dark theme. The AI Resume Checker pipeline is implemented on the backend, but its frontend entry points are currently disabled behind a feature flag while rollout readiness is completed. See [the project status](docs/PROJECT_STATUS.md) for the authoritative feature matrix.
+The core product is actively implemented and includes opportunity tracking (with campus mode), a Chrome MV3 quick-save extension, protected sharing, interview workflows, document management, analytics, in-app notifications, and a light/dark theme. The AI Resume Checker pipeline is implemented on the backend, but its frontend entry points are currently disabled behind a feature flag while rollout readiness is completed. See [the project status](docs/PROJECT_STATUS.md) for the authoritative feature matrix.
 
 ## What it does
 
-- Track internships from application date to final outcome, and track hackathons through submission.
-- Capture the current page's title, Open Graph description, and URL in the Chrome extension, review the fields, and save the opportunity with the signed-in user's Clerk session.
+- Track internships from application date to final outcome, and track hackathons through submission. Filter and record on-campus vs off-campus internships.
+- Capture the current page's title, Open Graph description, URL, and campus mode in the Chrome extension, review the fields, and save the opportunity with the signed-in user's Clerk session.
 - Manage upcoming interview rounds and hackathon submission deadlines in the dashboard, calendar, Kanban board, and PDF reports.
 - Record multi-round interview progress, including an optional scheduled time, and keep the parent opportunity status in sync.
 - Prepare for internship interviews with research, questions, technical topics, STAR stories, and reflections.
 - Store resumes, cover letters, and external links; associate them with opportunities and receive local ATS-style guidance for PDF and DOCX uploads.
 - Collaborate on hackathons with account-backed owner/editor/viewer access, expiring single-use invites, an idempotent idea-vote model, tasks, and a submission checklist.
-- Generate durable in-app hackathon-submission reminders through a transactional outbox. The free GitHub Actions dispatcher is optional and best-effort, not a strict-timing service; an optional Resend channel is disabled by default and runs only in that dispatcher.
+- Generate durable in-app hackathon-submission reminders through a transactional outbox; read them on the Notifications page. The free GitHub Actions dispatcher is optional and best-effort. Optional Resend email copies are off until the user opts in and the API enables Resend.
 - Create revocable, optional-passcode, read-only share links without requiring viewers to sign in.
-- Explore funnel, hackathon-submission, status, and rejection insights.
+- Explore funnel, campus-mode, hackathon-submission, status, and rejection insights.
 
-The applied-date, scheduled-time, and hackathon-only reminder semantics are migration-gated. Apply [`20260716110000_rounds_drive_active_events.sql`](supabase/migrations/20260716110000_rounds_drive_active_events.sql) before deploying those API and frontend changes to an existing database.
+For databases created before July 2026, apply [`20260716110000_rounds_drive_active_events.sql`](supabase/migrations/20260716110000_rounds_drive_active_events.sql) (and later timestamped migrations in order) before relying on applied-date and round-driven calendar behavior.
 
 ## Stack
 
@@ -146,6 +146,7 @@ All endpoints except health checks and public-share reads require a Clerk bearer
 | AI resume checks | `/api/v1/documents/:id/ai-check` |
 | AI provider settings | `/api/v1/ai-settings` |
 | In-app notifications | `/api/v1/notifications` |
+| Notification preferences | `/api/v1/notification-preferences` |
 
 The complete endpoint list, request expectations, and curl examples are in [backend/README.md](backend/README.md).
 

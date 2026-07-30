@@ -1,6 +1,6 @@
 # FutureTracker: Interview Preparation Guide
 
-Last reviewed against the repository: July 20, 2026
+Last reviewed against the repository: July 30, 2026
 
 This is the single, interview-focused source of truth for FutureTracker. It explains what the product does, how the current implementation works, why the important choices were made, the trade-offs they create, and how the design would evolve for millions of users. It is deliberately candid: a strong interview answer distinguishes shipped behavior from a production-scale plan.
 
@@ -43,29 +43,25 @@ Career applications are fragmented across job boards, messages, spreadsheets, do
 
 | Capability | Current state | Important interview detail |
 | --- | --- | --- |
-| Opportunity CRUD, dashboard, calendar, reports, analytics | Available in the current release | The applied active-events migration uses `applied_on` for internships and reserves active `deadline` behavior for hackathon submissions; all mutations go through the Express API. |
-| Chrome MV3 opportunity saver | Implemented, configuration-gated | The popup injects metadata extraction only when opened, lets users review fields, obtains a Clerk token through the extension sync host, and posts through the supported legacy `POST /api/opportunities` compatibility mount. Manual loading plus Clerk allowed-origin and CORS configuration remain deployment steps. |
+| Opportunity CRUD, dashboard, calendar, reports, analytics | Available in the current release | Internships support `campus_mode` (on/off campus) in the API and UI filters. The active-events migration uses `applied_on` for internships and reserves active `deadline` behavior for hackathon submissions; all mutations go through the Express API. |
+| Chrome MV3 opportunity saver | Implemented, configuration-gated | The popup injects metadata extraction only when opened, lets users review fields (including campus mode), obtains a Clerk token through the extension sync host, and posts through the supported legacy `POST /api/opportunities` compatibility mount. Manual loading plus Clerk allowed-origin and CORS configuration remain deployment steps. |
 | Light and dark theme | Available | Theme preference is managed in React context and applied to Clerk appearance as well as app UI. |
 | Interview rounds and preparation | Available | Rounds are internship-only, synchronize derived parent fields server-side, and can hold an optional scheduled date/time. |
 | Documents and ATS hints | Available | ATS analysis is rule-based and runs in the browser; it is not an official ATS score. |
 | Hackathon collaboration | Implemented, migration-gated | Account-backed owner/editor/viewer memberships authorize workspaces; the name-only roster is display data. Idea votes are database-idempotent. |
 | Read-only share links | Available | A stored snapshot is shared, not live dashboard access. Links can expire, be revoked, and require a passcode. |
 | AI Resume Checker | Implemented, UI-gated | Backend pipeline, storage, provider settings, tests, and UI components exist; `AI_RESUME_CHECK_ENABLED` is currently `false`. |
-| Progress Logger | Schema migration ready | Tracks and daily logs, indexes, and Clerk-compatible RLS are defined; API and UI remain separate follow-on work. |
 | Hackathon submission reminders | Available, scheduler-configured | The outbox and leased dispatcher create durable in-app notifications. GitHub Actions is an optional best-effort free-tier scheduler; the active-events migration limits new reminder intent to hackathon submissions. |
 | Website notification center and optional Resend email reminders | Implemented, migration/config-gated | The bell page shows persisted website notifications and lets each user opt into email copies. A per-job delivery record and Resend idempotency key make retried sends safe. |
-| Tags, bulk import/export, advanced filters | Planned | These are intentionally not claimed as shipped features. |
+| Tags, bulk import/export, advanced filters, Progress Logger | Planned | These are intentionally not claimed as shipped features. Progress Logger tables exist in migration SQL only. |
 
-**Production rollout status (checked July 16, 2026):** `20260716110000_rounds_drive_active_events.sql` is applied to the connected Supabase project. Read-only verification confirmed the new columns, triggers, and index; it preserved all 71 opportunity rows, backfilled `applied_on` for the 59 internship rows, and cancelled only queued internship reminder jobs. The matching application code is published; optional email delivery remains off until the separate migration and backend configuration below are completed.
+**Production rollout status (checked July 30, 2026):** Active-events, notification-preference, and optional-email migrations live in `supabase/migrations/` and are applied to the maintainer's Supabase project. Matching API and frontend behavior is on the main branch. Deploy API and web together whenever a database gains new columns or triggers. Optional Resend email remains off until backend env vars and the user's Notifications opt-in are both set.
 
-### Active-events rollout order
+### Active-events verification (post-migration)
 
-1. Completed: apply [`20260716110000_rounds_drive_active_events.sql`](../supabase/migrations/20260716110000_rounds_drive_active_events.sql). It is additive: it adds the two scheduling columns and index, preserves existing internship close-date values, cancels only their queued/leased reminder jobs, and changes new event behavior through triggers.
-2. Completed: run `node scripts/verify-rounds-schema.js` from the repository root with `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` set in `backend/.env`. The verifier is read-only; it does not create test users, opportunities, or rounds.
-3. Pending: deploy the matching backend and frontend commit together. Deploying code first would query columns that do not exist yet.
-4. Pending: manually add an internship with **Applied on**, schedule a dated/time round, and confirm the dashboard/calendar show that round while a hackathon submission still appears as a deadline.
-
-If migration verification fails, do not deploy the application code. The additive columns and index can remain while the pre-migration application version continues to run; contact the maintainer before attempting a trigger rollback.
+1. Completed: apply [`20260716110000_rounds_drive_active_events.sql`](../supabase/migrations/20260716110000_rounds_drive_active_events.sql).
+2. Completed: run `node scripts/verify-rounds-schema.js` from the repository root with `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` set in `backend/.env`. The verifier is read-only.
+3. After deploy: add an internship with **Applied on**, schedule a dated/time round, and confirm the dashboard/calendar show that round while a hackathon submission still appears as a deadline.
 
 ## 3. System architecture
 

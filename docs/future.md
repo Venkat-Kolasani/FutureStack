@@ -1,6 +1,6 @@
 # FutureTracker Roadmap
 
-Last reviewed: July 15, 2026
+Last reviewed: July 30, 2026
 
 This roadmap contains future work only. For implemented and gated capabilities, see [PROJECT_STATUS.md](PROJECT_STATUS.md).
 
@@ -15,7 +15,7 @@ This roadmap contains future work only. For implemented and gated capabilities, 
 
 ### Career workflow
 
-- [ ] Deadline reminders with per-user timing preferences.
+- [ ] Per-user reminder timing and timezone preferences beyond the current hackathon 7-day/1-day outbox.
 - [ ] Timestamped notes and a follow-up timeline for each opportunity.
 - [ ] Tags, saved filters, bulk actions, and CSV/JSON import/export.
 - [ ] Calendar integration for interview scheduling.
