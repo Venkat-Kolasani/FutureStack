@@ -47,7 +47,6 @@ const Home = () => {
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600 dark:text-gray-400">
             <a href="#features" className="hover:text-black dark:hover:text-white transition-colors">Features</a>
             <a href="/about.html" className="hover:text-black dark:hover:text-white transition-colors">About</a>
-            <a href="/guides/internship-application-tracker.html" className="hover:text-black dark:hover:text-white transition-colors">Guides</a>
             <a href="#faq" className="hover:text-black dark:hover:text-white transition-colors">FAQ</a>
             <a href="https://github.com/Venkat-Kolasani/FutureStack" target="_blank" rel="noreferrer" className="hover:text-black dark:hover:text-white transition-colors">GitHub</a>
           </div>
