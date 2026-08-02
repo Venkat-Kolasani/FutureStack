@@ -8,8 +8,8 @@ app.listen(PORT, () => {
 ║                   FutureTracker API                        ║
 ╠═══════════════════════════════════════════════════════════╣
 ║  Server running on http://localhost:${PORT}                   ║
-║  Environment: ${(process.env.NODE_ENV || 'development').padEnd(42)}║
-║  CORS Origin: ${(process.env.CORS_ORIGIN || 'http://localhost:3000').substring(0, 42).padEnd(42)}║
+║  Environment: ${(process.env.NODE_ENV || 'development').padEnd(42, " ")}║
+║  CORS Origin: ${(process.env.CORS_ORIGIN || 'http://localhost:3000').substring(0, 42).padEnd(42, " ")}║
 ╚═══════════════════════════════════════════════════════════╝
   `);
 });
