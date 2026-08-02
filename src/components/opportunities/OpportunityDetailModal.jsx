@@ -399,7 +399,7 @@ const OpportunityDetailModal = ({
                                         </div>
                                     ) : documents.length > 0 ? (
                                         <div className="divide-y divide-white/10">
-                                            {documents.map((doc) => {
+                                            {(documents ?? []).map((doc) => {
                                                 const config = documentTypeConfig[doc.type] || documentTypeConfig.other;
                                                 const Icon = config.icon;
                                                 return (

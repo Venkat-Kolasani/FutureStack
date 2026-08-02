@@ -196,7 +196,7 @@ const TeamManagementPanel = ({
                 </div>
             ) : (
                 <div className="space-y-3">
-                    {members.map((member) => (
+                    {(members ?? []).map((member) => (
                         <div
                             key={member.id}
                             className="flex items-center justify-between bg-black/5 dark:bg-white/5 rounded-lg p-4 border border-white/5 hover:border-white/10 transition-colors"
