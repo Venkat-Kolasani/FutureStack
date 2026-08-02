@@ -73,48 +73,4 @@ export function useInterviewReminders() {
         const pref = localStorage.getItem(REMINDER_PREF_KEY);
         if (pref !== 'off' && typeof Notification !== 'undefined' && Notification.permission === 'default') {
           Notification.requestPermission().then((result) => {
-            localStorage.setItem(REMINDER_PREF_KEY, result === 'denied' ? 'off' : 'on');
-          });
-        }
-
-        timersRef.current.forEach(clearTimeout);
-        timersRef.current = [];
-
-        for (const round of rounds) {
-          const typeLabel = getRoundTypeLabel(round.roundType);
-          const baseBody = `${round.opportunityTitle} — Round ${round.roundNumber} (${typeLabel})`;
-
-          const dayBeforeId = `${round.id}:day_before`;
-          const morningId = `${round.id}:morning`;
-
-          const dayBeforeTimer = scheduleNotification({
-            id: dayBeforeId,
-            title: 'Interview tomorrow',
-            body: baseBody,
-            fireAt: getReminderFireTime(toDateKey(round.scheduledDate), 'day_before'),
-          });
-
-          const morningTimer = scheduleNotification({
-            id: morningId,
-            title: 'Interview today',
-            body: baseBody,
-            fireAt: getReminderFireTime(toDateKey(round.scheduledDate), 'morning'),
-          });
-
-          if (dayBeforeTimer) timersRef.current.push(dayBeforeTimer);
-          if (morningTimer) timersRef.current.push(morningTimer);
-        }
-      } catch (error) {
-        console.error('Interview reminders setup failed:', error);
-      }
-    };
-
-    setup();
-
-    return () => {
-      cancelled = true;
-      timersRef.current.forEach(clearTimeout);
-      timersRef.current = [];
-    };
-  }, [isSignedIn]);
-}
+          .catch(err => console.error(err))
