@@ -268,10 +268,10 @@ const OpportunityDetailModal = ({
                             </h2>
                             <div className="flex flex-wrap gap-2">
                                 <span className={`px-3 py-1 rounded-full text-xs font-medium ${categoryColors[displayOpportunity.category] || 'bg-gray-500/10 text-gray-600 dark:text-gray-400 border border-gray-500/20'}`}>
-                                    {displayOpportunity.category.charAt(0).toUpperCase() + displayOpportunity.category.slice(1)}
+                                    {displayOpportunity.category[0].toUpperCase() + displayOpportunity.category.slice(1)}
                                 </span>
                                 <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusColors[displayOpportunity.status] || 'bg-gray-500/10 text-gray-600 dark:text-gray-400 border border-gray-500/20'}`}>
-                                    {displayOpportunity.status.charAt(0).toUpperCase() + displayOpportunity.status.slice(1)}
+                                    {displayOpportunity.status[0].toUpperCase() + displayOpportunity.status.slice(1)}
                                 </span>
                                 {roundStats.total > 0 && (
                                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-purple-500/10 text-purple-300 border border-purple-500/20">

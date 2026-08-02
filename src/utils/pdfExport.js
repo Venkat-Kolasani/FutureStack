@@ -186,8 +186,8 @@ export const generatePDF = (
     doc.setFont('helvetica', 'normal');
 
     const details = [
-      `Category: ${opp.category.charAt(0).toUpperCase() + opp.category.slice(1)}`,
-      `Status: ${opp.status.charAt(0).toUpperCase() + opp.status.slice(1)}`,
+      `Category: ${opp.category[0].toUpperCase() + opp.category.slice(1)}`,
+      `Status: ${opp.status[0].toUpperCase() + opp.status.slice(1)}`,
     ];
 
     details.push(

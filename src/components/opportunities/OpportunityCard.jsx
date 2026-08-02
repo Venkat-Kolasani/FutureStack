@@ -128,7 +128,7 @@ const OpportunityCard = ({ opportunity, onView, onEdit, onDelete, onShare }) => 
               className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${statusColors[opportunity.status] || 'bg-gray-500/10 text-gray-600 dark:text-gray-400 border border-gray-500/20'
                 }`}
             >
-              {opportunity.status.charAt(0).toUpperCase() + opportunity.status.slice(1)}
+              {opportunity.status[0].toUpperCase() + opportunity.status.slice(1)}
             </span>
             {roundSummary && (
               <span
