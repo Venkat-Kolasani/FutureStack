@@ -291,7 +291,7 @@ const InterviewPrepDetail = () => {
                             </h1>
                             <div className="flex flex-wrap items-center gap-3">
                                 <span className={`text-sm px-3 py-1 rounded-full border ${statusColors[internship.status] || statusColors.applied}`}>
-                                    {internship.status?.charAt(0).toUpperCase() + internship.status?.slice(1)}
+                                    {internship.status?[0].toUpperCase() + internship.status?.slice(1)}
                                 </span>
                                 {internship.applied_on && (
                                     <span className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-1">

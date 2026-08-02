@@ -29,7 +29,7 @@ const STATUS_STYLES = {
 
 const statusLabel = (status) => {
   if (!status) return 'Hidden';
-  return status.charAt(0).toUpperCase() + status.slice(1);
+  return status[0].toUpperCase() + status.slice(1);
 };
 
 const formatSharedTimestamp = (value) => {

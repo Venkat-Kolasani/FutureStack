@@ -266,7 +266,7 @@ const CalendarPage = () => {
                           opp.status
                         )}`}
                       >
-                        {opp.status.charAt(0).toUpperCase() + opp.status.slice(1)}
+                        {opp.status[0].toUpperCase() + opp.status.slice(1)}
                       </span>
                     </div>
                   </div>
