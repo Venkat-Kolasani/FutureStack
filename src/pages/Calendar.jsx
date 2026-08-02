@@ -231,7 +231,7 @@ const CalendarPage = () => {
                   <FaLayerGroup />
                   Interview rounds
                 </h4>
-                {selectedDateRounds.map((round) => (
+                {(selectedDateRounds ?? []).map((round) => (
                   <div
                     key={round.id}
                     className="bg-purple-900/20 rounded-lg p-3 border border-purple-500/30"

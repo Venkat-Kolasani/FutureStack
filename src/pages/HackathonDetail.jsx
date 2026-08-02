@@ -21,7 +21,7 @@ import TaskBoard from '../components/hackathons/TaskBoard';
 import SubmissionChecklist from '../components/hackathons/SubmissionChecklist';
 import { opportunityService, hackathonService } from '../services/api';
 
-export const mergeIdeaVoteResponse = (ideas, updated) => ideas.map((currentIdea) => (
+export const mergeIdeaVoteResponse = (ideas, updated) => (ideas ?? []).map((currentIdea) => (
     currentIdea.id === updated.id ? { ...currentIdea, ...updated } : currentIdea
 ));
 

@@ -160,7 +160,7 @@ const InterviewPrepDetail = () => {
     const handleUpdateQuestion = async (questionId, data) => {
         try {
             const updated = await interviewPrepService.updateQuestion(id, questionId, data);
-            setQuestions(questions.map(q => q.id === questionId ? updated : q));
+            setQuestions((questions ?? []).map(q => q.id === questionId ? updated : q));
         } catch (error) {
             console.error('Error updating question:', error);
             toast.error(error.response?.data?.error || 'Failed to update question. Please try again.');

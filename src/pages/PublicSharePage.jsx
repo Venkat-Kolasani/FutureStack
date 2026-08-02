@@ -264,7 +264,7 @@ const PublicSharePage = () => {
           </div>
 
           <div className="mt-8 grid grid-cols-2 gap-3 lg:grid-cols-4">
-            {heroStats.map((stat) => (
+            {(heroStats ?? []).map((stat) => (
               <div key={stat.label} className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-black/30 p-4">
                 <p className="text-sm text-gray-600 dark:text-gray-400">{stat.label}</p>
                 <p className={`mt-2 text-3xl font-bold ${stat.accent}`}>{stat.value}</p>
