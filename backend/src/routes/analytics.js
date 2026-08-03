@@ -5,7 +5,7 @@ const { buildInterviewPipelineAnalytics } = require('../lib/interviewPipelineAna
 const router = express.Router();
 
 // Helper to avoid toFixed + parseFloat conversions
-const roundToOneDecimal = (num) => Math.round(num * 10) / 10;
+const roundToOneDecimal = (num) => Math.round(num * 10 + Number.EPSILON) / 10;
 
 const toLocalDateKey = (value) => {
     if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
