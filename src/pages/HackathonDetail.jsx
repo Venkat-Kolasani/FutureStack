@@ -450,3 +450,5 @@ const HackathonDetail = () => {
 };
 
 export default HackathonDetail;
+
+.catch(err => console.error("Promise.all failed:", err));

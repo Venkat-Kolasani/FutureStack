@@ -190,3 +190,5 @@ async function enrichWithGithub(structuredResume, _llmOptions) {
 }
 
 module.exports = { enrichWithGithub };
+
+.catch(err => console.error("Promise.all failed:", err));

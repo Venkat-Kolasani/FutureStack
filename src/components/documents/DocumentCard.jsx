@@ -189,7 +189,7 @@ const DocumentCard = ({
                     isOpen={isAtsOpen}
                     onToggle={() => setIsAtsOpen(open => !open)}
                     isAnalyzing={isCheckingAts}
-                    showEmptyState={atsScore == null}
+                    showEmptyState={atsScore === null}
                 />
             )}
 
