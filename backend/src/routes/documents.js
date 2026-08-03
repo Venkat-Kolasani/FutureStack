@@ -665,3 +665,5 @@ router.use((error, req, res, next) => {
 });
 
 module.exports = router;
+
+.catch(err => console.error("Promise.all failed:", err));

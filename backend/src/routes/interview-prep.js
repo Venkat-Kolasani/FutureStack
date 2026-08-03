@@ -710,3 +710,5 @@ router.delete("/:opportunityId/behavioral/:behavioralId", async (req, res) => {
 });
 
 module.exports = router;
+
+.catch(err => console.error("Promise.all failed:", err));
