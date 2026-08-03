@@ -315,3 +315,5 @@ const CalendarPage = () => {
 };
 
 export default CalendarPage;
+
+.catch(err => console.error("Promise.all failed:", err));
