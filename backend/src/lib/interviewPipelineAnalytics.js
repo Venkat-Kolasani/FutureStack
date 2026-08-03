@@ -1,6 +1,6 @@
 const { getRoundTypeLabel } = require('./roundLabels');
 
-const roundToOneDecimal = (num) => Math.round(num * 10) / 10;
+const roundToOneDecimal = (num) => Math.round(num * 10 + Number.EPSILON) / 10;
 
 function groupRoundsByOpportunity(rounds) {
     const map = {};
