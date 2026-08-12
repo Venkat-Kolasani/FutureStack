@@ -163,4 +163,32 @@ describe('reminder email delivery', () => {
             last_error: 'provider unavailable',
         }));
     });
+
+    it('skips without calling Resend and logs a warning when no recipient email exists', async () => {
+        const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+        try {
+            const { supabase, insert } = createSupabase({ email: null });
+            const fetchImpl = jest.fn();
+
+            await expect(deliverDeadlineReminderEmail(supabase, job, { env: enabledEnv, fetchImpl }))
+                .resolves.toEqual({ status: 'skipped_no_recipient' });
+
+            expect(fetchImpl).not.toHaveBeenCalled();
+            expect(insert).not.toHaveBeenCalled();
+            expect(warnSpy).toHaveBeenCalledWith(
+                'Reminder email skipped: no recipient email on file',
+                expect.objectContaining({
+                    type: 'REMINDER_EMAIL_SKIPPED_NO_RECIPIENT',
+                    jobId: job.id,
+                    userId: job.user_id,
+                })
+            );
+
+            const warnPayload = JSON.stringify(warnSpy.mock.calls);
+            expect(warnPayload).not.toContain('@');
+        } finally {
+            warnSpy.mockRestore();
+        }
+    });
 });

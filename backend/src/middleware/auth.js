@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const { clerkClient } = require('@clerk/express');
 const { supabase } = require('../lib/supabase');
 
 // In-memory cache for user IDs to avoid database lookups on every request
@@ -186,7 +187,7 @@ async function ensureUserExists(auth) {
     // Try to find existing user
     const { data: existingUser, error: selectError } = await supabase
         .from('users')
-        .select('id')
+        .select('id, email')
         .eq('clerk_id', userId)
         .maybeSingle();
 
@@ -196,15 +197,37 @@ async function ensureUserExists(auth) {
     }
 
     if (existingUser) {
+        // Backfill a missing email from Clerk so reminder delivery can later
+        // find a recipient. Failure here must never block authentication.
+        if (!existingUser.email) {
+            const clerkEmail = await fetchPrimaryEmailFromClerk(userId);
+            if (clerkEmail) {
+                const { error: updateError } = await supabase
+                    .from('users')
+                    .update({ email: clerkEmail })
+                    .eq('id', existingUser.id);
+
+                if (updateError) {
+                    console.error('Auth: Supabase email backfill error:', {
+                        type: 'AUTH_EMAIL_BACKFILL_ERROR',
+                        message: updateError.message,
+                    });
+                }
+            }
+        }
+
         userCache.set(userId, { internalUserId: existingUser.id, timestamp: Date.now() });
         auth.internalUserId = existingUser.id;
         return;
     }
 
-    // User doesn't exist, create them
+    // User doesn't exist, create them. Prefer the JWT-derived email when the
+    // session token included one; otherwise resolve it from Clerk so reminder
+    // delivery can find a recipient.
+    const resolvedEmail = email || await fetchPrimaryEmailFromClerk(userId);
     const { data: newUser, error: insertError } = await supabase
         .from('users')
-        .insert({ clerk_id: userId, email: email || null })
+        .insert({ clerk_id: userId, email: resolvedEmail || null })
         .select('id')
         .single();
 
@@ -229,4 +252,35 @@ async function ensureUserExists(auth) {
     auth.internalUserId = newUser.id;
 }
 
-module.exports = { requireAuth };
+/**
+ * Fetch the user's primary email address from Clerk's Backend API.
+ *
+ * Returns null when the email cannot be resolved. Never throws: an email
+ * lookup failure must not prevent authentication.
+ *
+ * Logs only safe identifiers and error information - never email addresses,
+ * secrets, tokens, or service-role credentials.
+ */
+async function fetchPrimaryEmailFromClerk(clerkId) {
+    try {
+        const user = await clerkClient.users.getUser(clerkId);
+        const emailAddresses = user?.emailAddresses || [];
+        const primary = emailAddresses.find((entry) => entry.id === user.primaryEmailAddressId)
+            || emailAddresses[0];
+
+        return primary?.emailAddress || null;
+    } catch (error) {
+        console.error('Auth: Clerk email lookup failed:', {
+            type: 'CLERK_EMAIL_LOOKUP_ERROR',
+            clerkId,
+            message: error?.message,
+        });
+        return null;
+    }
+}
+
+module.exports = {
+    ensureUserExists,
+    fetchPrimaryEmailFromClerk,
+    requireAuth,
+};
