@@ -159,7 +159,14 @@ async function deliverDeadlineReminderEmail(supabase, job, {
     }
 
     const recipientEmail = await findUserEmail(supabase, job.user_id);
-    if (!recipientEmail) return { status: 'skipped_no_recipient' };
+    if (!recipientEmail) {
+        console.warn('Reminder email skipped: no recipient email on file', {
+            type: 'REMINDER_EMAIL_SKIPPED_NO_RECIPIENT',
+            jobId: job.id,
+            userId: job.user_id,
+        });
+        return { status: 'skipped_no_recipient' };
+    }
 
     let delivery = await findEmailDelivery(supabase, job.id);
     if (delivery?.state === 'sent') return { status: 'already_sent' };
