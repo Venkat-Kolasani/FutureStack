@@ -11,6 +11,7 @@ import Navbar from './components/common/Navbar';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import LoadingSpinner from './components/common/LoadingSpinner';
+import ScrollToTop from './components/common/ScrollToTop';
 import Home from './pages/Home'; // Landing page - load immediately for best UX
 
 // Context
@@ -175,7 +176,8 @@ function AppContent() {
         </Suspense>
       </main>
 
-      <ToastContainer
+      <ScrollToTop />
+        <ToastContainer
         position="top-right"
         autoClose={3000}
         hideProgressBar={false}
