@@ -15,6 +15,8 @@ describe('HeatmapGrid', () => {
     renderHeatmap();
 
     expect(screen.getByRole('grid', { name: 'Preparation activity for the past year' })).toBeInTheDocument();
+    expect(screen.getByRole('grid')).toHaveClass('w-full');
+    expect(screen.getByRole('grid')).not.toHaveClass('overflow-x-auto');
     expect(screen.getAllByRole('gridcell')).toHaveLength(365);
     expect(screen.getByText('Less')).toBeInTheDocument();
     expect(screen.getByText('More')).toBeInTheDocument();

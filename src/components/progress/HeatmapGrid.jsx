@@ -8,8 +8,7 @@ import {
   HEATMAP_WEEKDAY_LABELS,
 } from '../../utils/heatmapHelpers';
 
-const CELL_SIZE = 13;
-const CELL_GAP = 3;
+const CELL_GAP = 2;
 const MONTH_ROW = 18;
 const WEEKDAY_COL = 28;
 
@@ -22,7 +21,7 @@ const findCellPosition = (weeks, date) => {
 };
 
 const cellGlow = (day) => (
-  day.intensity >= 3 ? '0 0 10px rgba(62, 230, 162, 0.28)' : undefined
+  day.intensity >= 3 ? '0 0 8px rgba(62, 230, 162, 0.28)' : undefined
 );
 
 const HeatmapGrid = ({
@@ -33,25 +32,11 @@ const HeatmapGrid = ({
   className = '',
 }) => {
   const grid = useMemo(() => buildHeatmapGrid(data, { today }), [data, today]);
-  const scrollRef = useRef(null);
   const cellRefs = useRef(new Map());
   const [tooltip, setTooltip] = useState(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [focusedDate, setFocusedDate] = useState(selectedDate || grid.today);
-  const gridWidth = grid.weeks.length * CELL_SIZE + Math.max(0, grid.weeks.length - 1) * CELL_GAP;
+  const weekCount = grid.weeks.length;
   const rangeLabel = formatHeatmapRange(grid.rangeStart, grid.rangeEnd);
-
-  const updateScrollState = () => {
-    const node = scrollRef.current;
-    if (!node) return;
-    setCanScrollLeft(node.scrollLeft > 4);
-  };
-
-  useEffect(() => {
-    if (!scrollRef.current) return;
-    scrollRef.current.scrollLeft = scrollRef.current.scrollWidth;
-    updateScrollState();
-  }, [grid.weeks.length]);
 
   useEffect(() => {
     if (selectedDate) setFocusedDate(selectedDate);
@@ -131,14 +116,22 @@ const HeatmapGrid = ({
 
   const hideTooltip = () => setTooltip(null);
 
-  const renderCell = (day) => {
+  const cellStyle = (weekIndex, dayIndex) => ({
+    gridColumn: weekIndex + 2,
+    gridRow: dayIndex + 2,
+    aspectRatio: '1 / 1',
+    width: '100%',
+    minWidth: 0,
+  });
+
+  const renderCell = (day, weekIndex, dayIndex) => {
     if (day.isPadding) {
       return (
         <span
           key={day.date}
           aria-hidden="true"
-          className="block rounded-[3px]"
-          style={{ width: CELL_SIZE, height: CELL_SIZE }}
+          className="block min-w-0 rounded-[2px]"
+          style={cellStyle(weekIndex, dayIndex)}
         />
       );
     }
@@ -160,16 +153,15 @@ const HeatmapGrid = ({
         aria-label={getCellAriaLabel(day)}
         aria-current={day.isToday ? 'date' : undefined}
         aria-selected={isSelected}
-        className={`relative block rounded-[3px] ${intensityClass} motion-safe:transition-transform motion-safe:duration-150 motion-safe:hover:z-10 motion-safe:hover:scale-110 focus:outline-none ${
+        className={`relative block min-w-0 rounded-[2px] ${intensityClass} motion-safe:transition-transform motion-safe:duration-150 motion-safe:hover:z-10 motion-safe:hover:scale-105 focus:outline-none ${
           isSelected
-            ? 'z-[2] ring-2 ring-teal-600 ring-offset-2 ring-offset-white dark:ring-teal-300 dark:ring-offset-[#0A0A0A]'
+            ? 'z-[2] ring-2 ring-inset ring-teal-700 dark:ring-teal-200'
             : day.isToday
-              ? 'ring-1 ring-gray-900 dark:ring-white/80'
-              : 'ring-1 ring-black/[0.04] dark:ring-white/[0.06]'
+              ? 'ring-1 ring-inset ring-gray-900 dark:ring-white/80'
+              : 'ring-1 ring-inset ring-black/[0.04] dark:ring-white/[0.06]'
         }`}
         style={{
-          width: CELL_SIZE,
-          height: CELL_SIZE,
+          ...cellStyle(weekIndex, dayIndex),
           boxShadow: !isSelected ? cellGlow(day) : undefined,
         }}
         onClick={() => onDaySelect?.(day.date)}
@@ -187,62 +179,43 @@ const HeatmapGrid = ({
 
   return (
     <div className={className}>
-      <div className="flex">
-        <div
-          className="flex shrink-0 flex-col text-right text-[10px] font-medium tracking-wide text-gray-500 dark:text-gray-500"
-          style={{ width: WEEKDAY_COL, paddingTop: MONTH_ROW, paddingRight: 8 }}
-          aria-hidden="true"
-        >
-          {HEATMAP_WEEKDAY_LABELS.map((label, index) => (
+      <div
+        role="grid"
+        aria-label="Preparation activity for the past year"
+        className="grid w-full"
+        style={{
+          gridTemplateColumns: `${WEEKDAY_COL}px repeat(${weekCount}, minmax(0, 1fr))`,
+          gridTemplateRows: `${MONTH_ROW}px repeat(7, minmax(0, auto))`,
+          columnGap: CELL_GAP,
+          rowGap: CELL_GAP,
+        }}
+      >
+        {grid.monthLabels.map((label, weekIndex) => (
+          label ? (
             <span
-              key={`weekday-${index}`}
-              className="flex items-center justify-end"
-              style={{ height: CELL_SIZE, marginBottom: index === 6 ? 0 : CELL_GAP }}
+              key={`month-${label}-${weekIndex}`}
+              className="z-[1] whitespace-nowrap text-[11px] font-medium tracking-wide text-gray-500 dark:text-gray-400"
+              style={{ gridColumn: weekIndex + 2, gridRow: 1 }}
             >
               {label}
             </span>
-          ))}
-        </div>
+          ) : null
+        ))}
 
-        <div className="relative min-w-0 flex-1">
-          {canScrollLeft && (
-            <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-white dark:from-[#0A0A0A]" />
-          )}
-          <div
-            ref={scrollRef}
-            className="overflow-x-auto pb-1 [scrollbar-width:thin]"
-            onScroll={updateScrollState}
+        {HEATMAP_WEEKDAY_LABELS.map((label, dayIndex) => (
+          <span
+            key={`weekday-${dayIndex}`}
+            className="flex items-center justify-end pr-1 text-[10px] font-medium tracking-wide text-gray-500"
+            style={{ gridColumn: 1, gridRow: dayIndex + 2 }}
+            aria-hidden="true"
           >
-            <div role="grid" aria-label="Preparation activity for the past year" style={{ width: gridWidth }}>
-              <div className="relative" style={{ height: MONTH_ROW }}>
-                {grid.monthLabels.map((label, index) => (
-                  label ? (
-                    <span
-                      key={`month-${label}-${index}`}
-                      className="absolute top-0 text-[11px] font-medium tracking-wide text-gray-500 dark:text-gray-400"
-                      style={{ left: index * (CELL_SIZE + CELL_GAP) }}
-                    >
-                      {label}
-                    </span>
-                  ) : null
-                ))}
-              </div>
+            {label}
+          </span>
+        ))}
 
-              <div className="flex flex-col" style={{ gap: CELL_GAP }}>
-                {HEATMAP_WEEKDAY_LABELS.map((_, dayIndex) => (
-                  <div
-                    key={`row-${dayIndex}`}
-                    role="row"
-                    className="flex"
-                    style={{ gap: CELL_GAP }}
-                  >
-                    {grid.weeks.map((week) => renderCell(week[dayIndex]))}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
+        {grid.weeks.map((week, weekIndex) => (
+          week.map((day, dayIndex) => renderCell(day, weekIndex, dayIndex))
+        ))}
       </div>
 
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-[11px] text-gray-500 dark:text-gray-400">
@@ -251,7 +224,7 @@ const HeatmapGrid = ({
           {HEATMAP_INTENSITY_CLASSES.map((tone, level) => (
             <span
               key={`legend-${level}`}
-              className={`h-[11px] w-[11px] rounded-[3px] ${tone}`}
+              className={`h-[11px] w-[11px] rounded-[2px] ${tone}`}
               style={{ boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.06)' }}
               aria-hidden="true"
             />
