@@ -21,7 +21,7 @@ Email is a user-facing notification channel, not an administrator's choice. A gl
 
 ## Decision
 
-Use a `user_notification_preferences` row keyed by the internal user ID. The `deadline_email_enabled` setting defaults to `false`; each user can turn it on or off from FutureStack's notification page. The delivery worker checks this preference after confirming that the provider is configured and before reading or sending to the account email.
+Use a `user_notification_preferences` row keyed by the internal user ID. The `deadline_email_enabled` setting defaults to `false`; each user can turn it on or off from FutureStack's notification page. The delivery worker checks this preference after confirming that the provider is configured and before resolving the recipient from `users.email` or Clerk.
 
 The Resend configuration remains a server-side capability gate, not the user's preference. If a user has opted in while the provider is not configured, FutureStack keeps their stored preference and continues its in-app notification baseline until the provider becomes available.
 

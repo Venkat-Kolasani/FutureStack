@@ -36,3 +36,9 @@ The migration must be applied before setting `REMINDER_EMAILS_ENABLED=true`; oth
 ## Metrics and revisit threshold
 
 Track email delivery failures, retry/dead-job counts, provider response latency, and the daily email volume. Add Resend delivery webhooks, per-user notification preferences, and a durable provider-event audit when users rely on email for time-sensitive workflows or the free-plan daily cap becomes a constraint.
+
+## Amendment (2026-08-21): recipient resolution
+
+Clerk session JWTs used by `requireAuth` do not include an email claim unless custom session tokens are configured. First-login rows therefore often have `users.email = null`. Email reminders exist for users who are not in the app, so resolving the address only during login still misses send time.
+
+The leased dispatcher now resolves the recipient when it delivers: use a valid stored `users.email`, otherwise fetch the Clerk primary email with `CLERK_SECRET_KEY`, backfill the user row, and send. A Clerk outage retries with the existing outbox. A user with no Clerk email remains a successful skip for the in-app notification. Login-time backfill is a cache warmer, not the delivery source of truth.

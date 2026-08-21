@@ -32,6 +32,7 @@ export REACT_APP_API_URL=http://localhost:3001/api/v1
 | `src/utils/*` | `npm test -- <helper-name>` (e.g. `npm test -- dateHelpers`) |
 | `src/components/*` or `src/pages/*` | `npm run test:ci` + manual smoke steps below |
 | `backend/src/routes/*` or `backend/src/middleware/*` | `cd backend && npm test` — **add or update tests** in `backend/tests/` |
+| Reminder email (`backend/src/lib/reminderEmail.js`, `clerkEmail.js`, auth email backfill) | `cd backend && npm test -- reminderEmail clerkEmail auth` |
 | `backend/src/lib/validation.js` | `cd backend && npm test -- validation` |
 | `docs/*-migration.sql` or `supabase/migrations/*` | Manual: run migration on a dev Supabase project; document steps in the PR |
 | Dashboard share links (`share_links`, `/share/:token`, `shareLinkService`) | `cd backend && npm test -- share-links`, `npm run test:ci`, `npm run build`, manual flow in [`docs/share-links.md`](share-links.md#manual-verification) |
@@ -127,6 +128,19 @@ npm test -- atsScorer
 5. While signed in at the sync host, open a public opportunity page, open the popup, review the prefilled title/description/URL, save, and confirm the opportunity in the dashboard.
 
 See [`extensions/readme.md`](../extensions/readme.md) for the complete setup and example listing pages.
+
+### Optional Resend deadline emails (if you changed reminder delivery)
+
+1. Confirm `GET /api/v1/health/deps` shows `checks.reminderEmail.enabled: true` after setting `REMINDER_EMAILS_ENABLED`, `RESEND_API_KEY`, and `REMINDER_EMAIL_FROM`.
+2. Sign in, open **Notifications**, and turn on **Email deadline reminders**.
+3. Create or update a hackathon whose submission date is 1 or 7 days away so the outbox enqueues a job.
+4. Dispatch with `POST /api/v1/internal/jobs/dispatch` using `JOB_DISPATCH_TOKEN`, or wait for the GitHub Actions workflow.
+5. Confirm a Resend message arrives at the Clerk primary email. If `users.email` was empty, the send should backfill it and still deliver.
+6. A missing Clerk email should leave the in-app notification in place and log `REMINDER_EMAIL_SKIPPED_NO_RECIPIENT` without printing the address.
+
+```bash
+cd backend && npm test -- reminderEmail clerkEmail auth
+```
 
 ## What CI runs
 

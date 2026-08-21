@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { supabase } = require('../lib/supabase');
+const { normalizeEmail, tryFetchPrimaryEmailFromClerk } = require('../lib/clerkEmail');
 
 // In-memory cache for user IDs to avoid database lookups on every request
 // Key: clerk_id, Value: { internalUserId, timestamp }
@@ -125,7 +126,7 @@ const requireAuth = async (req, res, next) => {
         req.auth = {
             userId: payload.sub,
             sessionId: payload.sid,
-            email: payload.email || payload.primary_email
+            email: payload.email || payload.primary_email || payload.email_address
         };
 
         // Get or create user in Supabase (with caching)
@@ -167,6 +168,25 @@ const requireAuth = async (req, res, next) => {
     }
 };
 
+async function persistEmailIfMissing(userRow, clerkId, jwtEmail) {
+    if (normalizeEmail(userRow?.email)) return;
+
+    const resolvedEmail = normalizeEmail(jwtEmail) || await tryFetchPrimaryEmailFromClerk(clerkId);
+    if (!resolvedEmail) return;
+
+    const { error } = await supabase
+        .from('users')
+        .update({ email: resolvedEmail })
+        .eq('id', userRow.id);
+
+    if (error) {
+        console.error('Auth: Supabase email backfill error:', {
+            type: 'AUTH_EMAIL_BACKFILL_ERROR',
+            message: error.message,
+        });
+    }
+}
+
 /**
  * Ensure user exists in Supabase (create on first login)
  * Uses caching to avoid database lookups on every request
@@ -186,7 +206,7 @@ async function ensureUserExists(auth) {
     // Try to find existing user
     const { data: existingUser, error: selectError } = await supabase
         .from('users')
-        .select('id')
+        .select('id, email')
         .eq('clerk_id', userId)
         .maybeSingle();
 
@@ -196,16 +216,19 @@ async function ensureUserExists(auth) {
     }
 
     if (existingUser) {
+        await persistEmailIfMissing(existingUser, userId, email);
         userCache.set(userId, { internalUserId: existingUser.id, timestamp: Date.now() });
         auth.internalUserId = existingUser.id;
         return;
     }
 
-    // User doesn't exist, create them
+    // Clerk session JWTs do not include email unless custom claims are set.
+    // Resolve it from Clerk so reminder delivery has a recipient later.
+    const resolvedEmail = normalizeEmail(email) || await tryFetchPrimaryEmailFromClerk(userId);
     const { data: newUser, error: insertError } = await supabase
         .from('users')
-        .insert({ clerk_id: userId, email: email || null })
-        .select('id')
+        .insert({ clerk_id: userId, email: resolvedEmail || null })
+        .select('id, email')
         .single();
 
     if (insertError) {
@@ -213,10 +236,11 @@ async function ensureUserExists(auth) {
         if (insertError.code === '23505') {
             const { data: raceUser } = await supabase
                 .from('users')
-                .select('id')
+                .select('id, email')
                 .eq('clerk_id', userId)
                 .single();
             if (raceUser) {
+                await persistEmailIfMissing(raceUser, userId, email);
                 userCache.set(userId, { internalUserId: raceUser.id, timestamp: Date.now() });
                 auth.internalUserId = raceUser.id;
                 return;
@@ -229,4 +253,4 @@ async function ensureUserExists(auth) {
     auth.internalUserId = newUser.id;
 }
 
-module.exports = { requireAuth };
+module.exports = { ensureUserExists, requireAuth };

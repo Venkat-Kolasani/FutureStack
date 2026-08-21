@@ -112,8 +112,9 @@ Each migration enables and scopes Row-Level Security policies. Review them befor
 
 1. Confirm [`20260716120000_optional_email_reminders.sql`](supabase/migrations/20260716120000_optional_email_reminders.sql) and [`20260716123000_user_notification_preferences.sql`](supabase/migrations/20260716123000_user_notification_preferences.sql) were applied through the timestamp-ordered migration step above.
 2. In the [Resend API Keys dashboard](https://resend.com/api-keys), select **Create API Key**, name it `FutureStack Render production`, choose **Sending access**, and restrict it to the verified sender domain. Copy the `re_...` value immediately: Resend shows it only once.
-3. In Render, add `REMINDER_EMAILS_ENABLED=true`, `RESEND_API_KEY`, and `REMINDER_EMAIL_FROM=FutureStack <reminders@your-verified-domain>`. Redeploy the API. Do not add these to Vercel.
+3. In Render, add `REMINDER_EMAILS_ENABLED=true`, `RESEND_API_KEY`, and `REMINDER_EMAIL_FROM=FutureStack <reminders@your-verified-domain>`. Redeploy the API. Do not add these to Vercel. Confirm `checks.reminderEmail.enabled` is `true` on [`GET /api/v1/health/deps`](https://futurestack-aeyn.onrender.com/api/v1/health/deps).
 4. Keep the GitHub Actions reminder dispatcher configured. It wakes the existing outbox; it does not send email directly. Each signed-in user chooses **Email deadline reminders** from the bell icon's Notifications page; the default is off until they opt in.
+5. Recipients come from the Clerk primary email. Session JWTs do not include email by default, so the dispatcher looks the address up from Clerk when `users.email` is empty and stores it for later jobs.
 
 The implementation is intentionally best-effort: an email provider error retries through the existing job lease, and a per-job record plus Resend idempotency protects duplicate sends. See [`docs/DOCUMENTATION.md`](docs/DOCUMENTATION.md), [ADR-007](docs/adr/ADR-007-optional-email-reminders.md), and [ADR-008](docs/adr/ADR-008-user-controlled-email-reminders.md) for the limits and scale path.
 

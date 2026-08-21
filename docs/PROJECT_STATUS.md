@@ -1,6 +1,6 @@
 # Project Status
 
-Last reviewed: July 30, 2026
+Last reviewed: August 21, 2026
 
 This is the source of truth for the repository's product status. It distinguishes code that is available in the app from code that is intentionally gated or planned.
 
@@ -17,7 +17,7 @@ This is the source of truth for the repository's product status. It distinguishe
 | Analytics and PDF reports | Available | Funnel, campus-mode, rejection-round, and hackathon-submission insights; exportable PDF summaries. |
 | In-app notification center | Available | Bell page lists persisted website notifications; users can mark items read. |
 | Hackathon submission reminders | Available, scheduler-configured | Transactional outbox writes in-app notifications for hackathon submission dates. Optional GitHub Actions dispatcher is best-effort on the free tier. |
-| Optional Resend email reminders | Implemented, migration/config-gated | User opt-in on the Notifications page; dispatcher sends after in-app notification when `REMINDER_EMAILS_ENABLED` and Resend env vars are set. |
+| Optional Resend email reminders | Implemented, migration/config-gated | User opt-in on the Notifications page; dispatcher sends after in-app notification when `REMINDER_EMAILS_ENABLED` and Resend env vars are set. Missing `users.email` is resolved from Clerk at send time. |
 | Read-only share links | Available | Expiring or revocable snapshots with optional passcode verification. |
 | AI Resume Checker | Implemented, UI gated | Backend pipeline, persistence, provider settings, and tests exist. `AI_RESUME_CHECK_ENABLED` is `false` in `src/config/features.js`. |
 | Tags, bulk import/export, advanced filters, Progress Logger | Planned | See [future.md](future.md). Progress Logger has schema-only migrations; no API or UI yet. |

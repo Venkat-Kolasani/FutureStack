@@ -33,6 +33,9 @@ Server runs at `http://localhost:3001` by default.
 | `SHARE_LINK_ENCRYPTION_KEY` | 32-byte secret used to encrypt recoverable share tokens | Generate locally with `openssl rand -base64 32` |
 | `JOB_DISPATCH_TOKEN` | Bearer secret for the reminder dispatcher | Generate locally with `openssl rand -base64 48` |
 | `JOB_ADMIN_USER_IDS` | Comma-separated internal user UUIDs allowed to inspect dead jobs | Supabase `users.id` values for internal administrators |
+| `REMINDER_EMAILS_ENABLED` | Turns on optional Resend delivery after in-app reminders | `true` only after the email migrations and Resend sender are ready |
+| `RESEND_API_KEY` | Server-only Resend sending key | [Resend API Keys](https://resend.com/api-keys) |
+| `REMINDER_EMAIL_FROM` | Verified sender, e.g. `FutureStack <reminders@your-domain>` | [Resend Domains](https://resend.com/domains) |
 | `RESUME_AI_ENABLED` | Enables or disables AI-check requests | `true` or `false` |
 | `LLM_PROVIDER` / `LLM_MODEL` | AI provider and model when the pipeline is enabled | `gemini` or `ollama` |
 | `GEMINI_API_KEY` | Server-side Gemini key, when using Gemini | Google AI Studio |
@@ -53,7 +56,7 @@ All paths below are canonical `/api/v1` endpoints. The legacy `/api` prefix rema
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/api/v1/health` | Liveness check |
-| GET | `/api/v1/health/deps` | Supabase, AI-table, and reminder-outbox readiness (returns 503 if degraded) |
+| GET | `/api/v1/health/deps` | Supabase, AI-table, reminder-outbox, and Resend-channel readiness (returns 503 if degraded). `checks.reminderEmail.enabled` is `true` only when `REMINDER_EMAILS_ENABLED`, `RESEND_API_KEY`, and `REMINDER_EMAIL_FROM` are all set. |
 
 ### Auth & user
 
@@ -176,7 +179,7 @@ Owners manage the team, roster, and invites; editors may change workspace conten
 | POST | `/api/v1/internal/jobs/dispatch` | Token-protected reminder dispatcher for GitHub Actions |
 | GET | `/api/v1/admin/jobs/dead` | Configured-admin visibility into dead-letter jobs |
 
-The dispatcher requires `JOB_DISPATCH_TOKEN`. Dead-job visibility requires `JOB_ADMIN_USER_IDS` (comma-separated internal user UUIDs). The outbox becomes hackathon-submission-only after `20260716110000_rounds_drive_active_events.sql` is applied; until then, retain the existing generic deadline behavior. Apply the July 16 migrations through `20260716110000_rounds_drive_active_events.sql` before deploying the active-events API/frontend change.
+The dispatcher requires `JOB_DISPATCH_TOKEN`. Dead-job visibility requires `JOB_ADMIN_USER_IDS` (comma-separated internal user UUIDs). Optional Resend delivery also requires `REMINDER_EMAILS_ENABLED=true`, `RESEND_API_KEY`, `REMINDER_EMAIL_FROM`, user opt-in, and a resolvable Clerk primary email (`backend/src/lib/clerkEmail.js`). The outbox becomes hackathon-submission-only after `20260716110000_rounds_drive_active_events.sql` is applied; until then, retain the existing generic deadline behavior. Apply the July 16 migrations through `20260716110000_rounds_drive_active_events.sql` before deploying the active-events API/frontend change.
 
 ## Testing
 

@@ -42,6 +42,10 @@ describe('Health endpoints', () => {
         expect(res.status).toBe(200);
         expect(res.body.status).toBe('ok');
         expect(res.body.checks.supabase.status).toBe('ok');
+        expect(res.body.checks.reminderEmail).toEqual({
+            status: 'ok',
+            enabled: false,
+        });
     });
 
     it('GET /api/health/deps returns degraded when supabase fails', async () => {

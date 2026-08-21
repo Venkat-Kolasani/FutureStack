@@ -92,7 +92,7 @@ const Notifications = () => {
                 <div>
                   <h2 className="font-semibold text-gray-900 dark:text-white">Email deadline reminders</h2>
                   <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
-                    Send a copy of future hackathon submission reminders to your account email.
+                    Send a copy of future hackathon submission reminders to the primary email on your signed-in account.
                   </p>
                   {!emailDeliveryAvailable && (
                     <p className="mt-2 text-sm text-amber-700 dark:text-amber-300">

@@ -10,6 +10,7 @@ const { randomUUID } = require('crypto');
 
 const { requireAuth } = require('./middleware/auth');
 const { supabase } = require('./lib/supabase');
+const { getReminderEmailConfig } = require('./lib/reminderEmail');
 const opportunitiesRoutes = require('./routes/opportunities');
 const analyticsRoutes = require('./routes/analytics');
 const documentsRoutes = require('./routes/documents');
@@ -309,6 +310,11 @@ apiRouter.get('/health/deps', async (req, res) => {
             hint: 'Run docs/ai-tables-setup.sql in Supabase SQL Editor or npm run db:migrate:ai',
         };
     }
+
+    checks.reminderEmail = {
+        status: 'ok',
+        enabled: getReminderEmailConfig().enabled,
+    };
 
     const allHealthy = Object.values(checks).every(check => check.status === 'ok');
 
