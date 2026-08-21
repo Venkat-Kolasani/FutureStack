@@ -179,7 +179,7 @@ Owners manage the team, roster, and invites; editors may change workspace conten
 | POST | `/api/v1/internal/jobs/dispatch` | Token-protected reminder dispatcher for GitHub Actions |
 | GET | `/api/v1/admin/jobs/dead` | Configured-admin visibility into dead-letter jobs |
 
-The dispatcher requires `JOB_DISPATCH_TOKEN`. Dead-job visibility requires `JOB_ADMIN_USER_IDS` (comma-separated internal user UUIDs). Optional Resend delivery also requires `REMINDER_EMAILS_ENABLED=true`, `RESEND_API_KEY`, `REMINDER_EMAIL_FROM`, user opt-in, and a resolvable Clerk primary email (`backend/src/lib/clerkEmail.js`). The outbox becomes hackathon-submission-only after `20260716110000_rounds_drive_active_events.sql` is applied; until then, retain the existing generic deadline behavior. Apply the July 16 migrations through `20260716110000_rounds_drive_active_events.sql` before deploying the active-events API/frontend change.
+The dispatcher requires `JOB_DISPATCH_TOKEN`. Dead-job visibility requires `JOB_ADMIN_USER_IDS` (comma-separated internal user UUIDs). Optional Resend delivery also requires `REMINDER_EMAILS_ENABLED=true`, `RESEND_API_KEY`, `REMINDER_EMAIL_FROM`, user opt-in, and a recipient: a valid normalized `users.email`, or else a resolvable Clerk primary email (`backend/src/lib/clerkEmail.js`). The outbox becomes hackathon-submission-only after `20260716110000_rounds_drive_active_events.sql` is applied; until then, retain the existing generic deadline behavior. Apply the July 16 migrations through `20260716110000_rounds_drive_active_events.sql` before deploying the active-events API/frontend change.
 
 ## Testing
 

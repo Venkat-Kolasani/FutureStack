@@ -116,7 +116,7 @@ sequenceDiagram
 | `/api/v1/internal/jobs/dispatch` | `routes/internal-jobs.js` | Token-protected outbox dispatcher |
 | `/api/v1/admin/jobs/dead` | `routes/admin-jobs.js` | Configured-admin dead-letter view |
 | `/api/v1/health` | `app.js` | Liveness |
-| `/api/v1/health/deps` | `app.js` | Supabase, reminder-outbox, and Resend-channel readiness |
+| `/api/v1/health/deps` | `app.js` | Supabase, AI-table, reminder-outbox, and Resend configuration readiness |
 
 Round-specific logic also lives in `routes/opportunity-rounds.js` (mounted from opportunities router) and `lib/syncOpportunityFromRounds.js`.
 
