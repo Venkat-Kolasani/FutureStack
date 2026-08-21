@@ -4,6 +4,7 @@ import {
   buildHeatmapGrid,
   calculateCurrentStreak,
   countLoggedDays,
+  formatHeatmapRange,
   formatHeatmapTooltip,
   formatLocalDate,
   getBestWeekLoggedDays,
@@ -171,6 +172,10 @@ describe('heatmapHelpers', () => {
         count: 1,
         isPadding: false,
       })).toBe('Fri, Aug 21 · 1 log');
+    });
+
+    it('formats a local month range for the graph footer', () => {
+      expect(formatHeatmapRange('2025-08-22', '2026-08-21')).toBe('Aug 2025 – Aug 2026');
     });
 
     it('includes track names in the accessible label', () => {

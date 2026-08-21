@@ -4,10 +4,10 @@ export const HEATMAP_DAY_COUNT = 365;
 export const HEATMAP_WEEKDAY_LABELS = ['Mon', '', 'Wed', '', 'Fri', '', ''];
 
 export const HEATMAP_INTENSITY_CLASSES = [
-  'bg-gray-100 dark:bg-white/10',
-  'bg-emerald-200 dark:bg-emerald-900/80',
-  'bg-emerald-400 dark:bg-emerald-600',
-  'bg-emerald-600 dark:bg-emerald-400',
+  'bg-[#ebedf0] dark:bg-[#222222]',
+  'bg-[#9fe7cf] dark:bg-[#0f3f36]',
+  'bg-[#3cc89a] dark:bg-[#1b9a74]',
+  'bg-[#0b7a56] dark:bg-[#3ee6a2]',
 ];
 
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -195,6 +195,16 @@ export const formatHeatmapTooltip = (day) => {
   });
   const logWord = day.count === 1 ? 'log' : 'logs';
   return `${dateLabel} · ${day.count} ${logWord}`;
+};
+
+export const formatHeatmapRange = (rangeStart, rangeEnd) => {
+  const start = parseLocalDate(rangeStart);
+  const end = parseLocalDate(rangeEnd);
+  if (!start || !end) return '';
+
+  const startLabel = start.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+  const endLabel = end.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+  return `${startLabel} – ${endLabel}`;
 };
 
 export const getCellAriaLabel = (day) => {
