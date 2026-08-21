@@ -36,12 +36,20 @@ function createUpdateChain(result = { error: null }) {
 
 function createSupabase({
     email = 'owner@example.com',
+    clerkId = 'user_clerk_owner',
+    missingUser = false,
     deadlineEmailEnabled = true,
     existingDelivery = null,
     insertResult = { error: null },
     updateResult = { error: null },
+    userUpdateResult = { error: null },
 } = {}) {
-    const userLookup = createMaybeSingleChain({ data: email ? { email } : null, error: null });
+    const userLookup = createMaybeSingleChain({
+        data: missingUser
+            ? null
+            : { id: job.user_id, email: email || null, clerk_id: clerkId },
+        error: null,
+    });
     const preferenceLookup = createMaybeSingleChain({
         data: { deadline_email_enabled: deadlineEmailEnabled },
         error: null,
@@ -49,11 +57,17 @@ function createSupabase({
     const deliveryLookup = createMaybeSingleChain({ data: existingDelivery, error: null });
     const insert = jest.fn(() => Promise.resolve(insertResult));
     const update = jest.fn(() => createUpdateChain(updateResult));
+    const userUpdate = jest.fn(() => createUpdateChain(userUpdateResult));
 
     return {
         supabase: {
             from: jest.fn((table) => {
-                if (table === 'users') return { select: jest.fn(() => userLookup) };
+                if (table === 'users') {
+                    return {
+                        select: jest.fn(() => userLookup),
+                        update: userUpdate,
+                    };
+                }
                 if (table === 'user_notification_preferences') {
                     return { select: jest.fn(() => preferenceLookup) };
                 }
@@ -69,6 +83,7 @@ function createSupabase({
         },
         insert,
         update,
+        userUpdate,
     };
 }
 
@@ -162,5 +177,90 @@ describe('reminder email delivery', () => {
         expect(update).toHaveBeenCalledWith(expect.objectContaining({
             last_error: 'provider unavailable',
         }));
+    });
+
+    it('resolves a missing stored email from Clerk, backfills it, and sends', async () => {
+        const { supabase, insert, update, userUpdate } = createSupabase({ email: null });
+        const fetchPrimaryEmail = jest.fn().mockResolvedValue('clerk@example.com');
+        const fetchImpl = jest.fn(() => Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({ id: 'resend-message-clerk' }),
+        }));
+
+        const result = await deliverDeadlineReminderEmail(supabase, job, {
+            env: enabledEnv,
+            fetchImpl,
+            fetchPrimaryEmail,
+        });
+
+        expect(fetchPrimaryEmail).toHaveBeenCalledWith('user_clerk_owner');
+        expect(userUpdate).toHaveBeenCalledWith({ email: 'clerk@example.com' });
+        expect(result).toEqual({ status: 'sent', providerMessageId: 'resend-message-clerk' });
+        expect(JSON.parse(fetchImpl.mock.calls[0][1].body).to).toEqual(['clerk@example.com']);
+        expect(insert).toHaveBeenCalled();
+        expect(update).toHaveBeenCalledWith(expect.objectContaining({
+            state: 'sent',
+            provider_message_id: 'resend-message-clerk',
+        }));
+    });
+
+    it('does not call Clerk when a stored recipient email already exists', async () => {
+        const { supabase } = createSupabase();
+        const fetchPrimaryEmail = jest.fn();
+        const fetchImpl = jest.fn(() => Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({ id: 'resend-message-1' }),
+        }));
+
+        await deliverDeadlineReminderEmail(supabase, job, {
+            env: enabledEnv,
+            fetchImpl,
+            fetchPrimaryEmail,
+        });
+
+        expect(fetchPrimaryEmail).not.toHaveBeenCalled();
+    });
+
+    it('skips without calling Resend and logs a warning when Clerk also has no email', async () => {
+        const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+        const fetchPrimaryEmail = jest.fn().mockResolvedValue(null);
+        const fetchImpl = jest.fn();
+
+        try {
+            const { supabase, insert } = createSupabase({ email: null });
+
+            await expect(deliverDeadlineReminderEmail(supabase, job, {
+                env: enabledEnv,
+                fetchImpl,
+                fetchPrimaryEmail,
+            })).resolves.toEqual({ status: 'skipped_no_recipient' });
+
+            expect(fetchImpl).not.toHaveBeenCalled();
+            expect(insert).not.toHaveBeenCalled();
+            expect(warnSpy).toHaveBeenCalledTimes(1);
+            expect(warnSpy).toHaveBeenCalledWith(
+                'Reminder email skipped: no recipient email on file',
+                {
+                    type: 'REMINDER_EMAIL_SKIPPED_NO_RECIPIENT',
+                    jobId: job.id,
+                    userId: job.user_id,
+                    clerkId: 'user_clerk_owner',
+                }
+            );
+        } finally {
+            warnSpy.mockRestore();
+        }
+    });
+
+    it('retries through the outbox when Clerk lookup fails', async () => {
+        const { supabase, insert } = createSupabase({ email: null });
+        const fetchPrimaryEmail = jest.fn().mockRejectedValue(new Error('Clerk API unavailable'));
+
+        await expect(deliverDeadlineReminderEmail(supabase, job, {
+            env: enabledEnv,
+            fetchPrimaryEmail,
+        })).rejects.toThrow('Clerk API unavailable');
+
+        expect(insert).not.toHaveBeenCalled();
     });
 });

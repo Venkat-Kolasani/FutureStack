@@ -1,5 +1,9 @@
 const RESEND_EMAILS_URL = 'https://api.resend.com/emails';
 const EMAIL_REQUEST_TIMEOUT_MS = 10_000;
+const {
+    fetchPrimaryEmailFromClerk,
+    normalizeEmail,
+} = require('./clerkEmail');
 
 function getReminderEmailConfig(env = process.env) {
     const apiKey = String(env.RESEND_API_KEY || '').trim();
@@ -43,15 +47,39 @@ function buildProviderError(response, payload) {
     return error;
 }
 
-async function findUserEmail(supabase, userId) {
+async function resolveRecipientEmail(supabase, userId, fetchPrimaryEmail) {
     const { data, error } = await supabase
         .from('users')
-        .select('email')
+        .select('id, email, clerk_id')
         .eq('id', userId)
         .maybeSingle();
 
     if (error) throw error;
-    return data?.email || null;
+    if (!data) return { email: null, clerkId: null };
+
+    const stored = normalizeEmail(data.email);
+    const clerkId = data.clerk_id || null;
+    if (stored) return { email: stored, clerkId };
+
+    if (!clerkId) return { email: null, clerkId: null };
+
+    const clerkEmail = await fetchPrimaryEmail(clerkId);
+    if (!clerkEmail) return { email: null, clerkId };
+
+    const { error: updateError } = await supabase
+        .from('users')
+        .update({ email: clerkEmail })
+        .eq('id', data.id);
+
+    if (updateError) {
+        console.error('Reminder email: failed to backfill account email', {
+            type: 'REMINDER_EMAIL_BACKFILL_ERROR',
+            userId,
+            message: updateError.message,
+        });
+    }
+
+    return { email: clerkEmail, clerkId };
 }
 
 async function userWantsDeadlineEmail(supabase, userId) {
@@ -149,6 +177,7 @@ async function sendWithResend({ config, recipientEmail, job, fetchImpl = fetch }
 async function deliverDeadlineReminderEmail(supabase, job, {
     env = process.env,
     fetchImpl = fetch,
+    fetchPrimaryEmail = fetchPrimaryEmailFromClerk,
 } = {}) {
     const config = getReminderEmailConfig(env);
     if (!config.enabled) return { status: 'disabled' };
@@ -158,8 +187,16 @@ async function deliverDeadlineReminderEmail(supabase, job, {
         return { status: 'disabled_by_user' };
     }
 
-    const recipientEmail = await findUserEmail(supabase, job.user_id);
-    if (!recipientEmail) return { status: 'skipped_no_recipient' };
+    const recipient = await resolveRecipientEmail(supabase, job.user_id, fetchPrimaryEmail);
+    if (!recipient.email) {
+        console.warn('Reminder email skipped: no recipient email on file', {
+            type: 'REMINDER_EMAIL_SKIPPED_NO_RECIPIENT',
+            jobId: job.id,
+            userId: job.user_id,
+            clerkId: recipient.clerkId,
+        });
+        return { status: 'skipped_no_recipient' };
+    }
 
     let delivery = await findEmailDelivery(supabase, job.id);
     if (delivery?.state === 'sent') return { status: 'already_sent' };
@@ -174,7 +211,12 @@ async function deliverDeadlineReminderEmail(supabase, job, {
     }
 
     try {
-        const providerMessageId = await sendWithResend({ config, recipientEmail, job, fetchImpl });
+        const providerMessageId = await sendWithResend({
+            config,
+            recipientEmail: recipient.email,
+            job,
+            fetchImpl,
+        });
         await markEmailDelivered(supabase, job.id, providerMessageId);
         return { status: 'sent', providerMessageId };
     } catch (error) {
