@@ -39,6 +39,7 @@ const Reports = lazy(() => import('./pages/Reports'));
 const Analytics = lazy(() => import('./pages/Analytics'));
 const Documents = lazy(() => import('./pages/Documents'));
 const Notifications = lazy(() => import('./pages/Notifications'));
+const ProgressPreview = lazy(() => import('./pages/ProgressPreview'));
 const PublicSharePage = lazy(() => import('./pages/PublicSharePage'));
 
 // Loading fallback component for Suspense
@@ -169,6 +170,11 @@ function AppContent() {
             <Route path="/notifications" element={
               <ProtectedRoute>
                 <Notifications />
+              </ProtectedRoute>
+            } />
+            <Route path="/progress" element={
+              <ProtectedRoute>
+                <ProgressPreview />
               </ProtectedRoute>
             } />
           </Routes>
