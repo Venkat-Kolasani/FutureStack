@@ -53,7 +53,7 @@ Career applications are fragmented across job boards, messages, spreadsheets, do
 | AI Resume Checker | Implemented, UI-gated | Backend pipeline, storage, provider settings, tests, and UI components exist; `AI_RESUME_CHECK_ENABLED` is currently `false`. |
 | Hackathon submission reminders | Available, scheduler-configured | The outbox and leased dispatcher create durable in-app notifications. GitHub Actions is an optional best-effort free-tier scheduler; the active-events migration limits new reminder intent to hackathon submissions. |
 | Website notification center and optional Resend email reminders | Implemented, migration/config-gated | The bell page shows persisted website notifications and lets each user opt into email copies. A per-job delivery record and Resend idempotency key make retried sends safe. |
-| Tags, bulk import/export, advanced filters, Progress Logger | Planned | These are intentionally not claimed as shipped features. Progress Logger tables exist in migration SQL only. |
+| Tags, bulk import/export, advanced filters, Progress Logger | Planned | These are intentionally not claimed as shipped features. Progress Logger tables exist in migration SQL. A mock heatmap preview lives at `/progress`; tracks, logs, and the API are not wired. |
 
 **Production rollout status (checked July 30, 2026):** Active-events, notification-preference, and optional-email migrations live in `supabase/migrations/` and are applied to the maintainer's Supabase project. Matching API and frontend behavior is on the main branch. Deploy API and web together whenever a database gains new columns or triggers. Optional Resend email remains off until backend env vars and the user's Notifications opt-in are both set.
 
