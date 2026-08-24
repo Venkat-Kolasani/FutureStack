@@ -1,6 +1,6 @@
 {
   "name": "futuretracker-extension",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Chrome extension to save job/internship listings to FutureTracker",
   "type": "module",
   "scripts": {
@@ -16,6 +16,7 @@
     "@vitejs/plugin-react": "^4.7.0",
     "jest": "^30.4.2",
     "jest-cli": "^30.4.2",
+    "linkedom": "^0.18.13",
     "vite": "^5.4.21"
   },
   "dependencies": {

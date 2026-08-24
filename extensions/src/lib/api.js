@@ -3,9 +3,9 @@ const API_URL = API_BASE.endsWith('/api') || API_BASE.endsWith('/api/v1')
   ? `${API_BASE.replace(/\/v1$/, '')}/v1`
   : `${API_BASE}/api/v1`;
 
-const MAX_TITLE = 200;
-const MAX_DESCRIPTION = 5000;
-const MAX_LINK = 500;
+export const MAX_TITLE = 200;
+export const MAX_DESCRIPTION = 5000;
+export const MAX_LINK = 500;
 
 function sanitizeLink(link) {
   if (!link || typeof link !== 'string') return null;

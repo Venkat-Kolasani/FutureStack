@@ -32,7 +32,7 @@ Career applications are fragmented across job boards, messages, spreadsheets, do
 ### Primary user flow
 
 1. A user signs in with Clerk.
-2. They can add an internship or hackathon directly, or use the Chrome MV3 extension to prefill title, description, and link from the active tab before saving.
+2. They can add an internship or hackathon directly, or use the Chrome MV3 side-panel extension to prefill title, description, and link from LinkedIn, Greenhouse, Lever, or generic job pages before saving. The panel stays open so missing fields can be filled from page selection or paste.
 3. The dashboard, calendar, list, and Kanban board present the same opportunity data in different task-oriented views.
 4. For an internship, the user can add interview rounds and preparation material. Round outcomes synchronize the parent opportunity status.
 5. The user uploads or links a resume/cover letter, receives client-side ATS-style feedback for supported files, and assigns documents to applications.
@@ -44,7 +44,7 @@ Career applications are fragmented across job boards, messages, spreadsheets, do
 | Capability | Current state | Important interview detail |
 | --- | --- | --- |
 | Opportunity CRUD, dashboard, calendar, reports, analytics | Available in the current release | Internships support `campus_mode` (on/off campus) in the API and UI filters. The active-events migration uses `applied_on` for internships and reserves active `deadline` behavior for hackathon submissions; all mutations go through the Express API. |
-| Chrome MV3 opportunity saver | Implemented, configuration-gated | The popup injects metadata extraction only when opened, lets users review fields (including campus mode), obtains a Clerk token through the extension sync host, and posts through the supported legacy `POST /api/opportunities` compatibility mount. Manual loading plus Clerk allowed-origin and CORS configuration remain deployment steps. |
+| Chrome MV3 opportunity saver | Implemented, configuration-gated | The side panel (not a toolbar popup) injects site-aware extraction for LinkedIn, Greenhouse, and Lever, with JSON-LD and Open Graph fallbacks. Users can append selected page text or paste while the panel stays open. It obtains a Clerk token through the extension sync host and posts through the supported legacy `POST /api/opportunities` compatibility mount. Manual loading plus Clerk allowed-origin and CORS configuration remain deployment steps. |
 | Light and dark theme | Available | Theme preference is managed in React context and applied to Clerk appearance as well as app UI. |
 | Interview rounds and preparation | Available | Rounds are internship-only, synchronize derived parent fields server-side, and can hold an optional scheduled date/time. |
 | Documents and ATS hints | Available | ATS analysis is rule-based and runs in the browser; it is not an official ATS score. |
@@ -514,7 +514,7 @@ The public endpoint returns only the snapshot after token/passcode checks. This 
 
 ### Tests that exist
 
-The repository includes frontend tests for route/render behavior and pure helpers such as date, opportunity, and ATS scoring utilities. The Chrome extension has focused metadata-extraction tests and a production build. Backend tests cover health, opportunities, analytics, documents, interview prep, rounds, share links, validation middleware, round synchronization, AI key vault behavior, resume-agent logic, and GitHub enrichment.
+The repository includes frontend tests for route/render behavior and pure helpers such as date, opportunity, and ATS scoring utilities. The Chrome extension has parser tests for LinkedIn, Greenhouse, Lever, JSON-LD, and Open Graph fallbacks, plus a production build. Backend tests cover health, opportunities, analytics, documents, interview prep, rounds, share links, validation middleware, round synchronization, AI key vault behavior, resume-agent logic, and GitHub enrichment.
 
 Before a release or PR, the standard checks are:
 

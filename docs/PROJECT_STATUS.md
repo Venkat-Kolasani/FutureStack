@@ -7,7 +7,7 @@ This is the source of truth for the repository's product status. It distinguishe
 | Capability | Status | Notes |
 | --- | --- | --- |
 | Opportunity tracking | Available | Create, edit, delete, search, filter, and classify internship and hackathon opportunities. On-campus vs off-campus mode on internships and in list filters. |
-| Chrome MV3 opportunity saver | Implemented, configuration-gated | Popup collects page metadata on demand, supports campus mode, syncs a Clerk session, and saves through the API. Requires extension build/load, Clerk allowed-origin, and backend CORS setup. See [extensions/readme.md](../extensions/readme.md). |
+| Chrome MV3 opportunity saver | Implemented, configuration-gated | Side panel collects LinkedIn/Greenhouse/Lever (and generic) job fields, lets users append selected page text, supports campus mode, syncs a Clerk session, and saves through the API. Requires extension build/load, Clerk allowed-origin, and backend CORS setup. See [extensions/readme.md](../extensions/readme.md). |
 | Active-event dashboard, calendar, status board, reports | Available after migration | With `20260716110000_rounds_drive_active_events.sql` applied, internships use **Applied on**, scheduled rounds drive calendar/dashboard events, and hackathon **deadline** remains the submission date. |
 | Light and dark theme | Available | Persisted user preference with themed Clerk UI and app-wide contrast work. |
 | Interview rounds | Available | Internship-only multi-round timeline with optional scheduled date/time; parent status synchronizes server-side. |
