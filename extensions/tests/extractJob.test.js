@@ -77,16 +77,31 @@ describe('LinkedIn extraction', () => {
 });
 
 describe('Greenhouse extraction', () => {
-  const job = loadJob('greenhouse.html', 'https://boards.greenhouse.io/stripe/jobs/123');
+  const jsonLdJob = loadJob('greenhouse.html', 'https://boards.greenhouse.io/stripe/jobs/123');
 
   test('reads JSON-LD JobPosting title, company, location, and full description', () => {
+    expect(jsonLdJob.site).toBe('greenhouse');
+    expect(jsonLdJob.title).toBe('Backend Intern at Stripe');
+    expect(jsonLdJob.company).toBe('Stripe');
+    expect(jsonLdJob.location).toBe('San Francisco, CA');
+    expect(jsonLdJob.description).toContain('billing APIs');
+    expect(jsonLdJob.description).toContain('Python and SQL');
+    expect(jsonLdJob.source).toBe('jsonld');
+  });
+
+  test('uses job-boards DOM when JSON-LD is missing and ignores location OG copy', () => {
+    const job = loadJob(
+      'greenhouse-job-boards.html',
+      'https://job-boards.greenhouse.io/gitlab/jobs/8503792002',
+    );
     expect(job.site).toBe('greenhouse');
-    expect(job.title).toBe('Backend Intern at Stripe');
-    expect(job.company).toBe('Stripe');
-    expect(job.location).toBe('San Francisco, CA');
-    expect(job.description).toContain('billing APIs');
-    expect(job.description).toContain('Python and SQL');
-    expect(job.source).toBe('jsonld');
+    expect(job.source).toBe('greenhouse');
+    expect(job.title).toBe('Account Executive - Italy at GitLab');
+    expect(job.company).toBe('GitLab');
+    expect(job.location).toBe('Remote, Italy');
+    expect(job.description).toContain('intelligent orchestration platform');
+    expect(job.description).not.toBe('Remote, Italy');
+    expect(isWeakParse(job)).toBe(false);
   });
 });
 

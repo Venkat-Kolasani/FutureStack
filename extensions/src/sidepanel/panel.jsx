@@ -97,14 +97,24 @@ function CharCount({ value, max }) {
   );
 }
 
-function FieldActions({ onUse, onAdd, addDisabled }) {
+function FieldActions({ fieldLabel, onUse, onAdd }) {
   return (
     <div className="field-actions">
-      <button type="button" className="btn-quiet" onClick={onUse}>
+      <button
+        type="button"
+        className="btn-quiet"
+        onClick={onUse}
+        aria-label={`Use page selection for ${fieldLabel}`}
+      >
         Use selection
       </button>
       {onAdd ? (
-        <button type="button" className="btn-quiet" onClick={onAdd} disabled={addDisabled}>
+        <button
+          type="button"
+          className="btn-quiet"
+          onClick={onAdd}
+          aria-label={`Add page selection to ${fieldLabel}`}
+        >
           Add selection
         </button>
       ) : null}
@@ -236,11 +246,13 @@ export default function SidePanel() {
       ? 'Paste or select text from the page'
       : 'Save this opportunity';
   const parseHint = selectionMessage
-    || (metadataState === 'unread'
-      ? 'This page could not be read automatically. Copy sections from the listing, then paste here or use Add selection. The panel stays open while you do that.'
-      : weakParse
-        ? 'Review the title and description. Select another section on the page and click Add selection, or paste with Ctrl/Cmd+V.'
-        : null);
+    || (metadataState === 'loading'
+      ? null
+      : metadataState === 'unread'
+        ? 'This page could not be read automatically. Copy sections from the listing, then paste here or use Add selection. The panel stays open while you do that.'
+        : weakParse
+          ? 'Review the title and description. Select another section on the page and click Add selection, or paste with Ctrl/Cmd+V.'
+          : null);
   const parseHintStatus = selectionMessage === 'Added from the page selection.'
     ? 'saved'
     : selectionMessage
@@ -274,7 +286,10 @@ export default function SidePanel() {
               </label>
               <CharCount value={data.title} max={MAX_TITLE} />
             </div>
-            <FieldActions onUse={() => applySelection('title', 'replace')} />
+            <FieldActions
+              fieldLabel="title"
+              onUse={() => applySelection('title', 'replace')}
+            />
             <input
               id="ft-title"
               className="field-input"
@@ -303,6 +318,7 @@ export default function SidePanel() {
               <CharCount value={data.description} max={MAX_DESCRIPTION} />
             </div>
             <FieldActions
+              fieldLabel="description"
               onUse={() => applySelection('description', 'replace')}
               onAdd={() => applySelection('description', 'append')}
             />

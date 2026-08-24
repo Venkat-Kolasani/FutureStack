@@ -54,7 +54,11 @@ const GREENHOUSE_COMPANY_SELECTORS = [
   '.company-name',
   '.logo-text',
   '.app-title + .company-name',
-  'title',
+];
+
+const GREENHOUSE_LOCATION_SELECTORS = [
+  '.job__location',
+  '.location',
 ];
 
 const GREENHOUSE_DESCRIPTION_SELECTORS = [
@@ -231,6 +235,12 @@ function companyFromPath(href, index) {
   }
 }
 
+function companyFromDocumentTitle(documentObject) {
+  const cleaned = cleanupTitle(documentObject?.title || '');
+  const match = cleaned.match(/\sat\s+(.+)$/i);
+  return match ? normalizeText(match[1]) : '';
+}
+
 export function isWeakTitle(text) {
   const value = normalizeText(text);
   if (!value || value.length < 3) return true;
@@ -322,14 +332,15 @@ function extractGreenhouse(documentObject, locationObject, jsonLd) {
   );
   const company = coalesceField([
     jsonLd?.company,
-    firstText(documentObject, GREENHOUSE_COMPANY_SELECTORS.filter((selector) => selector !== 'title')),
+    firstText(documentObject, GREENHOUSE_COMPANY_SELECTORS),
+    companyFromDocumentTitle(documentObject),
     companyFromPath(locationObject?.href, 0),
   ]);
   return {
     title,
     description,
     company,
-    location: jsonLd?.location || '',
+    location: jsonLd?.location || firstText(documentObject, GREENHOUSE_LOCATION_SELECTORS),
     link: locationObject?.href || '',
     source: jsonLd?.description ? 'jsonld' : 'greenhouse',
   };

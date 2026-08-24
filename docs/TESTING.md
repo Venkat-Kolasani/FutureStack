@@ -151,6 +151,7 @@ GitHub Actions workflow [`.github/workflows/ci.yml`](../.github/workflows/ci.yml
 | **frontend** | `npm ci`, `npm run build`, `npm run test:ci` |
 | **backend** | `cd backend && npm ci && npm test` |
 | **architecture** | `npm run check:architecture` |
+| **extension** | `cd extensions && npm ci && npm test && npm run build` |
 | **audit** | Root and backend `npm audit --audit-level=high` (informational; does not block merge) |
 
 No Clerk or Supabase secrets are required in CI — backend tests mock auth and the database client.
@@ -165,6 +166,7 @@ After this workflow is on `main`, require status checks so merges are blocked wh
    - `frontend`
    - `backend`
    - `architecture`
+   - `extension`
 4. Keep **Require pull request reviews** enabled for GSSoC assignment flow
 
 ## Running a single test file

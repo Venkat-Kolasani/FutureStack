@@ -89,7 +89,7 @@ The side panel injects a parser into the active tab and prefers structured job d
 | Site | How fields are filled |
 | --- | --- |
 | LinkedIn | Job heading and `#job-details` in the open job pane; ignores “See who you know” OG copy |
-| Greenhouse | JSON-LD `JobPosting` on `boards.greenhouse.io` and `job-boards.greenhouse.io`, with DOM fallbacks |
+| Greenhouse | JSON-LD `JobPosting` when present; otherwise `job-boards.greenhouse.io` / `boards.greenhouse.io` heading and `.job__description`. Ignores one-line OG location blurbs |
 | Lever | JSON-LD `@graph` / `JobPosting` on `jobs.lever.co`, with posting-body fallbacks |
 | Other pages | JSON-LD when present, then `og:title` / `og:description` / `document.title` |
 
