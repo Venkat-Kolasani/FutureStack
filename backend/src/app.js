@@ -24,6 +24,7 @@ const internalJobsRoutes = require('./routes/internal-jobs');
 const adminJobsRoutes = require('./routes/admin-jobs');
 const notificationsRoutes = require('./routes/notifications');
 const notificationPreferencesRoutes = require('./routes/notification-preferences');
+const progressRoutes = require('./routes/progress');
 
 const app = express();
 const apiRouter = express.Router();
@@ -337,6 +338,7 @@ apiRouter.use('/documents/:id/ai-check', requireAuth, authenticatedReadLimiter, 
 apiRouter.use('/ai-settings', requireAuth, authenticatedReadLimiter, writeOperationsLimiter, aiSettingsRoutes);
 apiRouter.use('/notifications', requireAuth, authenticatedReadLimiter, writeOperationsLimiter, notificationsRoutes);
 apiRouter.use('/notification-preferences', requireAuth, authenticatedReadLimiter, writeOperationsLimiter, notificationPreferencesRoutes);
+apiRouter.use('/progress', requireAuth, authenticatedReadLimiter, writeOperationsLimiter, progressRoutes);
 apiRouter.use('/admin/jobs', requireAuth, authenticatedReadLimiter, adminJobsRoutes);
 apiRouter.use('/internal/jobs', internalJobsRoutes);
 
