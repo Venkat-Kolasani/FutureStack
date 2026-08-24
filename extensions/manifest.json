@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "FutureTracker Saver",
-  "version": "1.1.1",
+  "version": "1.1.0",
   "description": "Save job listings from LinkedIn, Greenhouse, Lever, and other pages to FutureTracker",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApfGYzPfQaRSMaqmuGZbW52+EOzfivBbIvsNAUa/gajIZjxk66JD6pRnipQfJ19eMhUouEzKpUMcC8LN89QJkjWiR01AuFaRD8aIiG7gNKSJZKQIfEQ/MhOtU0p/3uPjlhA/llXu2INRQ+9g7RKsXM06kJO44ZGcNhciwID0okl2z0b1cF7QNpsGEprthOZzdhJzgsHG+bMp4rUJiHcIn/PY+DFz+0qwWxsz3hkX+uhV5jyzRjaQoyC4sK777/ehndsznWvDTSaIExjEcc8Zh9imHGFDFieeZqoH49VGYjacIXmHLduUy5bf/qDWfh1EdcjpWsCpWiPBX20wDNpnpEwIDAQAB",
   "action": {
