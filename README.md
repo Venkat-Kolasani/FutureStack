@@ -1,6 +1,6 @@
 # FutureTracker.online
 
-FutureTracker.online is a full-stack career-application workspace for students and early-career professionals. It brings post-application internship tracking, hackathons, interview preparation, documents, and application insights into one focused workflow. **Not affiliated with the sustainability company at futuretracker.com.**
+FutureTracker.online is a full-stack career-application workspace for students and early-career professionals. It brings post-application internship tracking, hackathons, interview preparation, documents, and application insights into one focused workflow. 
 
 [Live app](https://futuretracker.online) · [About](https://futuretracker.online/about.html) · [Guides](https://futuretracker.online/guides/internship-application-tracker.html) · [API health](https://futurestack-aeyn.onrender.com/api/v1/health) · [Documentation](docs/DOCUMENTATION.md) · [Contributing](CONTRIBUTING.md)
 
