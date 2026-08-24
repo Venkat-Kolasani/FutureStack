@@ -123,7 +123,7 @@ npm test -- atsScorer
 
 1. Configure `extensions/.env` with the Clerk publishable key, API base URL, and sync host.
 2. Confirm the extension's deterministic `chrome-extension://` origin is allowed in Clerk and backend `CORS_ORIGIN`.
-3. Run `cd extensions && npm ci && npm test && npm run build`.
+3. Run `cd extensions && npm ci && npm test && npm run build`. For a local API, use `npm run build:dev` so localhost host permissions are included.
 4. In `chrome://extensions`, enable Developer mode and load `extensions/dist`.
 5. While signed in at the sync host, open a LinkedIn, Greenhouse, or Lever listing, click the extension icon to open the **side panel**, review the prefilled title/description/URL, append a second selected paragraph without the panel closing, save, and confirm the opportunity in the dashboard.
 

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { applyExtractedJob, joinBlocks, listingKey } from '../lib/extractJob.js';
-import { clearDraft, loadDraft, saveDraft } from '../lib/draft.js';
+import { loadDraft } from '../lib/draft.js';
+import { createDraftPersistence } from '../lib/draftPersistence.js';
 import { extractFromTab, getActiveTab, getPageSelection } from '../lib/tab.js';
 
 const EMPTY_FORM = {
@@ -42,6 +43,11 @@ export function useListing() {
   const dirtyRef = useRef(dirty);
   const windowIdRef = useRef(null);
   const generationRef = useRef(0);
+  const persistenceRef = useRef(null);
+  if (!persistenceRef.current) {
+    persistenceRef.current = createDraftPersistence();
+  }
+  const persistence = persistenceRef.current;
 
   useEffect(() => {
     dataRef.current = data;
@@ -50,15 +56,6 @@ export function useListing() {
   useEffect(() => {
     dirtyRef.current = dirty;
   }, [dirty]);
-
-  const persistDraft = useCallback((nextTab, nextData, nextDirty) => {
-    if (!nextTab?.id || !nextTab.url) return;
-    saveDraft(nextTab.id, nextTab.url, {
-      data: nextData,
-      dirty: nextDirty,
-      savedAt: Date.now(),
-    });
-  }, []);
 
   const loadListing = useCallback(async (nextTab) => {
     if (!nextTab?.id) {
@@ -76,7 +73,9 @@ export function useListing() {
     setMetadataState('loading');
 
     if (!keepInMemory) {
+      persistence.allowPersist();
       const draft = await loadDraft(nextTab.id, nextTab.url || '');
+      if (generation !== generationRef.current) return;
       const restored = {
         ...EMPTY_FORM,
         link: nextTab.url || '',
@@ -102,9 +101,9 @@ export function useListing() {
     );
     setData(merged);
     dataRef.current = merged;
-    persistDraft(nextTab, merged, dirtyRef.current);
+    persistence.persist(nextTab, merged, dirtyRef.current);
     setMetadataState(extracted ? 'idle' : 'unread');
-  }, [persistDraft]);
+  }, [persistence]);
 
   useEffect(() => {
     let cancelled = false;
@@ -146,11 +145,12 @@ export function useListing() {
 
   useEffect(() => {
     if (!tab?.id || metadataState === 'loading') return undefined;
-    const timer = setTimeout(() => persistDraft(tab, data, dirty), 300);
-    return () => clearTimeout(timer);
-  }, [tab, data, dirty, metadataState, persistDraft]);
+    persistence.schedulePersist(tab, data, dirty);
+    return () => persistence.cancelTimer();
+  }, [tab, data, dirty, metadataState, persistence]);
 
   function updateField(name, value) {
+    persistence.allowPersist();
     setData((prev) => {
       const next = { ...prev, [name]: value };
       dataRef.current = next;
@@ -195,7 +195,7 @@ export function useListing() {
   }
 
   async function forgetDraft() {
-    if (tab?.id) await clearDraft(tab.id, tab.url || '');
+    await persistence.forget(tabRef.current || tab);
   }
 
   return {

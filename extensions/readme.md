@@ -29,23 +29,28 @@ npm install
 Copy `.env.example` to `.env` and fill in your values.
 
 **Local development:**
-```
+```dotenv
 VITE_CLERK_PUBLISHABLE_KEY=pk_test_your_key_here
 VITE_API_BASE=http://localhost:3001
 VITE_SYNC_HOST=http://localhost:3000
 ```
 
 **Production:**
-```
+```dotenv
 VITE_CLERK_PUBLISHABLE_KEY=pk_live_your_key_here
-VITE_API_BASE=https://your-backend.onrender.com
-VITE_SYNC_HOST=https://clerk.your-domain.com
+VITE_API_BASE=https://futurestack-aeyn.onrender.com
+VITE_SYNC_HOST=https://clerk.futuretracker.online
 ```
 
 ### 3. Build the extension
+
+Local API and Clerk sync need the localhost hosts from `manifest.development.json`:
+
 ```bash
-npm run build
+npm run build:dev
 ```
+
+`npm run build` is the production package: it pins `https://futurestack-aeyn.onrender.com` and omits localhost. Use `npm run dev` for a watch build with the same development hosts.
 
 ### 4. Load in Chrome
 1. Open Chrome and go to `chrome://extensions`
@@ -73,12 +78,12 @@ The backend reads from `CORS_ORIGIN` in `backend/.env`.
 Add the extension ID to the comma-separated list:
 
 **Local development:**
-```
+```dotenv
 CORS_ORIGIN=http://localhost:3000,chrome-extension://ocadhiiiainnijhhimhmpagfdmfcnfmj
 ```
 
 **Production:**
-```
+```dotenv
 CORS_ORIGIN=https://futuretracker.online,chrome-extension://ocadhiiiainnijhhimhmpagfdmfcnfmj
 ```
 
@@ -129,7 +134,7 @@ npm test
 ```
 
 ## Folder Structure
-```
+```text
 extensions/
 ├── src/
 │   ├── background.js          # Clerk session sync + open side panel on icon click
@@ -140,6 +145,8 @@ extensions/
 │   │   ├── injectExtractJob.js# Isolated-world entry injected into the tab
 │   │   ├── tab.js             # executeScript helpers
 │   │   ├── draft.js           # Per-listing session drafts
+│   │   ├── draftPersistence.js# Debounced draft writes that cannot outrun a save
+│   │   ├── opportunityFields.js # Title/description/link limits and URL checks
 │   │   ├── clerk.js           # Clerk config
 │   │   └── api.js             # Backend API calls
 │   └── sidepanel/             # Clerk-backed review and save UI
@@ -147,8 +154,12 @@ extensions/
 ├── tests/
 │   ├── extractJob.test.js     # Parser and merge tests
 │   ├── metadata.test.js       # Open Graph fallback tests
+│   ├── opportunityFields.test.js
+│   ├── draftPersistence.test.js
+│   ├── manifest.test.js       # Production vs development host permissions
 │   └── fixtures/              # LinkedIn, Greenhouse, Lever, and generic HTML
-├── manifest.json              # Chrome MV3 manifest
+├── manifest.json              # Production MV3 host permissions
+├── manifest.development.json  # Localhost hosts merged by npm run build:dev
 ├── vite.config.js             # Vite + crxjs build config
 └── .env.example               # Environment variable template
 ```

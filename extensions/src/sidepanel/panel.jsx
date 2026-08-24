@@ -1,6 +1,6 @@
 import { useId, useState } from 'react';
 import { useAuth } from '@clerk/chrome-extension';
-import { MAX_DESCRIPTION, MAX_LINK, MAX_TITLE, saveOpportunity } from '../lib/api.js';
+import { MAX_DESCRIPTION, MAX_LINK, MAX_TITLE, describeLinkError, saveOpportunity } from '../lib/api.js';
 import { SITE_LABELS, isWeakParse } from '../lib/extractJob.js';
 import { useListing } from './useListing.js';
 import './panel.css';
@@ -136,6 +136,7 @@ export default function SidePanel() {
   const [saveStatus, setSaveStatus] = useState('idle');
   const [saveError, setSaveError] = useState('');
   const titleErrorId = useId();
+  const linkErrorId = useId();
   const statusMessageId = useId();
   const hintId = useId();
   const selectionId = useId();
@@ -155,6 +156,14 @@ export default function SidePanel() {
       setSaveStatus('missing-title');
       setSaveError('Please enter a title.');
       document.getElementById('ft-title')?.focus();
+      return;
+    }
+
+    const linkError = describeLinkError(data.link);
+    if (linkError) {
+      setSaveStatus('invalid-link');
+      setSaveError(linkError);
+      document.getElementById('ft-link')?.focus();
       return;
     }
 
@@ -263,7 +272,7 @@ export default function SidePanel() {
   const statusMessage =
     saveStatus === 'saved'
       ? 'Saved. It’s on your FutureTracker board.'
-      : saveStatus === 'missing-title' || saveStatus === 'auth-error' || saveStatus === 'timeout' || saveStatus === 'error'
+      : saveStatus === 'missing-title' || saveStatus === 'invalid-link' || saveStatus === 'auth-error' || saveStatus === 'timeout' || saveStatus === 'error'
         ? saveError
         : '';
 
@@ -347,7 +356,14 @@ export default function SidePanel() {
               onChange={(event) => handleField('link', event.target.value)}
               placeholder="https://"
               autoComplete="off"
+              aria-invalid={saveStatus === 'invalid-link'}
+              aria-describedby={saveStatus === 'invalid-link' ? linkErrorId : undefined}
             />
+            {saveStatus === 'invalid-link' ? (
+              <p id={linkErrorId} className="field-error">
+                {saveError}
+              </p>
+            ) : null}
           </div>
 
           <SegmentedControl

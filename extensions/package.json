@@ -1,11 +1,12 @@
 {
   "name": "futuretracker-extension",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Chrome extension to save job/internship listings to FutureTracker",
   "type": "module",
   "scripts": {
-    "dev": "vite build --watch",
+    "dev": "EXTENSION_DEV_HOSTS=1 vite build --watch",
     "build": "vite build",
+    "build:dev": "EXTENSION_DEV_HOSTS=1 vite build",
     "test": "node --experimental-vm-modules ./node_modules/jest-cli/bin/jest.js tests/"
   },
   "keywords": [],

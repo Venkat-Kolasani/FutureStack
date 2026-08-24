@@ -177,9 +177,24 @@ describe('joinBlocks and listingKey', () => {
   });
 
   test('includes LinkedIn currentJobId in the listing key', () => {
-    expect(listingKey('https://www.linkedin.com/jobs/search/?currentJobId=99')).toBe(
+    expect(listingKey('https://www.linkedin.com/jobs/search/?currentJobId=99&trk=flagship')).toBe(
       'https://www.linkedin.com/jobs/search/?job=99',
     );
     expect(listingKey('https://jobs.lever.co/acme/uuid')).toBe('https://jobs.lever.co/acme/uuid');
+  });
+
+  test('keeps query parameters that distinguish generic listings', () => {
+    expect(listingKey('https://example.com/careers?jobId=1')).toBe(
+      'https://example.com/careers?jobId=1',
+    );
+    expect(listingKey('https://example.com/careers?jobId=1')).not.toBe(
+      listingKey('https://example.com/careers?jobId=2'),
+    );
+  });
+
+  test('ignores tracking parameters when comparing listing keys', () => {
+    expect(listingKey('https://example.com/careers?jobId=1&utm_source=li')).toBe(
+      listingKey('https://example.com/careers?jobId=1'),
+    );
   });
 });

@@ -413,12 +413,36 @@ export function joinBlocks(existing, addition) {
   return `${current}\n\n${extra}`;
 }
 
+const TRACKING_QUERY_KEYS = new Set([
+  'fbclid',
+  'gclid',
+  'gbraid',
+  'wbraid',
+  'mc_cid',
+  'mc_eid',
+  'li_fat_id',
+  'trk',
+  'trkinfo',
+]);
+
 export function listingKey(url) {
   try {
     const parsed = new URL(url);
     const jobId = parsed.searchParams.get('currentJobId');
-    return jobId
-      ? `${parsed.origin}${parsed.pathname}?job=${jobId}`
+    if (jobId) {
+      return `${parsed.origin}${parsed.pathname}?job=${jobId}`;
+    }
+
+    const params = new URLSearchParams(parsed.search);
+    for (const key of [...params.keys()]) {
+      const normalized = key.toLowerCase();
+      if (TRACKING_QUERY_KEYS.has(normalized) || normalized.startsWith('utm_')) {
+        params.delete(key);
+      }
+    }
+    const query = params.toString();
+    return query
+      ? `${parsed.origin}${parsed.pathname}?${query}`
       : `${parsed.origin}${parsed.pathname}`;
   } catch {
     return url || 'unknown';
