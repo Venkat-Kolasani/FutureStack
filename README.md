@@ -11,7 +11,7 @@ The core product is actively implemented and includes opportunity tracking (with
 ## What it does
 
 - Track internships from application date to final outcome, and track hackathons through submission. Filter and record on-campus vs off-campus internships.
-- Capture the current page's title, Open Graph description, URL, and campus mode in the Chrome extension, review the fields, and save the opportunity with the signed-in user's Clerk session.
+- Capture a LinkedIn, Greenhouse, Lever, or generic listing in the Chrome side-panel extension, review or paste missing fields, and save the opportunity with the signed-in user's Clerk session.
 - Manage upcoming interview rounds and hackathon submission deadlines in the dashboard, calendar, Kanban board, and PDF reports.
 - Record multi-round interview progress, including an optional scheduled time, and keep the parent opportunity status in sync.
 - Prepare for internship interviews with research, questions, technical topics, STAR stories, and reflections.
