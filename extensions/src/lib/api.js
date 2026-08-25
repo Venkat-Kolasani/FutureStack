@@ -1,31 +1,17 @@
+import {
+  MAX_DESCRIPTION,
+  MAX_LINK,
+  MAX_TITLE,
+  describeLinkError,
+  sanitizeLink,
+} from './opportunityFields.js';
+
+export { MAX_DESCRIPTION, MAX_LINK, MAX_TITLE, describeLinkError };
+
 const API_BASE = (import.meta.env.VITE_API_BASE || 'http://localhost:3001').replace(/\/$/, '');
 const API_URL = API_BASE.endsWith('/api') || API_BASE.endsWith('/api/v1')
   ? `${API_BASE.replace(/\/v1$/, '')}/v1`
   : `${API_BASE}/api/v1`;
-
-const MAX_TITLE = 200;
-const MAX_DESCRIPTION = 5000;
-const MAX_LINK = 500;
-
-function sanitizeLink(link) {
-  if (!link || typeof link !== 'string') return null;
-  const trimmed = link.trim();
-  if (!trimmed) return null;
-
-  try {
-    const url = new URL(trimmed);
-    if (url.protocol !== 'http:' && url.protocol !== 'https:') return null;
-
-    let candidate = url.toString();
-    if (candidate.length > MAX_LINK) {
-      candidate = `${url.origin}${url.pathname}`;
-    }
-    if (candidate.length > MAX_LINK) return null;
-    return candidate;
-  } catch {
-    return null;
-  }
-}
 
 function sanitizeCampusMode(campusMode) {
   if (campusMode === 'on_campus' || campusMode === 'off_campus') {
@@ -62,6 +48,11 @@ async function readErrorMessage(res) {
 }
 
 export async function saveOpportunity(token, payload, signal) {
+  const linkError = describeLinkError(payload?.link);
+  if (linkError) {
+    throw new Error(linkError);
+  }
+
   const body = sanitizePayload(payload);
   if (!body.title) {
     throw new Error('Title is required');
