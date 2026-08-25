@@ -85,7 +85,7 @@ const CreateTrackModal = ({ isOpen, onClose, onSave, saving = false }) => {
 
         <div className="flex justify-end gap-3 pt-2">
           <Button type="button" variant="secondary" onClick={onClose} disabled={saving}>Cancel</Button>
-          <Button type="submit" variant="primarySolid" disabled={saving}>
+          <Button type="submit" variant="primary" disabled={saving}>
             {saving ? 'Creating…' : 'Create track'}
           </Button>
         </div>

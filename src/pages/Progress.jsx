@@ -178,7 +178,7 @@ const Progress = () => {
           </div>
           <div className="flex gap-2">
             <Button variant="secondary" onClick={() => setCreateOpen(true)}>New track</Button>
-            <Button variant="primarySolid" onClick={() => openLog()} disabled={activeTracks.length === 0}>
+            <Button variant="primary" onClick={() => openLog()} disabled={activeTracks.length === 0}>
               Log today
             </Button>
           </div>
@@ -202,7 +202,7 @@ const Progress = () => {
               ))}
             </div>
             <div className="mt-4">
-              <Button variant="primarySolid" onClick={() => setCreateOpen(true)}>Create a track</Button>
+              <Button variant="primary" onClick={() => setCreateOpen(true)}>Create a track</Button>
             </div>
           </Card>
         ) : (
@@ -277,7 +277,7 @@ const Progress = () => {
                 {historyTrack ? (
                   <Button variant="secondary" onClick={() => setHistoryTrack(null)}>Back to day</Button>
                 ) : (
-                  <Button variant="primarySolid" onClick={() => openLog(null, selectedDate)}>
+                  <Button variant="primary" onClick={() => openLog(null, selectedDate)}>
                     {isToday ? 'Log today' : 'Add log'}
                   </Button>
                 )}

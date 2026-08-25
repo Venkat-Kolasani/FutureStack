@@ -35,7 +35,7 @@ const TrackCard = ({
             {streak} {streak === 1 ? 'day' : 'days'}
           </p>
         </div>
-        <Button variant="primarySolid" className="px-4 py-2 text-sm" onClick={onLogToday}>
+        <Button variant="primary" className="px-4 py-2 text-sm" onClick={onLogToday}>
           Log today
         </Button>
       </div>
