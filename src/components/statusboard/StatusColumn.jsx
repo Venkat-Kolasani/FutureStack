@@ -45,7 +45,7 @@ const StatusColumn = ({ status, opportunities, onStatusChange, onDelete }) => {
   const count = opportunities.length;
 
   return (
-    <div className="flex-shrink-0 w-72 sm:w-80">
+    <div className="w-full">
       {/* Column Header */}
       <div className={`${config.headerColor} text-gray-900 dark:text-white rounded-t-lg p-3 sm:p-4`}>
         <h3 className="font-semibold text-base sm:text-lg flex items-center justify-between">
@@ -57,7 +57,7 @@ const StatusColumn = ({ status, opportunities, onStatusChange, onDelete }) => {
       </div>
 
       {/* Column Content */}
-      <div className={`${config.color} border-2 border-t-0 rounded-b-lg p-3 sm:p-4 min-h-[400px] max-h-[600px] overflow-y-auto`}>
+      <div className={`${config.color} border-2 border-t-0 rounded-b-lg p-3 sm:p-4 min-h-[350px] max-h-[550px] overflow-y-auto`}>
         {opportunities.length === 0 ? (
           <p className="text-gray-600 dark:text-gray-400 text-sm text-center py-8">No opportunities</p>
         ) : (
