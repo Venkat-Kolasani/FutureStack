@@ -302,6 +302,7 @@ describe('Progress API', () => {
 
         expect(res.status).toBe(204);
         expectUserScoped(tracksChain);
+        expect(tracksChain.delete).toHaveBeenCalled();
     });
 
     it('lists logs for an owned track', async () => {
@@ -428,6 +429,7 @@ describe('Progress API', () => {
 
         expect(res.status).toBe(204);
         expectUserScoped(logsChain);
+        expect(logsChain.delete).toHaveBeenCalled();
     });
 
     it('returns 404 when deleting another user log', async () => {

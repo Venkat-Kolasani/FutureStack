@@ -678,6 +678,7 @@ The authentication path distinguishes invalid tokens from database/bootstrap fai
 | Collaboration authorization and votes | `backend/src/routes/hackathons.js`, `supabase/migrations/20260716081332_idempotent_idea_votes.sql`, `supabase/migrations/20260716083209_team_memberships_and_invites.sql`, `supabase/migrations/20260716100000_review_hardening.sql` |
 | Website notifications, reminder outbox, and email preference | `src/pages/Notifications.jsx`, `backend/src/routes/notifications.js`, `backend/src/routes/notification-preferences.js`, `backend/src/lib/reminderJobs.js`, `backend/src/lib/reminderEmail.js`, `.github/workflows/dispatch-reminders.yml`, `supabase/migrations/20260716082400_transactional_reminder_outbox.sql`, `supabase/migrations/20260716120000_optional_email_reminders.sql`, `supabase/migrations/20260716123000_user_notification_preferences.sql` |
 | Active internship events | `src/components/rounds/`, `backend/src/routes/upcoming-rounds.js`, `supabase/migrations/20260716110000_rounds_drive_active_events.sql` |
+| Progress logger | `src/pages/Progress.jsx`, `backend/src/routes/progress.js`, `backend/src/validation/progress-schemas.js`, `backend/tests/integration/progress.test.js` |
 | SQL schema and policies | `docs/*.sql`, `supabase/migrations/` |
 | Tests and CI | `docs/TESTING.md`, `backend/tests/`, `.github/workflows/ci.yml` |
 
