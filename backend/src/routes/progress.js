@@ -11,6 +11,7 @@ const {
     dateParamSchema,
     trackIdParamSchema,
     idParamSchema,
+    assertLoggedDayHasNote,
 } = require('../validation/progress-schemas');
 
 const router = express.Router();
@@ -286,6 +287,33 @@ router.post('/logs', validate(createLogSchema), async (req, res) => {
 router.patch('/logs/:id', validate(idParamSchema, 'params'), validate(updateLogSchema), async (req, res) => {
     try {
         const userId = req.auth.internalUserId;
+
+        const { data: existing, error: fetchError } = await supabase
+            .from('progress_logs')
+            .select('*')
+            .eq('id', req.params.id)
+            .eq('user_id', userId)
+            .maybeSingle();
+
+        if (fetchError) throw fetchError;
+        if (!existing) {
+            return res.status(404).json({ error: 'Progress log not found' });
+        }
+
+        const nextDidLog = req.body.didLog !== undefined ? req.body.didLog : existing.did_log;
+        const nextWhatDidYouDo = req.body.whatDidYouDo !== undefined
+            ? req.body.whatDidYouDo
+            : (existing.what_did_you_do || '');
+
+        const noteError = assertLoggedDayHasNote(nextDidLog, nextWhatDidYouDo);
+        if (noteError) {
+            return res.status(400).json({
+                error: 'Validation Error',
+                message: 'The request data is invalid',
+                details: [noteError],
+            });
+        }
+
         const updates = {};
         if (req.body.didLog !== undefined) updates.did_log = req.body.didLog;
         if (req.body.whatDidYouDo !== undefined) updates.what_did_you_do = req.body.whatDidYouDo;
@@ -306,7 +334,10 @@ router.patch('/logs/:id', validate(idParamSchema, 'params'), validate(updateLogS
         if (!data) {
             return res.status(404).json({ error: 'Progress log not found' });
         }
-        return res.json(serializeLog(data));
+
+        const track = await findOwnedTrack(data.track_id, userId);
+        const trackById = track ? { [track.id]: track } : {};
+        return res.json(serializeLog(data, trackById));
     } catch (error) {
         return handleRouteError(res, 'UPDATE_PROGRESS_LOG', error, 'Failed to update progress log');
     }

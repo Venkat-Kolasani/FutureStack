@@ -1,12 +1,31 @@
 const Joi = require('joi');
+const { isValidCalendarIsoDate } = require('../lib/progressHeatmap');
 
 const TEMPLATE_TYPES = ['leetcode', 'dev', 'system_design', 'mock', 'reading', 'custom'];
 const MOODS = ['easy', 'moderate', 'hard'];
-const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
-const isoDate = Joi.string().pattern(ISO_DATE).messages({
+const isoDate = Joi.string().custom((value, helpers) => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+        return helpers.error('string.pattern.base');
+    }
+    if (!isValidCalendarIsoDate(value)) {
+        return helpers.error('date.invalid');
+    }
+    return value;
+}).messages({
     'string.pattern.base': 'Date must be YYYY-MM-DD',
+    'date.invalid': 'Date must be a valid calendar date',
 });
+
+function assertLoggedDayHasNote(didLog, whatDidYouDo) {
+    if (didLog && !String(whatDidYouDo ?? '').trim()) {
+        return {
+            field: 'whatDidYouDo',
+            message: 'whatDidYouDo is required when didLog is true',
+        };
+    }
+    return null;
+}
 
 const uuidParam = (field, label) => Joi.object({
     [field]: Joi.string().uuid().required().messages({
@@ -83,4 +102,5 @@ module.exports = {
     dateParamSchema,
     trackIdParamSchema,
     idParamSchema,
+    assertLoggedDayHasNote,
 };

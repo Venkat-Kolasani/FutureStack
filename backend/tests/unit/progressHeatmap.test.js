@@ -1,4 +1,24 @@
-const { fillHeatmapDays, HEATMAP_DAY_COUNT, shiftIsoDate } = require('../../src/lib/progressHeatmap');
+const { fillHeatmapDays, HEATMAP_DAY_COUNT, isValidCalendarIsoDate, resolveHeatmapEndDate, shiftIsoDate } = require('../../src/lib/progressHeatmap');
+
+describe('isValidCalendarIsoDate', () => {
+    it('accepts valid calendar dates', () => {
+        expect(isValidCalendarIsoDate('2026-08-21')).toBe(true);
+        expect(isValidCalendarIsoDate('2024-02-29')).toBe(true);
+    });
+
+    it('rejects calendar-invalid dates', () => {
+        expect(isValidCalendarIsoDate('2026-02-30')).toBe(false);
+        expect(isValidCalendarIsoDate('2023-02-29')).toBe(false);
+    });
+});
+
+describe('resolveHeatmapEndDate', () => {
+    it('falls back when end is calendar-invalid', () => {
+        const resolved = resolveHeatmapEndDate('2026-02-30');
+        expect(resolved).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+        expect(resolved).not.toBe('2026-02-30');
+    });
+});
 
 describe('fillHeatmapDays', () => {
     it('returns 365 consecutive days including zeros', () => {

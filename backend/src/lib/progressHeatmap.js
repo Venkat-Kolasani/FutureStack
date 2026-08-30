@@ -1,6 +1,20 @@
 const HEATMAP_DAY_COUNT = 365;
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
+function isValidCalendarIsoDate(isoDateStr) {
+    if (typeof isoDateStr !== 'string' || !ISO_DATE.test(isoDateStr)) {
+        return false;
+    }
+
+    const [year, month, day] = isoDateStr.split('-').map(Number);
+    const parsed = new Date(Date.UTC(year, month - 1, day));
+    return (
+        parsed.getUTCFullYear() === year
+        && parsed.getUTCMonth() === month - 1
+        && parsed.getUTCDate() === day
+    );
+}
+
 function shiftIsoDate(isoDate, days) {
     const [year, month, day] = isoDate.split('-').map(Number);
     const shifted = new Date(Date.UTC(year, month - 1, day + days));
@@ -12,7 +26,7 @@ function utcTodayIsoDate() {
 }
 
 function resolveHeatmapEndDate(endDate) {
-    if (typeof endDate === 'string' && ISO_DATE.test(endDate)) {
+    if (typeof endDate === 'string' && isValidCalendarIsoDate(endDate)) {
         return endDate;
     }
     return utcTodayIsoDate();
@@ -59,6 +73,7 @@ function fillHeatmapDays(rows = [], endDate, dayCount = HEATMAP_DAY_COUNT) {
 module.exports = {
     HEATMAP_DAY_COUNT,
     fillHeatmapDays,
+    isValidCalendarIsoDate,
     resolveHeatmapEndDate,
     shiftIsoDate,
 };

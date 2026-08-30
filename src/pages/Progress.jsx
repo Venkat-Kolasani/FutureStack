@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import SEO from '../components/seo/SEO';
 import Card from '../components/common/Card';
@@ -39,6 +39,7 @@ const Progress = () => {
   const [createOpen, setCreateOpen] = useState(false);
   const [activeTrack, setActiveTrack] = useState(null);
   const [existingLog, setExistingLog] = useState(null);
+  const dayLogsRequestId = useRef(0);
 
   const activeTracks = useMemo(() => tracks.filter((track) => track.isActive !== false), [tracks]);
 
@@ -60,8 +61,11 @@ const Progress = () => {
   }, [todayKey]);
 
   const loadDayLogs = useCallback(async (date) => {
+    const requestId = ++dayLogsRequestId.current;
     const logs = await progressService.listLogsByDate(date);
-    setDayLogs(logs);
+    if (requestId === dayLogsRequestId.current) {
+      setDayLogs(logs);
+    }
   }, []);
 
   useEffect(() => {
