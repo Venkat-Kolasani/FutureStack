@@ -38,6 +38,7 @@ export REACT_APP_API_URL=http://localhost:3001/api/v1
 | Dashboard share links (`share_links`, `/share/:token`, `shareLinkService`) | `cd backend && npm test -- share-links`, `npm run test:ci`, `npm run build`, manual flow in [`docs/share-links.md`](share-links.md#manual-verification) |
 | Interview rounds (`backend/src/routes/opportunity-rounds.js`, `src/components/rounds/*`) | `cd backend && npm test -- rounds`, manual flow in [`docs/interview-rounds.md`](interview-rounds.md#testing) |
 | Interview prep (`backend/src/routes/interview-prep.js`, `src/components/interview-prep/*`) | `cd backend && npm test -- interview-prep`, manual flow in [`docs/interview-prep.md`](interview-prep.md#testing) |
+| Progress logger (`backend/src/routes/progress.js`, `src/pages/Progress.jsx`) | `cd backend && npm test -- progress`, `npm run test:ci -- --testPathPattern=Progress.test` |
 | ATS scorer (`src/utils/atsScorer.js`, `DocumentUpload.jsx`) | `npm test -- atsScorer`, upload PDF/DOCX on `/documents` |
 | Chrome extension (`extensions/**`) | `cd extensions && npm ci && npm test && npm run build`; follow the extension manual flow below |
 
@@ -104,6 +105,20 @@ See [`docs/interview-prep.md`](interview-prep.md#testing).
 
 ```bash
 cd backend && npm test -- interview-prep
+```
+
+### Progress logger (if you changed progress API or UI)
+
+1. Open `/progress` while signed in.
+2. Create a track, log today with a note, and confirm the heatmap and journal update.
+3. Select another day on the heatmap and confirm the journal follows the latest selection.
+4. Mark an off day and confirm it saves without a note.
+
+Backend integration tests in `backend/tests/integration/progress.test.js` cover track/log CRUD, calendar-invalid dates, logged-day validation, user scoping, and successful DELETE mutations (204 plus `delete()` on the mocked Supabase chain).
+
+```bash
+cd backend && npm test -- progress
+npm run test:ci -- --testPathPattern=Progress.test
 ```
 
 ### Documents & ATS (if you changed upload or scorer)

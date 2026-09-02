@@ -53,7 +53,8 @@ Career applications are fragmented across job boards, messages, spreadsheets, do
 | AI Resume Checker | Implemented, UI-gated | Backend pipeline, storage, provider settings, tests, and UI components exist; `AI_RESUME_CHECK_ENABLED` is currently `false`. |
 | Hackathon submission reminders | Available, scheduler-configured | The outbox and leased dispatcher create durable in-app notifications. GitHub Actions is an optional best-effort free-tier scheduler; the active-events migration limits new reminder intent to hackathon submissions. |
 | Website notification center and optional Resend email reminders | Implemented, migration/config-gated | The bell page shows persisted website notifications and lets each user opt into email copies. Recipients are resolved from `users.email` or, if that is empty, from Clerk at send time. A per-job delivery record and Resend idempotency key make retried sends safe. |
-| Tags, bulk import/export, advanced filters, Progress Logger | Planned | These are intentionally not claimed as shipped features. Progress Logger tables exist in migration SQL. A mock heatmap preview lives at `/progress`; tracks, logs, and the API are not wired. |
+| Tags, bulk import/export, advanced filters | Planned | These are intentionally not claimed as shipped features. |
+| Progress Logger | Available | Authenticated `/progress` page with tracks, daily logs, and a yearly heatmap. Data is owned per user and served through `/api/v1/progress`. This is a prep journal, not an analytics suite. |
 
 **Production rollout status (checked August 21, 2026):** Active-events, notification-preference, and optional-email migrations live in `supabase/migrations/` and are applied to the maintainer's Supabase project. Matching API and frontend behavior is on the main branch. Deploy API and web together whenever a database gains new columns or triggers. Optional Resend email remains off until backend env vars and the user's Notifications opt-in are both set. Confirm the email gate with `GET /api/v1/health/deps` (`checks.reminderEmail.enabled`). Clerk session JWTs do not include email by default, so the dispatcher resolves a missing `users.email` from Clerk when it sends.
 
@@ -677,6 +678,7 @@ The authentication path distinguishes invalid tokens from database/bootstrap fai
 | Collaboration authorization and votes | `backend/src/routes/hackathons.js`, `supabase/migrations/20260716081332_idempotent_idea_votes.sql`, `supabase/migrations/20260716083209_team_memberships_and_invites.sql`, `supabase/migrations/20260716100000_review_hardening.sql` |
 | Website notifications, reminder outbox, and email preference | `src/pages/Notifications.jsx`, `backend/src/routes/notifications.js`, `backend/src/routes/notification-preferences.js`, `backend/src/lib/reminderJobs.js`, `backend/src/lib/reminderEmail.js`, `.github/workflows/dispatch-reminders.yml`, `supabase/migrations/20260716082400_transactional_reminder_outbox.sql`, `supabase/migrations/20260716120000_optional_email_reminders.sql`, `supabase/migrations/20260716123000_user_notification_preferences.sql` |
 | Active internship events | `src/components/rounds/`, `backend/src/routes/upcoming-rounds.js`, `supabase/migrations/20260716110000_rounds_drive_active_events.sql` |
+| Progress logger | `src/pages/Progress.jsx`, `backend/src/routes/progress.js`, `backend/src/validation/progress-schemas.js`, `backend/tests/integration/progress.test.js` |
 | SQL schema and policies | `docs/*.sql`, `supabase/migrations/` |
 | Tests and CI | `docs/TESTING.md`, `backend/tests/`, `.github/workflows/ci.yml` |
 
