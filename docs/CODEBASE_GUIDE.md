@@ -4,7 +4,7 @@ Quick orientation for contributors, reviewers, and technical interviews. Read th
 
 ## What is FutureTracker?
 
-A full-stack React + Express app that helps students track internships and hackathons: Kanban status board, analytics, documents, multi-round interview pipelines, per-internship prep workspaces, hackathon team collaboration, and a Chrome MV3 opportunity saver.
+A full-stack Next.js + Express app that helps students track internships and hackathons: Kanban status board, analytics, documents, multi-round interview pipelines, per-internship prep workspaces, hackathon team collaboration, and a Chrome MV3 opportunity saver.
 
 | Environment | URL |
 |-------------|-----|
@@ -20,13 +20,14 @@ A full-stack React + Express app that helps students track internships and hacka
 
 ```
 FutureStack/
-├── src/                          # React frontend (Create React App)
-│   ├── App.js                    # Routes, lazy loading, analytics
-│   ├── pages/                    # One file per route (see table below)
+├── src/                          # Next.js 15 App Router frontend
+│   ├── app/                      # Server routes, metadata, sitemap, robots
+│   ├── views/                    # Client screens rendered by app/page.tsx wrappers
 │   ├── components/               # UI by domain (common, opportunities, interview-prep, …)
-│   ├── services/api.js           # Axios client + all API service objects
-│   ├── hooks/useAuthToken.js     # Registers Clerk JWT getter for API
-│   ├── lib/supabase.js           # Realtime client ONLY (not CRUD)
+│   ├── services/api.ts           # Axios client + all API service objects
+│   ├── hooks/useAuthToken.ts     # Registers Clerk JWT getter for API
+│   ├── lib/supabase.ts           # Realtime client ONLY (not CRUD)
+│   ├── types/                    # Domain models aligned with backend Joi schemas
 │   └── utils/                    # Pure helpers (dates, PDF export, ATS scorer)
 ├── backend/
 │   └── src/
@@ -40,7 +41,7 @@ FutureStack/
 │   ├── src/sidepanel/            # Clerk-backed review and save UI
 │   └── readme.md                 # Setup, Clerk/CORS, and manual test guide
 ├── docs/                         # Feature guides, migrations, testing
-└── scripts/                      # architecture-check, verify-rounds-schema
+└── scripts/                      # architecture-check, verify-rounds-schema, seo-smoke
 ```
 
 ---
@@ -60,7 +61,7 @@ FutureStack/
 ```mermaid
 sequenceDiagram
     participant R as React page
-    participant A as src/services/api.js
+    participant A as src/services/api.ts
     participant E as Express + auth.js
     participant S as Supabase (service role)
 
@@ -81,20 +82,22 @@ sequenceDiagram
 
 | Path | Page | Auth | Notes |
 |------|------|------|-------|
-| `/` | `Home.jsx` | Public | Landing + footer status link |
-| `/share/:token` | `PublicSharePage.jsx` | Public | Read-only redacted opportunity share, optional passcode |
+| `/` | `(marketing)/page.tsx` + `LandingPage.jsx` | Public | Server-rendered landing + client auth islands |
+| `/about`, `/privacy`, `/guides/[slug]` | `(marketing)/` | Public | Indexable marketing HTML |
+| `/share/[token]` | `PublicSharePage.jsx` | Public | Read-only redacted opportunity share, optional passcode |
 | `/dashboard` | `Dashboard.jsx` | ✅ | Stats, interview rounds, hackathon submission deadlines |
 | `/internships` | `InternshipList.jsx` | ✅ | Detail drawer → rounds + prep |
-| `/internships/:id/prep` | `InterviewPrepDetail.jsx` | ✅ | Interview prep workspace |
+| `/internships/[id]/prep` | `InterviewPrepDetail.jsx` | ✅ | Interview prep workspace |
 | `/hackathons` | `HackathonList.jsx` | ✅ | |
-| `/hackathons/:id` | `HackathonDetail.jsx` | ✅ | Team, ideas, tasks, checklist |
+| `/hackathons/[id]` | `HackathonDetail.jsx` | ✅ | Team, ideas, tasks, checklist |
 | `/status-board` | `StatusBoard.jsx` | ✅ | Kanban + realtime |
 | `/calendar` | `Calendar.jsx` | ✅ | |
 | `/documents` | `Documents.jsx` | ✅ | Upload, document links, ATS analysis, and gated AI controls |
 | `/analytics` | `Analytics.jsx` | ✅ | Charts + rejection insights |
 | `/reports` | `Reports.jsx` | ✅ | PDF export |
 | `/notifications` | `Notifications.jsx` | ✅ | In-app reminders and email opt-in |
-| `/add`, `/edit/:id` | Add/Edit opportunity | ✅ | |
+| `/progress` | `Progress.jsx` | ✅ | Tracks, daily logs, heatmap |
+| `/add`, `/edit/[id]` | Add/Edit opportunity | ✅ | |
 
 ---
 
@@ -125,7 +128,7 @@ and the provider-agnostic LLM layer in `lib/llm/`. See [`ai-resume-checker.md`](
 
 ---
 
-## API service objects (`src/services/api.js`)
+## API service objects (`src/services/api.ts`)
 
 | Export | Backend prefix |
 |--------|----------------|
@@ -154,7 +157,7 @@ Always add new endpoints here — pages should not construct URLs manually.
 | Documents + ATS | [`documents-and-ats.md`](documents-and-ats.md) | `documents-migration.sql` |
 | AI Resume Checker (UI gated) | [`ai-resume-checker.md`](ai-resume-checker.md) | `ai-resume-check-migration.sql`, `user-ai-settings-migration.sql` |
 | Dashboard share links | [`share-links.md`](share-links.md) | `share-links-migration.sql`, `supabase/migrations/20260624163000_create_share_links.sql`, `supabase/migrations/20260624171000_add_recoverable_share_tokens.sql` |
-| Hackathon collaboration | `src/pages/HackathonDetail.jsx` and `src/components/hackathons/` | `hackathon-collaboration-migration.sql`, `20260716081332_idempotent_idea_votes.sql`, `20260716083209_team_memberships_and_invites.sql`, `20260716100000_review_hardening.sql` |
+| Hackathon collaboration | `src/views/HackathonDetail.jsx` and `src/components/hackathons/` | `hackathon-collaboration-migration.sql`, `20260716081332_idempotent_idea_votes.sql`, `20260716083209_team_memberships_and_invites.sql`, `20260716100000_review_hardening.sql` |
 | Active events and reminders | `backend/src/routes/upcoming-rounds.js`, `backend/src/lib/reminderJobs.js`, `backend/src/lib/reminderEmail.js`, `backend/src/lib/clerkEmail.js`, `.github/workflows/dispatch-reminders.yml` | `20260716110000_rounds_drive_active_events.sql`, `20260716082400_transactional_reminder_outbox.sql`, `20260716100000_review_hardening.sql`, `20260716120000_optional_email_reminders.sql`, `20260716123000_user_notification_preferences.sql` |
 | Architecture & challenges | [`DOCUMENTATION.md`](DOCUMENTATION.md) | `supabase-schema.sql` |
 | Testing & CI | [`TESTING.md`](TESTING.md) | — |
@@ -187,7 +190,7 @@ When explaining the project in an interview, lead with **realtime Kanban + RLS c
 cd backend && npm run dev    # :3001
 
 # Terminal 2
-npm start                    # :3000
+npm run dev                    # :3000
 ```
 
 Env files: `.env` (frontend), `backend/.env` (API). See README **Environment Variables**.
@@ -210,8 +213,8 @@ Full checklist: [`TESTING.md`](TESTING.md).
 |------|------------|
 | Fix internship drawer | `OpportunityDetailModal.jsx`, `roundService` |
 | Add prep field | `interview-prep-migration.sql` → `interview-prep-schemas.js` → route → panel component |
-| New API endpoint | `backend/src/routes/` + test + `api.js` service method |
-| UI-only change | `src/components/` or `src/pages/` + smoke test |
+| New API endpoint | `backend/src/routes/` + test + `api.ts` service method |
+| UI-only change | `src/components/` or `src/views/` + smoke test |
 | DB column | New `docs/*-migration.sql` + backend validation + frontend types |
 
 ---
