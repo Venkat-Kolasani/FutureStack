@@ -12,8 +12,8 @@ const errors = [];
 const warnings = [];
 
 const SUPABASE_FROM_ALLOWLIST = new Set([
-    'src/lib/supabase.js',
-    'src/pages/StatusBoard.jsx',
+    'src/lib/supabase.ts',
+    'src/views/StatusBoard.jsx',
 ]);
 
 // Catches supabase.from(, supabase?.from(, supabase . from(, etc.
