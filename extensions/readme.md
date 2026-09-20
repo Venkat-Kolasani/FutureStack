@@ -1,6 +1,8 @@
 # FutureTracker Chrome Extension
 
-Save job/internship listings to FutureTracker with one click.
+Save job and internship listings to FutureTracker from a side panel that stays open while you copy from the page.
+
+The toolbar icon opens the **side panel**, not a popup. Chrome destroys popups when they lose focus, which made multi-section copy/paste impossible. The side panel stays docked, so you can select title, then description, then more JD sections without losing the form.
 
 ## Extension ID
 
@@ -27,25 +29,35 @@ npm install
 Copy `.env.example` to `.env` and fill in your values.
 
 **Local development:**
+```dotenv
 VITE_CLERK_PUBLISHABLE_KEY=pk_test_your_key_here
 VITE_API_BASE=http://localhost:3001
 VITE_SYNC_HOST=http://localhost:3000
+```
 
 **Production:**
+```dotenv
 VITE_CLERK_PUBLISHABLE_KEY=pk_live_your_key_here
-VITE_API_BASE=https://your-backend.onrender.com
-VITE_SYNC_HOST=https://clerk.your-domain.com
+VITE_API_BASE=https://futurestack-aeyn.onrender.com
+VITE_SYNC_HOST=https://clerk.futuretracker.online
+```
 
 ### 3. Build the extension
+
+Local API and Clerk sync need the localhost hosts from `manifest.development.json`:
+
 ```bash
-npm run build
+npm run build:dev
 ```
+
+`npm run build` is the production package: it pins `https://futurestack-aeyn.onrender.com` and omits localhost. Use `npm run dev` for a watch build with the same development hosts.
 
 ### 4. Load in Chrome
 1. Open Chrome and go to `chrome://extensions`
 2. Enable **Developer mode** (top right toggle)
 3. Click **Load unpacked**
 4. Select the `extensions/dist` folder
+5. Pin **FutureTracker Saver** and click it — the save form opens in the side panel
 
 ### 5. Add to Clerk allowed origins
 
@@ -58,7 +70,7 @@ curl -X PATCH https://api.clerk.com/v1/instance \
   -d '{"allowed_origins": ["chrome-extension://ocadhiiiainnijhhimhmpagfdmfcnfmj"]}'
 ```
 
-> ⚠️ Never paste your secret key directly into terminal commands — it persists in shell history.
+> Never paste your secret key directly into terminal commands — it persists in shell history.
 
 ## Backend CORS Setup
 
@@ -66,25 +78,54 @@ The backend reads from `CORS_ORIGIN` in `backend/.env`.
 Add the extension ID to the comma-separated list:
 
 **Local development:**
+```dotenv
 CORS_ORIGIN=http://localhost:3000,chrome-extension://ocadhiiiainnijhhimhmpagfdmfcnfmj
+```
 
 **Production:**
+```dotenv
 CORS_ORIGIN=https://futuretracker.online,chrome-extension://ocadhiiiainnijhhimhmpagfdmfcnfmj
+```
+
+## What it extracts
+
+The side panel injects a parser into the active tab and prefers structured job data over Open Graph blurbs:
+
+| Site | How fields are filled |
+| --- | --- |
+| LinkedIn | Job heading and `#job-details` in the open job pane; ignores “See who you know” OG copy |
+| Greenhouse | JSON-LD `JobPosting` when present; otherwise `job-boards.greenhouse.io` / `boards.greenhouse.io` heading and `.job__description`. Ignores one-line OG location blurbs |
+| Lever | JSON-LD `@graph` / `JobPosting` on `jobs.lever.co`, with posting-body fallbacks |
+| Other pages | JSON-LD when present, then `og:title` / `og:description` / `document.title` |
+
+Company and location are shown as helper text and may be folded into the title (`Role at Company`). They are not separate API fields. After the first website sign-in, close and reopen the side panel so Clerk session sync is picked up.
+
+## Copying multiple sections
+
+If the parser misses a field, keep the side panel open and:
+
+1. Select text on the listing
+2. Click **Use selection** (replace) or **Add selection** (append to the description)
+3. Or copy on the page and paste into the panel with Ctrl/Cmd+V
+
+Drafts are stored per tab/listing in `chrome.storage.session` so an accidental panel close does not wipe pasted text. **Re-read page** fills empty or unedited fields after a slow SPA load. Edited fields are not overwritten.
 
 ## Manual Test Plan
 
-1. Sign in at [futuretracker.online](https://futuretracker.online)
+1. Sign in at [futuretracker.online](https://futuretracker.online), then close and reopen the side panel
 2. Visit a concrete job listing page, for example:
-   - Internshala: `https://internshala.com/internship/detail/software-development-work-from-home-job-internship-at-skillible1749535640`
    - LinkedIn: `https://www.linkedin.com/jobs/view/4415735571/`
-     (Note: LinkedIn blocks content scripts — title may need manual entry)
-3. Verify the popup pre-fills:
-   - **Title** — matches the job/internship title on the page
-   - **Description** — matches the company or role description
-   - **URL** — matches the current page URL
-4. Select category and status
-5. Click **Save Opportunity**
-6. Go to [Dashboard](https://futuretracker.online/dashboard) and confirm entry appears
+   - Greenhouse: a public `https://boards.greenhouse.io/{company}/jobs/{id}` posting
+   - Lever: a public `https://jobs.lever.co/{company}/{id}` posting
+   - Internshala or another board still uses the generic JSON-LD / Open Graph fallback
+3. Verify the side panel pre-fills:
+   - **Title** — the role, not the site name
+   - **Description** — the job body, not a one-line OG summary
+   - **URL** — the current page URL (editable)
+4. Select another paragraph on the page, click **Add selection**, and confirm the panel stayed open
+5. Select category and status
+6. Click **Save opportunity**
+7. Go to [Internships](https://futuretracker.online/internships) or [Hackathons](https://futuretracker.online/hackathons) and confirm the entry appears
 
 ## Running Tests
 ```bash
@@ -93,20 +134,32 @@ npm test
 ```
 
 ## Folder Structure
+```text
 extensions/
 ├── src/
-│   ├── background.js     # Clerk session sync
-│   ├── content.js        # Page metadata scraper (injected on demand)
+│   ├── background.js          # Clerk session sync + open side panel on icon click
+│   ├── content.js             # Optional message-based extractor (not declared in the manifest)
 │   ├── lib/
-│   │   ├── clerk.js      # Clerk config
-│   │   └── api.js        # Backend API calls with timeout
-│   └── popup/
-│       ├── index.html    # Popup HTML shell
-│       ├── main.jsx      # React entry point
-│       └── popup.jsx     # Popup UI component
-├── public/icons/         # Extension icons (16, 48, 128px)
+│   │   ├── extractJob.js      # LinkedIn / Greenhouse / Lever / JSON-LD / OG parsers
+│   │   ├── htmlToText.js      # HTML job-description cleanup
+│   │   ├── injectExtractJob.js# Isolated-world entry injected into the tab
+│   │   ├── tab.js             # executeScript helpers
+│   │   ├── draft.js           # Per-listing session drafts
+│   │   ├── draftPersistence.js# Debounced draft writes that cannot outrun a save
+│   │   ├── opportunityFields.js # Title/description/link limits and URL checks
+│   │   ├── clerk.js           # Clerk config
+│   │   └── api.js             # Backend API calls
+│   └── sidepanel/             # Clerk-backed review and save UI
+├── public/icons/              # Extension icons (16, 48, 128px)
 ├── tests/
-│   └── metadata.test.js  # Unit tests for metadata extraction
-├── manifest.json         # Chrome MV3 manifest
-├── vite.config.js        # Vite + crxjs build config
-└── .env.example          # Environment variable template
+│   ├── extractJob.test.js     # Parser and merge tests
+│   ├── metadata.test.js       # Open Graph fallback tests
+│   ├── opportunityFields.test.js
+│   ├── draftPersistence.test.js
+│   ├── manifest.test.js       # Production vs development host permissions
+│   └── fixtures/              # LinkedIn, Greenhouse, Lever, and generic HTML
+├── manifest.json              # Production MV3 host permissions
+├── manifest.development.json  # Localhost hosts merged by npm run build:dev
+├── vite.config.js             # Vite + crxjs build config
+└── .env.example               # Environment variable template
+```

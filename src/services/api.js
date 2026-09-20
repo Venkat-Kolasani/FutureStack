@@ -387,6 +387,56 @@ export const notificationPreferenceService = {
     },
 };
 
+export const progressService = {
+    listTracks: async () => {
+        const response = await api.get('/progress/tracks');
+        return response.data;
+    },
+
+    createTrack: async (payload) => {
+        const response = await api.post('/progress/tracks', payload);
+        return response.data;
+    },
+
+    updateTrack: async (id, payload) => {
+        const response = await api.patch(`/progress/tracks/${id}`, payload);
+        return response.data;
+    },
+
+    deleteTrack: async (id) => {
+        await api.delete(`/progress/tracks/${id}`);
+    },
+
+    listLogsByTrack: async (trackId) => {
+        const response = await api.get(`/progress/logs/${trackId}`);
+        return response.data;
+    },
+
+    listLogsByDate: async (date) => {
+        const response = await api.get(`/progress/logs/date/${date}`);
+        return response.data;
+    },
+
+    saveLog: async (payload) => {
+        const response = await api.post('/progress/logs', payload);
+        return response.data;
+    },
+
+    updateLog: async (id, payload) => {
+        const response = await api.patch(`/progress/logs/${id}`, payload);
+        return response.data;
+    },
+
+    deleteLog: async (id) => {
+        await api.delete(`/progress/logs/${id}`);
+    },
+
+    getHeatmap: async (end) => {
+        const response = await api.get('/progress/heatmap', { params: end ? { end } : undefined });
+        return response.data;
+    },
+};
+
 // =============================================================================
 // HACKATHON TEAM COLLABORATION SERVICE
 // =============================================================================

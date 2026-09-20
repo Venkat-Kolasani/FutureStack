@@ -1,7 +1,7 @@
 import { getPageMetadata } from '../src/lib/metadata.js';
 
 describe('getPageMetadata', () => {
-  const url = { href: 'https://linkedin.com/jobs/123' };
+  const url = { href: 'https://internshala.com/internship/detail/example' };
 
   test('returns og:title when present', () => {
     const documentObject = {

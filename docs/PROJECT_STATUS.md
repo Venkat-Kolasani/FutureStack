@@ -1,13 +1,13 @@
 # Project Status
 
-Last reviewed: August 21, 2026
+Last reviewed: August 24, 2026
 
 This is the source of truth for the repository's product status. It distinguishes code that is available in the app from code that is intentionally gated or planned.
 
 | Capability | Status | Notes |
 | --- | --- | --- |
 | Opportunity tracking | Available | Create, edit, delete, search, filter, and classify internship and hackathon opportunities. On-campus vs off-campus mode on internships and in list filters. |
-| Chrome MV3 opportunity saver | Implemented, configuration-gated | Popup collects page metadata on demand, supports campus mode, syncs a Clerk session, and saves through the API. Requires extension build/load, Clerk allowed-origin, and backend CORS setup. See [extensions/readme.md](../extensions/readme.md). |
+| Chrome MV3 opportunity saver | Implemented, configuration-gated | Side panel collects LinkedIn/Greenhouse/Lever (and generic) job fields, lets users append selected page text, supports campus mode, syncs a Clerk session, and saves through the API. Requires extension build/load, Clerk allowed-origin, and backend CORS setup. See [extensions/readme.md](../extensions/readme.md). |
 | Active-event dashboard, calendar, status board, reports | Available after migration | With `20260716110000_rounds_drive_active_events.sql` applied, internships use **Applied on**, scheduled rounds drive calendar/dashboard events, and hackathon **deadline** remains the submission date. |
 | Light and dark theme | Available | Persisted user preference with themed Clerk UI and app-wide contrast work. |
 | Interview rounds | Available | Internship-only multi-round timeline with optional scheduled date/time; parent status synchronizes server-side. |
@@ -20,7 +20,8 @@ This is the source of truth for the repository's product status. It distinguishe
 | Optional Resend email reminders | Implemented, migration/config-gated | User opt-in on the Notifications page; dispatcher sends after in-app notification when `REMINDER_EMAILS_ENABLED` and Resend env vars are set. Missing `users.email` is resolved from Clerk at send time. |
 | Read-only share links | Available | Expiring or revocable snapshots with optional passcode verification. |
 | AI Resume Checker | Implemented, UI gated | Backend pipeline, persistence, provider settings, and tests exist. `AI_RESUME_CHECK_ENABLED` is `false` in `src/config/features.js`. |
-| Tags, bulk import/export, advanced filters, Progress Logger | Planned | See [future.md](future.md). Schema migrations exist. A mock heatmap preview is at `/progress` for design review; there is no API or product logging UI yet. |
+| Tags, bulk import/export, advanced filters | Planned | See [future.md](future.md). |
+| Progress Logger | Available | `/progress` now logs real prep tracks against `/api/v1/progress`. The heatmap is live user data, not a mock. |
 
 ## Release safeguards
 

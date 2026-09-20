@@ -1,22 +1,26 @@
 {
   "manifest_version": 3,
   "name": "FutureTracker Saver",
-  "version": "1.0.2",
-  "description": "Save job/internship listings to FutureTracker",
+  "version": "1.1.0",
+  "description": "Save job listings from LinkedIn, Greenhouse, Lever, and other pages to FutureTracker",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApfGYzPfQaRSMaqmuGZbW52+EOzfivBbIvsNAUa/gajIZjxk66JD6pRnipQfJ19eMhUouEzKpUMcC8LN89QJkjWiR01AuFaRD8aIiG7gNKSJZKQIfEQ/MhOtU0p/3uPjlhA/llXu2INRQ+9g7RKsXM06kJO44ZGcNhciwID0okl2z0b1cF7QNpsGEprthOZzdhJzgsHG+bMp4rUJiHcIn/PY+DFz+0qwWxsz3hkX+uhV5jyzRjaQoyC4sK777/ehndsznWvDTSaIExjEcc8Zh9imHGFDFieeZqoH49VGYjacIXmHLduUy5bf/qDWfh1EdcjpWsCpWiPBX20wDNpnpEwIDAQAB",
   "action": {
-    "default_popup": "src/popup/index.html",
+    "default_title": "Save to FutureTracker",
     "default_icon": { "16": "icons/16.png", "48": "icons/48.png", "128": "icons/128.png" }
   },
+  "side_panel": {
+    "default_path": "src/sidepanel/index.html"
+  },
   "icons": { "16": "icons/16.png", "48": "icons/48.png", "128": "icons/128.png" },
-  "permissions": ["activeTab", "storage", "scripting", "cookies"],
+  "permissions": ["activeTab", "storage", "scripting", "cookies", "sidePanel"],
   "host_permissions": [
     "https://futuretracker.online/*",
     "https://clerk.futuretracker.online/*",
     "https://*.clerk.accounts.dev/*",
-    "https://*.onrender.com/*",
-    "http://localhost:3000/*",
-    "http://localhost:3001/*"
+    "https://futurestack-aeyn.onrender.com/*",
+    "https://*.linkedin.com/*",
+    "https://*.greenhouse.io/*",
+    "https://jobs.lever.co/*"
   ],
   "background": { "service_worker": "src/background.js", "type": "module" }
 }

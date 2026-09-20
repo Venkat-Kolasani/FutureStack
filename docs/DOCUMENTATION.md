@@ -32,7 +32,7 @@ Career applications are fragmented across job boards, messages, spreadsheets, do
 ### Primary user flow
 
 1. A user signs in with Clerk.
-2. They can add an internship or hackathon directly, or use the Chrome MV3 extension to prefill title, description, and link from the active tab before saving.
+2. They can add an internship or hackathon directly, or use the Chrome MV3 side-panel extension to prefill title, description, and link from LinkedIn, Greenhouse, Lever, or generic job pages before saving. The panel stays open so missing fields can be filled from page selection or paste.
 3. The dashboard, calendar, list, and Kanban board present the same opportunity data in different task-oriented views.
 4. For an internship, the user can add interview rounds and preparation material. Round outcomes synchronize the parent opportunity status.
 5. The user uploads or links a resume/cover letter, receives client-side ATS-style feedback for supported files, and assigns documents to applications.
@@ -44,7 +44,7 @@ Career applications are fragmented across job boards, messages, spreadsheets, do
 | Capability | Current state | Important interview detail |
 | --- | --- | --- |
 | Opportunity CRUD, dashboard, calendar, reports, analytics | Available in the current release | Internships support `campus_mode` (on/off campus) in the API and UI filters. The active-events migration uses `applied_on` for internships and reserves active `deadline` behavior for hackathon submissions; all mutations go through the Express API. |
-| Chrome MV3 opportunity saver | Implemented, configuration-gated | The popup injects metadata extraction only when opened, lets users review fields (including campus mode), obtains a Clerk token through the extension sync host, and posts through the supported legacy `POST /api/opportunities` compatibility mount. Manual loading plus Clerk allowed-origin and CORS configuration remain deployment steps. |
+| Chrome MV3 opportunity saver | Implemented, configuration-gated | The side panel (not a toolbar popup) injects site-aware extraction for LinkedIn, Greenhouse (`job-boards` DOM and legacy JSON-LD), and Lever, with Open Graph fallbacks. Users can append selected page text or paste while the panel stays open. Production host permissions pin `https://futurestack-aeyn.onrender.com`; localhost origins are merged from `manifest.development.json` only for `npm run build:dev`. It obtains a Clerk token through the extension sync host and posts through the supported legacy `POST /api/opportunities` compatibility mount. Manual loading plus Clerk allowed-origin and CORS configuration remain deployment steps. |
 | Light and dark theme | Available | Theme preference is managed in React context and applied to Clerk appearance as well as app UI. |
 | Interview rounds and preparation | Available | Rounds are internship-only, synchronize derived parent fields server-side, and can hold an optional scheduled date/time. |
 | Documents and ATS hints | Available | ATS analysis is rule-based and runs in the browser; it is not an official ATS score. |
@@ -53,7 +53,8 @@ Career applications are fragmented across job boards, messages, spreadsheets, do
 | AI Resume Checker | Implemented, UI-gated | Backend pipeline, storage, provider settings, tests, and UI components exist; `AI_RESUME_CHECK_ENABLED` is currently `false`. |
 | Hackathon submission reminders | Available, scheduler-configured | The outbox and leased dispatcher create durable in-app notifications. GitHub Actions is an optional best-effort free-tier scheduler; the active-events migration limits new reminder intent to hackathon submissions. |
 | Website notification center and optional Resend email reminders | Implemented, migration/config-gated | The bell page shows persisted website notifications and lets each user opt into email copies. Recipients are resolved from `users.email` or, if that is empty, from Clerk at send time. A per-job delivery record and Resend idempotency key make retried sends safe. |
-| Tags, bulk import/export, advanced filters, Progress Logger | Planned | These are intentionally not claimed as shipped features. Progress Logger tables exist in migration SQL. A mock heatmap preview lives at `/progress`; tracks, logs, and the API are not wired. |
+| Tags, bulk import/export, advanced filters | Planned | These are intentionally not claimed as shipped features. |
+| Progress Logger | Available | Authenticated `/progress` page with tracks, daily logs, and a yearly heatmap. Data is owned per user and served through `/api/v1/progress`. This is a prep journal, not an analytics suite. |
 
 **Production rollout status (checked August 21, 2026):** Active-events, notification-preference, and optional-email migrations live in `supabase/migrations/` and are applied to the maintainer's Supabase project. Matching API and frontend behavior is on the main branch. Deploy API and web together whenever a database gains new columns or triggers. Optional Resend email remains off until backend env vars and the user's Notifications opt-in are both set. Confirm the email gate with `GET /api/v1/health/deps` (`checks.reminderEmail.enabled`). Clerk session JWTs do not include email by default, so the dispatcher resolves a missing `users.email` from Clerk when it sends.
 
@@ -514,7 +515,7 @@ The public endpoint returns only the snapshot after token/passcode checks. This 
 
 ### Tests that exist
 
-The repository includes frontend tests for route/render behavior and pure helpers such as date, opportunity, and ATS scoring utilities. The Chrome extension has focused metadata-extraction tests and a production build. Backend tests cover health, opportunities, analytics, documents, interview prep, rounds, share links, validation middleware, round synchronization, AI key vault behavior, resume-agent logic, and GitHub enrichment.
+The repository includes frontend tests for route/render behavior and pure helpers such as date, opportunity, and ATS scoring utilities. The Chrome extension has parser tests for LinkedIn, Greenhouse, Lever, JSON-LD, and Open Graph fallbacks, plus a production build. Backend tests cover health, opportunities, analytics, documents, interview prep, rounds, share links, validation middleware, round synchronization, AI key vault behavior, resume-agent logic, and GitHub enrichment.
 
 Before a release or PR, the standard checks are:
 
@@ -677,6 +678,7 @@ The authentication path distinguishes invalid tokens from database/bootstrap fai
 | Collaboration authorization and votes | `backend/src/routes/hackathons.js`, `supabase/migrations/20260716081332_idempotent_idea_votes.sql`, `supabase/migrations/20260716083209_team_memberships_and_invites.sql`, `supabase/migrations/20260716100000_review_hardening.sql` |
 | Website notifications, reminder outbox, and email preference | `src/pages/Notifications.jsx`, `backend/src/routes/notifications.js`, `backend/src/routes/notification-preferences.js`, `backend/src/lib/reminderJobs.js`, `backend/src/lib/reminderEmail.js`, `.github/workflows/dispatch-reminders.yml`, `supabase/migrations/20260716082400_transactional_reminder_outbox.sql`, `supabase/migrations/20260716120000_optional_email_reminders.sql`, `supabase/migrations/20260716123000_user_notification_preferences.sql` |
 | Active internship events | `src/components/rounds/`, `backend/src/routes/upcoming-rounds.js`, `supabase/migrations/20260716110000_rounds_drive_active_events.sql` |
+| Progress logger | `src/pages/Progress.jsx`, `backend/src/routes/progress.js`, `backend/src/validation/progress-schemas.js`, `backend/tests/integration/progress.test.js` |
 | SQL schema and policies | `docs/*.sql`, `supabase/migrations/` |
 | Tests and CI | `docs/TESTING.md`, `backend/tests/`, `.github/workflows/ci.yml` |
 

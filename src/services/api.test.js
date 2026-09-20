@@ -1,6 +1,10 @@
 jest.mock('axios', () => {
   const client = {
     get: jest.fn(),
+    post: jest.fn(),
+    patch: jest.fn(),
+    put: jest.fn(),
+    delete: jest.fn(),
     interceptors: {
       request: { use: jest.fn() },
       response: { use: jest.fn() },
@@ -30,7 +34,7 @@ jest.mock('../lib/analytics', () => ({
 }));
 
 import axios from 'axios';
-import { opportunityService } from './api';
+import { opportunityService, progressService } from './api';
 
 describe('opportunityService.getAll', () => {
   const apiClient = axios.create.mock.results[0].value;
@@ -65,6 +69,48 @@ describe('opportunityService.getAll', () => {
     });
     expect(apiClient.get).toHaveBeenNthCalledWith(2, '/opportunities', {
       params: { limit: 100, cursor: 'next-page' },
+    });
+  });
+});
+
+describe('progressService', () => {
+  const apiClient = axios.create.mock.results[0].value;
+
+  beforeEach(() => {
+    apiClient.get.mockReset();
+    apiClient.post.mockReset();
+  });
+
+  it('loads the heatmap with the local end date', async () => {
+    apiClient.get.mockResolvedValueOnce({
+      data: [{ date: '2026-08-24', count: 1, tracks: ['DSA'] }],
+    });
+
+    await expect(progressService.getHeatmap('2026-08-24')).resolves.toEqual([
+      { date: '2026-08-24', count: 1, tracks: ['DSA'] },
+    ]);
+    expect(apiClient.get).toHaveBeenCalledWith('/progress/heatmap', {
+      params: { end: '2026-08-24' },
+    });
+  });
+
+  it('saves a log through POST /progress/logs', async () => {
+    apiClient.post.mockResolvedValueOnce({
+      data: { id: 'log-1', didLog: true },
+    });
+
+    await expect(progressService.saveLog({
+      trackId: 'track-1',
+      logDate: '2026-08-21',
+      didLog: true,
+      whatDidYouDo: 'Graphs',
+    })).resolves.toEqual({ id: 'log-1', didLog: true });
+
+    expect(apiClient.post).toHaveBeenCalledWith('/progress/logs', {
+      trackId: 'track-1',
+      logDate: '2026-08-21',
+      didLog: true,
+      whatDidYouDo: 'Graphs',
     });
   });
 });
