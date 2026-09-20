@@ -29,9 +29,9 @@ const Footer = () => {
                         <ul className="space-y-4 text-gray-600 dark:text-gray-400">
                             <li><a href="#features" className="hover:text-gray-900 dark:hover:text-white transition-colors">Features</a></li>
                             <li><a href="#faq" className="hover:text-gray-900 dark:hover:text-white transition-colors">FAQ</a></li>
-                            <li><a href="/about.html" className="hover:text-gray-900 dark:hover:text-white transition-colors">About</a></li>
-                            <li><a href="/guides/internship-application-tracker.html" className="hover:text-gray-900 dark:hover:text-white transition-colors">Guides</a></li>
-                            <li><a href="/privacy.html" className="hover:text-gray-900 dark:hover:text-white transition-colors">Privacy</a></li>
+                            <li><a href="/about" className="hover:text-gray-900 dark:hover:text-white transition-colors">About</a></li>
+                            <li><a href="/guides/internship-application-tracker" className="hover:text-gray-900 dark:hover:text-white transition-colors">Guides</a></li>
+                            <li><a href="/privacy" className="hover:text-gray-900 dark:hover:text-white transition-colors">Privacy</a></li>
                         </ul>
                     </div>
 
@@ -76,9 +76,9 @@ const Footer = () => {
 
             {/* Large Branding Text */}
             <div className="mt-20 select-none pointer-events-none w-full overflow-hidden flex justify-center">
-                <h1 className="text-[10vw] leading-none font-bold text-orange-600/15 dark:text-white/5 text-center whitespace-nowrap">
+                <p className="text-[10vw] leading-none font-bold text-orange-600/15 dark:text-white/5 text-center whitespace-nowrap" aria-hidden="true">
                     FUTURE TRACKER
-                </h1>
+                </p>
             </div>
         </footer>
     );

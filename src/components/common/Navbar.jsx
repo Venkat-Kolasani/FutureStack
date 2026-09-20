@@ -1,12 +1,17 @@
+'use client';
+
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
 import { FaBars, FaTimes } from 'react-icons/fa';
-import { UserButton } from '@clerk/clerk-react';
+import { UserButton } from '@clerk/nextjs';
 import ThemeToggle from './ThemeToggle';
+import { hasUsableClerkKey } from '@/lib/clerk';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const location = useLocation();
+  const pathname = usePathname();
+  const clerkEnabled = hasUsableClerkKey();
 
   const navLinks = [
     { path: '/dashboard', label: 'Dashboard' },
@@ -20,7 +25,7 @@ const Navbar = () => {
     { path: '/analytics', label: 'Analytics' },
   ];
 
-  const isActive = (path) => location.pathname === path;
+  const isActive = (path) => pathname === path;
 
   return (
     <nav className="backdrop-blur-sm bg-white/70 dark:bg-black/40 text-gray-900 dark:text-white border-b border-gray-200 dark:border-white/10 sticky top-0 z-50 transition-colors duration-300">
@@ -28,7 +33,7 @@ const Navbar = () => {
         <div className="flex justify-between items-center h-16 gap-4">
           {/* Logo/Brand */}
           <Link
-            to="/"
+            href="/"
             className="flex items-center gap-2 group flex-shrink-0"
           >
             <div className="w-8 h-8 bg-gray-900 dark:bg-white rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform">
@@ -44,7 +49,7 @@ const Navbar = () => {
             {navLinks.map((link) => (
               <Link
                 key={link.path}
-                to={link.path}
+                href={link.path}
                 className={`text-sm font-medium transition-all duration-200 whitespace-nowrap ${
                   isActive(link.path)
                     ? 'text-gray-900 dark:text-white font-semibold'
@@ -60,14 +65,16 @@ const Navbar = () => {
           {/* Right Side Controls */}
           <div className="hidden lg:flex items-center gap-4 flex-shrink-0">
             <ThemeToggle />
-            <UserButton
-              afterSignOutUrl="/"
-              appearance={{
-                elements: {
-                  avatarBox: "w-9 h-9 ring-2 ring-gray-200 dark:ring-white/20 hover:ring-gray-300 dark:hover:ring-white/40 transition-all"
-                }
-              }}
-            />
+            {clerkEnabled ? (
+              <UserButton
+                afterSignOutUrl="/"
+                appearance={{
+                  elements: {
+                    avatarBox: "w-9 h-9 ring-2 ring-gray-200 dark:ring-white/20 hover:ring-gray-300 dark:hover:ring-white/40 transition-all"
+                  }
+                }}
+              />
+            ) : null}
           </div>
 
           {/* Mobile / Small Screen Menu Controls */}
@@ -91,7 +98,7 @@ const Navbar = () => {
             {navLinks.map((link) => (
               <Link
                 key={link.path}
-                to={link.path}
+                href={link.path}
                 onClick={() => setIsOpen(false)}
                 className={`block py-3 px-4 rounded-md text-base font-medium transition-colors ${
                   isActive(link.path)
@@ -103,17 +110,19 @@ const Navbar = () => {
                 {link.label}
               </Link>
             ))}
-            <div className="pt-3 mt-2 border-t border-gray-200 dark:border-white/10 flex items-center gap-3 px-4 py-3">
-              <UserButton
-                afterSignOutUrl="/"
-                appearance={{
-                  elements: {
-                    avatarBox: "w-9 h-9 ring-2 ring-gray-200 dark:ring-white/20"
-                  }
-                }}
-              />
-              <span className="text-sm text-gray-600 dark:text-gray-300">Account</span>
-            </div>
+            {clerkEnabled ? (
+              <div className="pt-3 mt-2 border-t border-gray-200 dark:border-white/10 flex items-center gap-3 px-4 py-3">
+                <UserButton
+                  afterSignOutUrl="/"
+                  appearance={{
+                    elements: {
+                      avatarBox: "w-9 h-9 ring-2 ring-gray-200 dark:ring-white/20"
+                    }
+                  }}
+                />
+                <span className="text-sm text-gray-600 dark:text-gray-300">Account</span>
+              </div>
+            ) : null}
           </div>
         </div>
       )}

@@ -1,26 +1,36 @@
+'use client';
+
 import { createContext, useContext, useEffect, useState } from 'react';
 
 const ThemeContext = createContext();
 
-export function ThemeProvider({ children }) {
-  const [isDark, setIsDark] = useState(() => {
-    try {
-      const item = window.localStorage.getItem('futurestack-theme');
-      if (item) {
-        return item === 'dark';
-      }
-      return window.matchMedia('(prefers-color-scheme: dark)').matches;
-    } catch (error) {
-      console.warn('Error reading theme from localStorage', error);
-      return true; // Default to dark since the app was originally dark
+function readIsDark() {
+  if (typeof window === 'undefined') {
+    return true;
+  }
+  try {
+    const item = window.localStorage.getItem('futurestack-theme');
+    if (item) {
+      return item === 'dark';
     }
-  });
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  } catch (error) {
+    console.warn('Error reading theme from localStorage', error);
+    return true;
+  }
+}
+
+export function ThemeProvider({ children }) {
+  const [isDark, setIsDark] = useState(true);
+
+  useEffect(() => {
+    setIsDark(readIsDark());
+  }, []);
 
   useEffect(() => {
     const root = window.document.documentElement;
     let metaThemeColor = document.querySelector('meta[name="theme-color"]');
 
-    // Create it if it doesn't exist
     if (!metaThemeColor) {
       metaThemeColor = document.createElement('meta');
       metaThemeColor.name = 'theme-color';
@@ -39,7 +49,6 @@ export function ThemeProvider({ children }) {
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleChange = (e) => {
-      // Only change if user hasn't explicitly set a preference in localStorage
       try {
         if (!window.localStorage.getItem('futurestack-theme')) {
           setIsDark(e.matches);
