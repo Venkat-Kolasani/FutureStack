@@ -6,7 +6,7 @@ FutureStack is a production-oriented career and hackathon workspace. `docs/DOCUM
 
 ## Architecture boundaries
 
-- Keep browser data access behind `src/services/api.js`. The frontend may use Supabase only for realtime subscriptions that trigger an API refetch; it must not perform CRUD with `supabase.from()`.
+- Keep browser data access behind `src/services/api.ts`. The frontend may use Supabase only for realtime subscriptions that trigger an API refetch; it must not perform CRUD with `supabase.from()`.
 - Every protected backend route must use `requireAuth` and scope database access with `req.auth.internalUserId`.
 - Validate every v1 route body, query, and parameter with the shared Joi middleware before database access.
 - Treat PostgreSQL constraints as the final guard for invariants that must remain correct under concurrent requests.
@@ -26,6 +26,7 @@ Run the relevant commands before committing:
 ```bash
 npm run test:ci
 npm run build
+npm run test:seo
 cd backend && npm test && cd ..
 npm run check:architecture
 git diff --check

@@ -1,6 +1,6 @@
 # FutureTracker: Interview Preparation Guide
 
-Last reviewed against the repository: July 30, 2026
+Last reviewed against the repository: September 21, 2026
 
 This is the single, interview-focused source of truth for FutureTracker. It explains what the product does, how the current implementation works, why the important choices were made, the trade-offs they create, and how the design would evolve for millions of users. It is deliberately candid: a strong interview answer distinguishes shipped behavior from a production-scale plan.
 
@@ -8,7 +8,7 @@ This is the single, interview-focused source of truth for FutureTracker. It expl
 
 **FutureTracker is a full-stack career-application workspace for students and early-career professionals.** It lets a user manage internships and hackathons, capture a listing from the current browser tab with a Chrome extension, track deadlines on a calendar and Kanban board, record multi-round interviews, prepare for interviews, manage application documents, view analytics, collaborate on hackathons, and selectively share a read-only progress snapshot.
 
-The application is a React single-page app backed by an Express API. Clerk handles identity; the API validates Clerk JWTs and enforces user ownership; Supabase provides PostgreSQL, storage, and limited realtime refreshes. I chose an API boundary rather than frontend database CRUD so authentication, validation, business rules, and sensitive operations are centralized. The design is intentionally modular: each domain has a route module, validation schemas, focused UI components, migration SQL, and tests.
+The application is a Next.js 15 App Router frontend with server-rendered marketing pages, backed by an Express API. Clerk handles identity; the API validates Clerk JWTs and enforces user ownership; Supabase provides PostgreSQL, storage, and limited realtime refreshes. I chose an API boundary rather than frontend database CRUD so authentication, validation, business rules, and sensitive operations are centralized. The design is intentionally modular: each domain has a route module, validation schemas, focused UI components, migration SQL, and tests.
 
 The most important engineering trade-offs are:
 
@@ -68,7 +68,7 @@ Career applications are fragmented across job boards, messages, spreadsheets, do
 
 ```mermaid
 flowchart LR
-  U["User browser"] --> R["React SPA"]
+  U["User browser"] --> R["Next.js App Router"]
   U --> X["Chrome MV3 extension"]
   R -->|"Clerk session"| C["Clerk"]
   R -->|"Bearer JWT over HTTPS"| A["Express API /api/v1 + legacy /api"]
@@ -89,7 +89,7 @@ flowchart LR
 
 | Choice | Why it was chosen | Trade-off |
 | --- | --- | --- |
-| React single-page application | Fast, responsive interaction for a personal workspace; components naturally map to product domains. | Initial JavaScript cost and client state complexity; authenticated routes are lazy-loaded to reduce initial work. |
+| Next.js App Router | Marketing routes are server-rendered HTML for search engines; authenticated workspace views stay client components with `noindex`. | Adds a Node server for the frontend and a Clerk secret on Vercel for middleware; the Express API remains the data plane. |
 | Express API | Centralizes authorization, validation, ownership checks, audit-oriented logging, rate limits, and business rules. | Requires separate API deployment and operational ownership. |
 | Clerk | Avoids building credential storage, OAuth, sessions, and token issuance. | Adds vendor dependency and requires correct JWT-key configuration. |
 | Supabase PostgreSQL | Provides managed relational data, storage, RLS, migrations, and realtime primitives. | Service-role use must be tightly controlled; schema and RLS changes are security-sensitive. |
@@ -100,50 +100,45 @@ flowchart LR
 
 ### Deployment shape today
 
-- Frontend: React app intended for Vercel.
+- Frontend: Next.js 15 App Router on Vercel. Marketing pages (`/`, `/about`, `/privacy`, `/guides/*`) are statically generated. Authenticated `/dashboard` and related routes are prerendered static shells with `noindex`; Clerk middleware still requires a session before they render. Parameterized routes such as `/edit/[id]`, `/hackathons/[id]`, and `/share/[token]` stay dynamic.
 - Chrome extension: a separately built MV3 bundle, loaded from `extensions/dist`; it uses Clerk's extension session sync and the same authenticated API boundary after its allowed origin and CORS entry are configured.
 - API: Express service on Render at `https://futurestack-aeyn.onrender.com/api/v1`; liveness is `/health` and dependency readiness is `/health/deps`.
-- Identity: Clerk.
+- Identity: Clerk. The Next.js deployment needs `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and server-only `CLERK_SECRET_KEY` for `clerkMiddleware`.
 - Database, storage, and optional realtime: Supabase.
 - Product analytics: PostHog when configured.
-- CI: GitHub Actions runs frontend build/tests, backend tests, architecture guardrails, and non-blocking dependency audits.
+- CI: GitHub Actions runs frontend build/tests, an SSR/SEO smoke job, backend tests, architecture guardrails, and non-blocking dependency audits.
 - Reminder scheduling: an optional repository workflow posts to the token-protected dispatcher every 15 minutes. It is intentionally described as best-effort because the GitHub Actions free tier has no execution SLA.
 - Email delivery: an optional Resend API call runs only inside the leased dispatcher. It is server-only, never blocks opportunity create/update requests, and is selected per user from the website notification page. Recipients are resolved from `users.email` or Clerk's primary email at send time.
 
-The exact environment contract lives in `.env.example`, `backend/.env.example`, and `extensions/.env.example`. Vercel must receive `REACT_APP_API_URL=https://futurestack-aeyn.onrender.com/api/v1` at build time. Secrets are backend-only; the browser and extension receive only public configuration such as Clerk's publishable key and Supabase's anon key.
+The exact environment contract lives in `.env.example`, `backend/.env.example`, and `extensions/.env.example`. Vercel must receive `NEXT_PUBLIC_API_URL=https://futurestack-aeyn.onrender.com/api/v1` at build time, plus `CLERK_SECRET_KEY` for middleware. Browser-visible configuration uses `NEXT_PUBLIC_*` (Clerk publishable key, API URL, Supabase anon key, optional PostHog). Service-role, job-dispatch, Resend, and AI keys stay on Render.
 
 ## 4. Frontend architecture
 
 ### Application composition
 
-`src/App.js` is the composition root. It wires up:
+`src/app/layout.tsx` is the composition root. It is a server component that exports default Metadata API tags (`metadataBase` is `https://futuretracker.online`), loads Inter through `next/font/google`, injects the theme FOUC-prevention script, and wraps the tree in Clerk when a real publishable key is present.
 
-- `HelmetProvider` for document metadata.
-- `ThemeProvider` for persisted light/dark preference.
-- `ClerkProvider`, including matching Clerk appearance tokens.
-- `ErrorBoundary` for unexpected render failures.
-- React Router routes and `ProtectedRoute` wrappers.
-- A global toast container and page-view tracking.
-- `Suspense` and route-level lazy loading for authenticated pages.
+Client-only shell behavior lives in `src/app/providers.tsx`: `ThemeProvider`, `ErrorBoundary`, toast container, PostHog pageviews via `usePathname()`, and Clerk token/reminder side effects. `src/middleware.ts` uses `clerkMiddleware` to protect authenticated routes and leave `/`, `/about`, `/privacy`, `/guides/*`, and `/share/*` public.
 
-The landing page loads immediately; heavier authenticated pages such as Dashboard, Analytics, Documents, and Hackathon Detail are loaded on demand. This was a deliberate performance choice because the landing route is the most common first visit.
+Authenticated workspace screens are client views under `src/views/`. Each App Router `page.tsx` in `src/app/(app)/` is a thin server wrapper that exports `robots: { index: false, follow: false }` and renders the matching view. The `(app)` group is not `force-dynamic`: list/dashboard shells are statically generated so `<Link>` can prefetch them, with `loading.tsx` skeletons for the client data fetch. Share links live at `src/app/share/[token]/` so they render without the signed-in navbar.
+
+Marketing routes in `src/app/(marketing)/` are the SEO surface: the landing page server-renders hero copy, the feature grid, FAQ JSON-LD, and footer, with Clerk buttons and the theme toggle as small client islands.
 
 ### Public discoverability (SEO / AI agents)
 
-The authenticated app remains a client-rendered SPA. Crawlable marketing content lives as static files under `public/` so search engines and AI agents can read real HTML without executing the bundle:
+Marketing HTML is produced by the Next.js server, not by a client bundle. Crawlers that never execute JavaScript still see titles, descriptions, canonicals, Open Graph tags, and JSON-LD.
 
-- `public/llms.txt` — short curated product index for AI agents (cite as FutureTracker.online).
-- `public/llms-full.txt` — longer feature, architecture, and citation brief for agents that fetch it.
-- `public/about.html`, `public/privacy.html`, and `public/guides/*.html` — indexable trust and intent pages.
-- `public/sitemap.xml` and `public/robots.txt` list those URLs; agent crawlers are allowed.
-- Brand copy and JSON-LD disambiguate from the unrelated ESG product at futuretracker.com.
-- Authenticated app routes stay `noindex` via `src/components/seo/SEO.jsx`.
+- `/`, `/about`, `/privacy`, and `/guides/[slug]` are indexable App Router routes.
+- `src/app/sitemap.ts` and `src/app/robots.ts` generate `/sitemap.xml` and `/robots.txt`, including the AI-crawler allow rules.
+- Permanent redirects map previously indexed `*.html` URLs (`/about.html`, `/privacy.html`, `/guides/*.html`) onto the clean routes.
+- `public/llms.txt` and `public/llms-full.txt` remain curated agent briefs.
+- Authenticated app routes stay `noindex` through the Metadata API. `scripts/seo-smoke.mjs` (`npm run test:seo`) fetches raw HTML without running JavaScript and is wired as a CI job.
 
 After deploy, submit the sitemap in Google Search Console and Bing Webmaster Tools. Third-party citations (directories, Product Hunt, student communities) remain the main lever for AI recommendations.
 
 ### Data access rule
 
-`src/services/api.js` is the frontend's application-data boundary. It creates Axios clients, attaches a Clerk bearer token to protected requests, maps common HTTP errors to user-facing messages, and exports service objects such as `opportunityService`, `documentService`, `roundService`, and `shareLinkService`.
+`src/services/api.ts` is the frontend's application-data boundary. It creates Axios clients, attaches a Clerk bearer token to protected requests, maps common HTTP errors to user-facing messages, and exports service objects such as `opportunityService`, `documentService`, `roundService`, and `shareLinkService`. Domain TypeScript types live in `src/types/` and follow the backend Joi shapes.
 
 **Why not query Supabase directly from every component?** It would distribute authorization logic and make validation, rate limiting, audit logging, and future backend changes much harder to enforce consistently. The repository's architecture check guards against direct frontend Supabase CRUD.
 
@@ -468,7 +463,7 @@ Before enabling it, apply [`20260716120000_optional_email_reminders.sql`](../sup
 
 To create the key, visit [Resend API Keys](https://resend.com/api-keys), choose **Create API Key**, name it `FutureStack Render production`, choose **Sending access**, and limit it to the verified sender domain. Copy the resulting `re_...` value immediately—it is shown only once—and add it only to Render's backend environment. For a production sender, add and verify a domain in [Resend Domains](https://resend.com/domains) before creating the domain-restricted key.
 
-This stays within Resend's free transactional plan as of July 16, 2026: 3,000 emails per month, 100 per day, and one custom domain. Start with `onboarding@resend.dev` only to test delivery to the account owner's email; verify a custom domain before enabling reminders for other users. Check [Resend pricing](https://resend.com/pricing/) before rollout because provider quotas can change. Do not put the API key in Vercel or any `REACT_APP_*` variable.
+This stays within Resend's free transactional plan as of July 16, 2026: 3,000 emails per month, 100 per day, and one custom domain. Start with `onboarding@resend.dev` only to test delivery to the account owner's email; verify a custom domain before enabling reminders for other users. Check [Resend pricing](https://resend.com/pricing/) before rollout because provider quotas can change. Do not put the API key in Vercel public env or any `NEXT_PUBLIC_*` variable.
 
 **What we deliberately do not do yet:** browser push notifications, open/click tracking, provider webhooks, or a permanent email audit/event stream. Those become necessary when email is a user promise rather than a best-effort convenience. The first upgrade is Resend webhooks plus delivery-event reconciliation; the next is per-reminder timing/timezone controls and a dedicated scheduler/worker.
 
@@ -492,7 +487,7 @@ The public endpoint returns only the snapshot after token/passcode checks. This 
 - User-owned database tables have RLS policies.
 - Share tokens are hashed; passcodes are salted and hashed; stored recoverable tokens and AI BYOK values are encrypted with authenticated encryption.
 - Team-invite tokens are hashed before persistence; reminder dispatch has a separate bearer token and dead-letter visibility is restricted to configured internal users.
-- No backend secrets are placed in `REACT_APP_*` variables.
+- No backend secrets are placed in `NEXT_PUBLIC_*` variables. The Next.js `CLERK_SECRET_KEY` is server-only on Vercel (middleware), not a browser secret.
 
 ### What I would not overclaim
 
@@ -522,12 +517,30 @@ Before a release or PR, the standard checks are:
 ```bash
 npm run test:ci
 npm run build
+npm run test:seo
 npm run check:architecture
 (cd backend && npm test)
 (cd extensions && npm ci && npm test && npm run build)
 ```
 
-`check:architecture` enforces the frontend API boundary. Tests mock Clerk and Supabase, so they do not require live secrets. Manual smoke checks remain important for sign-in, pages changed, an expected error case, upload flows, public share behavior, responsive UI, and the extension's sign-in → save → dashboard path once its Clerk/CORS configuration is present. The repository does not yet have a disposable PostgreSQL-backed concurrency suite for the vote functions; ADR-003 defines that required release-gate coverage, so the invariant must not be described as end-to-end concurrency-tested until that fixture is added.
+`check:architecture` enforces the frontend API boundary. Tests mock Clerk and Supabase, so they do not require live secrets. `npm run test:seo` builds the Next.js app, serves it, and asserts on raw HTML (title, description, canonical, Open Graph, JSON-LD, `noindex` on app routes, and `.html` redirects). Manual smoke checks remain important for sign-in, pages changed, an expected error case, upload flows, public share behavior, responsive UI, and the extension's sign-in → save → dashboard path once its Clerk/CORS configuration is present. The repository does not yet have a disposable PostgreSQL-backed concurrency suite for the vote functions; ADR-003 defines that required release-gate coverage, so the invariant must not be described as end-to-end concurrency-tested until that fixture is added.
+
+### Frontend delivery (measured September 21, 2026)
+
+| Claim | Value | Method |
+| --- | --- | --- |
+| Jest | 27 suites, 98 tests passing | `CI=true TZ=UTC npx jest --ci --forceExit` after the speed/UX/SEO pass |
+| Landing first-load JS | 207 kB | `npx next build` route table (`○ /` First Load JS), Next.js 15.5.25 |
+| Shared first-load JS | 103 kB | same `next build` output (`First Load JS shared by all`) |
+| Analytics first-load JS | 105 kB | same `next build` output (`○ /analytics`); Recharts loads after the route shell |
+| App-route TTFB | 4–5 ms (`/dashboard`, `/internships`, `/calendar`) | `fetch` of prerendered HTML from `next start` on 127.0.0.1:4320 |
+| Lighthouse desktop (local `next start`) | `/` 99/100/94, `/about` 100/100/98, `/guides/internship-application-tracker` 100/100/98 (performance / SEO / accessibility) | `npx lighthouse@12.6.0 --preset=desktop --only-categories=performance,seo,accessibility` against 127.0.0.1:4320 on 21 Sep 2026 |
+| Historical CRA JS | ~3.7 MB uncompressed `build/static/js` | Phase 0 baseline before the App Router port; not a current Lighthouse score |
+| Historical landing first-load JS | 206 kB | `npx next build` immediately after the CRA→Next port, before this pass |
+
+Authenticated `(app)` routes are prerendered static shells (`○` in the route table) after removing `force-dynamic` from `src/app/(app)/layout.tsx`. Clerk still gates them in middleware. `npm run test:seo` is the current proof that marketing HTML is crawlable without executing JavaScript (title, description, canonical, Open Graph including `og:url`, JSON-LD on every public route including privacy, `noindex` on app routes, and `.html` redirects).
+
+Prior marketing-HTML Lighthouse figures from the static `.html` workaround, and the “not re-run after the App Router port” row, are historical.
 
 ### Observability today
 
@@ -605,7 +618,7 @@ Start with measured operational readiness: apply the optional email migration, c
 
 **“Walk me through a request.”**
 
-Browser calls `src/services/api.js` against `/api/v1`; Axios gets a fresh Clerk token; Express assigns a request ID, applies security middleware, verifies RS256 JWT locally, resolves the internal UUID, validates the payload, applies user-aware rate limits, performs a user-scoped Supabase query, and returns JSON. The UI handles status-specific errors and refreshes its local state.
+Browser calls `src/services/api.ts` against `/api/v1`; Axios gets a fresh Clerk token; Express assigns a request ID, applies security middleware, verifies RS256 JWT locally, resolves the internal UUID, validates the payload, applies user-aware rate limits, performs a user-scoped Supabase query, and returns JSON. The UI handles status-specific errors and refreshes its local state.
 
 **“Why cursor pagination and an API version?”**
 
@@ -664,21 +677,21 @@ The authentication path distinguishes invalid tokens from database/bootstrap fai
 
 | Topic | Start in code |
 | --- | --- |
-| App composition, routes, lazy loading, theme | `src/App.js`, `src/context/ThemeContext.jsx` |
-| Frontend API/auth/error behavior | `src/services/api.js`, `src/hooks/useAuthToken.js` |
+| App composition, routes, theme | `src/app/layout.tsx`, `src/app/providers.tsx`, `src/middleware.ts`, `src/context/ThemeContext.jsx` |
+| Frontend API/auth/error behavior | `src/services/api.ts`, `src/hooks/useAuthToken.ts` |
 | Auth and user provisioning | `backend/src/middleware/auth.js` |
 | HTTP security, limits, health, route mounts | `backend/src/app.js` |
 | Opportunity CRUD | `backend/src/routes/opportunities.js` |
 | API versioning, limits, request IDs, health | `backend/src/app.js`, `docs/adr/ADR-001-versioned-api.md` |
 | Round status derivation | `backend/src/lib/syncOpportunityFromRounds.js` |
 | Analytics computations | `backend/src/routes/analytics.js`, `backend/src/lib/interviewPipelineAnalytics.js` |
-| Documents/ATS | `src/utils/atsScorer.js`, `backend/src/routes/documents.js` |
+| Documents/ATS | `src/utils/atsScorer.ts`, `backend/src/routes/documents.js` |
 | AI pipeline and settings | `backend/src/lib/resume-agent/`, `backend/src/lib/llm/`, `backend/src/lib/apiKeyVault.js` |
 | Share security | `backend/src/lib/shareLinks.js`, share-link route modules |
 | Collaboration authorization and votes | `backend/src/routes/hackathons.js`, `supabase/migrations/20260716081332_idempotent_idea_votes.sql`, `supabase/migrations/20260716083209_team_memberships_and_invites.sql`, `supabase/migrations/20260716100000_review_hardening.sql` |
-| Website notifications, reminder outbox, and email preference | `src/pages/Notifications.jsx`, `backend/src/routes/notifications.js`, `backend/src/routes/notification-preferences.js`, `backend/src/lib/reminderJobs.js`, `backend/src/lib/reminderEmail.js`, `.github/workflows/dispatch-reminders.yml`, `supabase/migrations/20260716082400_transactional_reminder_outbox.sql`, `supabase/migrations/20260716120000_optional_email_reminders.sql`, `supabase/migrations/20260716123000_user_notification_preferences.sql` |
+| Website notifications, reminder outbox, and email preference | `src/views/Notifications.jsx`, `backend/src/routes/notifications.js`, `backend/src/routes/notification-preferences.js`, `backend/src/lib/reminderJobs.js`, `backend/src/lib/reminderEmail.js`, `.github/workflows/dispatch-reminders.yml`, `supabase/migrations/20260716082400_transactional_reminder_outbox.sql`, `supabase/migrations/20260716120000_optional_email_reminders.sql`, `supabase/migrations/20260716123000_user_notification_preferences.sql` |
 | Active internship events | `src/components/rounds/`, `backend/src/routes/upcoming-rounds.js`, `supabase/migrations/20260716110000_rounds_drive_active_events.sql` |
-| Progress logger | `src/pages/Progress.jsx`, `backend/src/routes/progress.js`, `backend/src/validation/progress-schemas.js`, `backend/tests/integration/progress.test.js` |
+| Progress logger | `src/views/Progress.jsx`, `backend/src/routes/progress.js`, `backend/src/validation/progress-schemas.js`, `backend/tests/integration/progress.test.js` |
 | SQL schema and policies | `docs/*.sql`, `supabase/migrations/` |
 | Tests and CI | `docs/TESTING.md`, `backend/tests/`, `.github/workflows/ci.yml` |
 

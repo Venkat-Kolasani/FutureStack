@@ -7,9 +7,10 @@ How to verify changes locally before opening or updating a PR, and what CI enfor
 Run this from the repo root:
 
 ```bash
-# Frontend — unit tests + production build
+# Frontend — unit tests + production build + SEO HTML smoke
 npm run test:ci
 npm run build
+npm run test:seo
 
 # Backend — API tests (mocked Supabase/Clerk; no secrets needed)
 cd backend && npm test && cd ..
@@ -21,8 +22,9 @@ npm run check:architecture
 Set these env vars for local builds if they are not already in `.env`:
 
 ```bash
-export REACT_APP_CLERK_PUBLISHABLE_KEY=pk_test_placeholder
-export REACT_APP_API_URL=http://localhost:3001/api/v1
+export NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_ci_placeholder
+export CLERK_SECRET_KEY=sk_test_ci_placeholder
+export NEXT_PUBLIC_API_URL=http://localhost:3001/api/v1
 ```
 
 ## If you changed…
@@ -30,7 +32,7 @@ export REACT_APP_API_URL=http://localhost:3001/api/v1
 | Area changed | Required commands |
 |--------------|-------------------|
 | `src/utils/*` | `npm test -- <helper-name>` (e.g. `npm test -- dateHelpers`) |
-| `src/components/*` or `src/pages/*` | `npm run test:ci` + manual smoke steps below |
+| `src/components/*` or `src/views/*` | `npm run test:ci` + manual smoke steps below |
 | `backend/src/routes/*` or `backend/src/middleware/*` | `cd backend && npm test` — **add or update tests** in `backend/tests/` |
 | Reminder email (`backend/src/lib/reminderEmail.js`, `clerkEmail.js`, auth email backfill) | `cd backend && npm test -- reminderEmail clerkEmail auth` |
 | `backend/src/lib/validation.js` | `cd backend && npm test -- validation` |
@@ -38,7 +40,7 @@ export REACT_APP_API_URL=http://localhost:3001/api/v1
 | Dashboard share links (`share_links`, `/share/:token`, `shareLinkService`) | `cd backend && npm test -- share-links`, `npm run test:ci`, `npm run build`, manual flow in [`docs/share-links.md`](share-links.md#manual-verification) |
 | Interview rounds (`backend/src/routes/opportunity-rounds.js`, `src/components/rounds/*`) | `cd backend && npm test -- rounds`, manual flow in [`docs/interview-rounds.md`](interview-rounds.md#testing) |
 | Interview prep (`backend/src/routes/interview-prep.js`, `src/components/interview-prep/*`) | `cd backend && npm test -- interview-prep`, manual flow in [`docs/interview-prep.md`](interview-prep.md#testing) |
-| Progress logger (`backend/src/routes/progress.js`, `src/pages/Progress.jsx`) | `cd backend && npm test -- progress`, `npm run test:ci -- --testPathPattern=Progress.test` |
+| Progress logger (`backend/src/routes/progress.js`, `src/views/Progress.jsx`) | `cd backend && npm test -- progress`, `npm run test:ci -- --testPathPattern=Progress.test` |
 | ATS scorer (`src/utils/atsScorer.js`, `DocumentUpload.jsx`) | `npm test -- atsScorer`, upload PDF/DOCX on `/documents` |
 | Chrome extension (`extensions/**`) | `cd extensions && npm ci && npm test && npm run build`; follow the extension manual flow below |
 
@@ -48,14 +50,14 @@ Any change to `backend/src/routes/` or request validation must include tests und
 
 ### No direct Supabase CRUD from the frontend
 
-All data mutations and reads go through the Express API (`REACT_APP_API_URL`). The frontend Supabase client is for **realtime only** (`src/pages/StatusBoard.jsx`). `npm run check:architecture` fails if `supabase.from(` appears elsewhere in `src/`.
+All data mutations and reads go through the Express API (`NEXT_PUBLIC_API_URL`). The frontend Supabase client is for **realtime only** (`src/views/StatusBoard.jsx`). `npm run check:architecture` fails if `supabase.from(` appears elsewhere in `src/`.
 
 ## Manual smoke checklist
 
 Use this after automated tests pass:
 
 1. Start backend: `cd backend && npm run dev`
-2. Start frontend: `npm start` (separate terminal)
+2. Start frontend: `npm run dev` (separate terminal)
 3. Sign in with Clerk (Google, GitHub, or email)
 4. Open the page(s) you changed
 5. Exercise the happy path once
@@ -198,7 +200,7 @@ cd backend && npm test -- opportunities
 
 | Problem | Fix |
 |---------|-----|
-| `App.test.js` fails locally | Run `npm run test:ci` (not watch mode). Ensure `REACT_APP_*` env vars are set. |
+| `LandingPage.test.jsx` fails locally | Run `npm run test:ci` (not watch mode). Ensure `NEXT_PUBLIC_*` env vars are set. |
 | Backend tests fail with missing env | Tests use defaults in `backend/tests/setup.js`; no real `.env` needed. |
-| `architecture-check` fails on `supabase.from` | Move data access to a backend route; frontend should call `src/services/api.js`. |
-| Build fails on Clerk key | Set `REACT_APP_CLERK_PUBLISHABLE_KEY` (any non-empty placeholder works for CI). |
+| `architecture-check` fails on `supabase.from` | Move data access to a backend route; frontend should call `src/services/api.ts`. |
+| Build fails on Clerk key | CI uses `pk_test_ci_placeholder` / `sk_test_ci_placeholder`. Production Vercel needs a real `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY`. |
