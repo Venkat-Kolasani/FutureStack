@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { FaFilter } from 'react-icons/fa';
 import {

@@ -1,7 +1,8 @@
-import jsPDF from 'jspdf';
 import { formatDate } from './dateHelpers';
 import { getCampusModeLabel, calculateCampusModeStats } from './opportunityHelpers';
 import type { Opportunity, OpportunityStatistics, PipelineAnalytics, PipelineRejection } from '../types';
+
+type JsPdfDoc = import('jspdf').jsPDF;
 
 export type PdfExportType = 'all' | 'selected' | 'summary';
 
@@ -10,13 +11,14 @@ export type PdfExportType = 'all' | 'selected' | 'summary';
  * `statsOpportunities` defaults to `opportunities` so a selected-rows export can still
  * summarise campus mode across the full set when the caller passes it explicitly.
  */
-export const generatePDF = (
+export const generatePDF = async (
   opportunities: Opportunity[],
   statistics: OpportunityStatistics,
   exportType: PdfExportType = 'all',
   pipelineAnalytics: PipelineAnalytics | null = null,
   statsOpportunities: Opportunity[] = opportunities
-): jsPDF => {
+): Promise<JsPdfDoc> => {
+  const { default: jsPDF } = await import('jspdf');
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -244,6 +246,6 @@ export const generatePDF = (
   return doc;
 };
 
-export const downloadPDF = (doc: jsPDF, filename = 'futurestack-report.pdf'): void => {
+export const downloadPDF = (doc: JsPdfDoc, filename = 'futurestack-report.pdf'): void => {
   doc.save(filename);
 };

@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { FiPlus, FiMinus } from 'react-icons/fi';
 
-const FAQItem = ({ question, answer, isOpen, onClick }) => {
+const FAQItem = ({ question, answer, isOpen, onClick, reduceMotion }) => {
     return (
         <motion.div
             initial={false}
@@ -25,7 +25,7 @@ const FAQItem = ({ question, answer, isOpen, onClick }) => {
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.3, ease: "easeInOut" }}
+                        transition={{ duration: reduceMotion ? 0 : 0.3, ease: "easeInOut" }}
                     >
                         <div className="px-6 pb-6 text-gray-600 dark:text-gray-400 leading-relaxed">
                             {answer}
@@ -39,6 +39,7 @@ const FAQItem = ({ question, answer, isOpen, onClick }) => {
 
 const FAQ = () => {
     const [openIndex, setOpenIndex] = useState(null);
+    const reduceMotion = useReducedMotion();
 
     const faqs = [
         {
@@ -91,6 +92,7 @@ const FAQ = () => {
                             answer={faq.answer}
                             isOpen={openIndex === index}
                             onClick={() => handleToggle(index)}
+                            reduceMotion={reduceMotion}
                         />
                     ))}
                 </div>

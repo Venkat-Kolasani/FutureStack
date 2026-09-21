@@ -100,7 +100,7 @@ flowchart LR
 
 ### Deployment shape today
 
-- Frontend: Next.js 15 App Router on Vercel. Marketing pages (`/`, `/about`, `/privacy`, `/guides/*`) are statically generated; authenticated `/dashboard` and related routes are dynamic and `noindex`.
+- Frontend: Next.js 15 App Router on Vercel. Marketing pages (`/`, `/about`, `/privacy`, `/guides/*`) are statically generated. Authenticated `/dashboard` and related routes are prerendered static shells with `noindex`; Clerk middleware still requires a session before they render. Parameterized routes such as `/edit/[id]`, `/hackathons/[id]`, and `/share/[token]` stay dynamic.
 - Chrome extension: a separately built MV3 bundle, loaded from `extensions/dist`; it uses Clerk's extension session sync and the same authenticated API boundary after its allowed origin and CORS entry are configured.
 - API: Express service on Render at `https://futurestack-aeyn.onrender.com/api/v1`; liveness is `/health` and dependency readiness is `/health/deps`.
 - Identity: Clerk. The Next.js deployment needs `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and server-only `CLERK_SECRET_KEY` for `clerkMiddleware`.
@@ -120,7 +120,7 @@ The exact environment contract lives in `.env.example`, `backend/.env.example`, 
 
 Client-only shell behavior lives in `src/app/providers.tsx`: `ThemeProvider`, `ErrorBoundary`, toast container, PostHog pageviews via `usePathname()`, and Clerk token/reminder side effects. `src/middleware.ts` uses `clerkMiddleware` to protect authenticated routes and leave `/`, `/about`, `/privacy`, `/guides/*`, and `/share/*` public.
 
-Authenticated workspace screens are client views under `src/views/`. Each App Router `page.tsx` in `src/app/(app)/` is a thin server wrapper that exports `robots: { index: false, follow: false }` and renders the matching view. Share links live at `src/app/share/[token]/` so they render without the signed-in navbar.
+Authenticated workspace screens are client views under `src/views/`. Each App Router `page.tsx` in `src/app/(app)/` is a thin server wrapper that exports `robots: { index: false, follow: false }` and renders the matching view. The `(app)` group is not `force-dynamic`: list/dashboard shells are statically generated so `<Link>` can prefetch them, with `loading.tsx` skeletons for the client data fetch. Share links live at `src/app/share/[token]/` so they render without the signed-in navbar.
 
 Marketing routes in `src/app/(marketing)/` are the SEO surface: the landing page server-renders hero copy, the feature grid, FAQ JSON-LD, and footer, with Clerk buttons and the theme toggle as small client islands.
 
@@ -529,13 +529,18 @@ npm run check:architecture
 
 | Claim | Value | Method |
 | --- | --- | --- |
-| Jest | 24 suites, 87 tests passing | `CI=true TZ=UTC npx jest --ci` on `feat/nextjs-migration` |
-| Landing first-load JS | 206 kB | `npx next build` route table (`○ /` First Load JS), Next.js 15.5.25 |
+| Jest | 27 suites, 98 tests passing | `CI=true TZ=UTC npx jest --ci --forceExit` after the speed/UX/SEO pass |
+| Landing first-load JS | 207 kB | `npx next build` route table (`○ /` First Load JS), Next.js 15.5.25 |
 | Shared first-load JS | 103 kB | same `next build` output (`First Load JS shared by all`) |
-| Historical CRA JS | ~3.7 MB uncompressed `build/static/js` | Phase 0 baseline before this port; treat as historical, not a current Lighthouse score |
-| Lighthouse | not re-run after the App Router port | Previous marketing-HTML Lighthouse figures are historical until a post-deploy run on https://futuretracker.online |
+| Analytics first-load JS | 105 kB | same `next build` output (`○ /analytics`); Recharts loads after the route shell |
+| App-route TTFB | 4–5 ms (`/dashboard`, `/internships`, `/calendar`) | `fetch` of prerendered HTML from `next start` on 127.0.0.1:4320 |
+| Lighthouse desktop (local `next start`) | `/` 99/100/94, `/about` 100/100/98, `/guides/internship-application-tracker` 100/100/98 (performance / SEO / accessibility) | `npx lighthouse@12.6.0 --preset=desktop --only-categories=performance,seo,accessibility` against 127.0.0.1:4320 on 21 Sep 2026 |
+| Historical CRA JS | ~3.7 MB uncompressed `build/static/js` | Phase 0 baseline before the App Router port; not a current Lighthouse score |
+| Historical landing first-load JS | 206 kB | `npx next build` immediately after the CRA→Next port, before this pass |
 
-`npm run test:seo` is the current proof that marketing HTML is crawlable without executing JavaScript.
+Authenticated `(app)` routes are prerendered static shells (`○` in the route table) after removing `force-dynamic` from `src/app/(app)/layout.tsx`. Clerk still gates them in middleware. `npm run test:seo` is the current proof that marketing HTML is crawlable without executing JavaScript (title, description, canonical, Open Graph including `og:url`, JSON-LD on every public route including privacy, `noindex` on app routes, and `.html` redirects).
+
+Prior marketing-HTML Lighthouse figures from the static `.html` workaround, and the “not re-run after the App Router port” row, are historical.
 
 ### Observability today
 

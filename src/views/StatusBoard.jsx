@@ -8,6 +8,7 @@ import Modal from '../components/common/Modal';
 import Button from '../components/common/Button';
 import { opportunityService } from '../services/api';
 import { supabase, isRealtimeAvailable } from '../lib/supabase';
+import { PageSkeleton } from '../components/common/PageSkeleton';
 
 const StatusBoard = () => {
   const [opportunities, setOpportunities] = useState([]);
@@ -153,14 +154,7 @@ const StatusBoard = () => {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-white dark:bg-black p-4 sm:p-6">
-        <div className="flex flex-col items-center justify-center py-20">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mb-4"></div>
-          <p className="text-gray-900 dark:text-white text-lg">Loading status board...</p>
-        </div>
-      </div>
-    );
+    return <PageSkeleton variant="list" />;
   }
 
   return (

@@ -24,6 +24,10 @@ export function ThemeProvider({ children }) {
   const [isDark, setIsDark] = useState(true);
 
   useEffect(() => {
+    if (document.documentElement.classList.contains('dark')) {
+      setIsDark(true);
+      return;
+    }
     setIsDark(readIsDark());
   }, []);
 

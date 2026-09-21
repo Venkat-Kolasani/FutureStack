@@ -1,8 +1,6 @@
 import type { Metadata } from 'next';
 import Navbar from '@/components/common/Navbar';
 
-export const dynamic = 'force-dynamic';
-
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };

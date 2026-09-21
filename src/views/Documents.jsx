@@ -19,6 +19,7 @@ import {
     inferResumeFileName,
     isAtsEligible
 } from '../utils/atsScorer';
+import { ListItemsSkeleton } from '../components/common/PageSkeleton';
 
 
 
@@ -456,10 +457,7 @@ const Documents = () => {
 
                 {/* Loading State */}
                 {loading ? (
-                    <div className="flex flex-col items-center justify-center py-20">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
-                        <p className="text-gray-600 dark:text-gray-400">Loading documents...</p>
-                    </div>
+                    <ListItemsSkeleton count={6} />
                 ) : filteredDocuments.length > 0 ? (
                     /* Documents Grid */
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">

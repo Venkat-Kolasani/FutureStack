@@ -14,6 +14,7 @@ import ShareProgressModal from '../components/sharing/ShareProgressModal';
 import ManageSharesPanel from '../components/sharing/ManageSharesPanel';
 import { opportunityService, roundService } from '../services/api';
 import { isOverdue, getDaysRemaining } from '../utils/dateHelpers';
+import { PageSkeleton } from '../components/common/PageSkeleton';
 
 const Dashboard = () => {
   const [opportunities, setOpportunities] = useState([]);
@@ -118,16 +119,7 @@ const Dashboard = () => {
   );
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-white dark:bg-black p-4 sm:p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col items-center justify-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
-            <p className="text-gray-900 dark:text-white text-lg">Loading dashboard...</p>
-          </div>
-        </div>
-      </div>
-    );
+    return <PageSkeleton variant="dashboard" />;
   }
 
   return (

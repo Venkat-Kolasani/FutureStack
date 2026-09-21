@@ -3,7 +3,6 @@
  * - analyzeFile(file): tries to extract text from PDF/DOCX and returns analysis
  * - analyzeText(text): rule-based scoring returning breakdown and total (0-100)
  */
-import mammoth from 'mammoth';
 import type { UserDocument } from '../types';
 
 export type AtsSectionKey = 'contact' | 'education' | 'skills' | 'experience' | 'projects';
@@ -291,6 +290,7 @@ export async function extractTextFromPDF(arrayBuffer: ArrayBuffer): Promise<stri
 
 export async function extractTextFromDocx(arrayBuffer: ArrayBuffer): Promise<string> {
   try {
+    const mammoth = await import('mammoth');
     const result = await mammoth.extractRawText({ arrayBuffer });
     return result.value || '';
   } catch (err) {

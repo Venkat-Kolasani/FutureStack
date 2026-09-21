@@ -12,9 +12,10 @@ import {
 } from 'react-icons/fa';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
-import InterviewRejectionInsights from '../components/analytics/InterviewRejectionInsights';
-import InterviewFunnelChart from '../components/analytics/InterviewFunnelChart';
+import dynamic from 'next/dynamic';
 import StatusIndicator from '../components/common/StatusIndicator';
+import { SkeletonChart } from '../components/common/LoadingSpinner';
+import { PageSkeleton } from '../components/common/PageSkeleton';
 import { opportunityService, analyticsService } from '../services/api';
 import { generatePDF, downloadPDF } from '../utils/pdfExport';
 import { formatDate } from '../utils/dateHelpers';
@@ -24,6 +25,15 @@ import {
   getCampusModeLabel,
   CAMPUS_MODE_BADGE_STYLES,
 } from '../utils/opportunityHelpers';
+
+const InterviewRejectionInsights = dynamic(() => import('../components/analytics/InterviewRejectionInsights'), {
+  ssr: false,
+  loading: () => <SkeletonChart />,
+});
+const InterviewFunnelChart = dynamic(() => import('../components/analytics/InterviewFunnelChart'), {
+  ssr: false,
+  loading: () => <SkeletonChart />,
+});
 
 const STATUS_STYLES = {
   applied: 'bg-blue-500/15 text-blue-300 border-blue-500/25',
@@ -137,7 +147,7 @@ const Reports = () => {
     );
   }, [opportunities]);
 
-  const handleDownloadPDF = () => {
+  const handleDownloadPDF = async () => {
     try {
       let oppsToExport = [];
       let stats;
@@ -158,7 +168,7 @@ const Reports = () => {
           : pipelineAnalytics;
 
       const statsScope = exportType === 'selected' ? oppsToExport : opportunities;
-      const doc = generatePDF(oppsToExport, stats, exportType, pipelineForExport, statsScope);
+      const doc = await generatePDF(oppsToExport, stats, exportType, pipelineForExport, statsScope);
       downloadPDF(doc, `futurestack-report-${new Date().toISOString().split('T')[0]}.pdf`);
       toast.success('PDF report generated successfully!');
     } catch (error) {
@@ -171,16 +181,7 @@ const Reports = () => {
   const showPipelineSection = displayPipeline?.rejectedCount > 0;
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-white dark:bg-black p-4 sm:p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col items-center justify-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mb-4" />
-            <p className="text-gray-900 dark:text-white text-lg">Loading report data…</p>
-          </div>
-        </div>
-      </div>
-    );
+    return <PageSkeleton variant="reports" />;
   }
 
   return (

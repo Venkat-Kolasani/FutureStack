@@ -47,12 +47,12 @@ function assertPublicPage(name, html, { canonical, h1, copy }) {
   if (!canonicalHref || !canonicalHref.includes(canonical)) {
     fail(`${name}: expected canonical containing ${canonical}, got ${canonicalHref}`);
   }
-  for (const property of ['og:title', 'og:description', 'og:image']) {
+  for (const property of ['og:title', 'og:description', 'og:image', 'og:url']) {
     const hasOg = html.includes(`property="${property}"`) || html.includes(`property='${property}'`);
     if (!hasOg) fail(`${name}: missing ${property}`);
   }
   const jsonBlocks = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)];
-  if (jsonBlocks.length === 0 && name === 'landing') {
+  if (jsonBlocks.length === 0) {
     fail(`${name}: missing JSON-LD`);
   }
   for (const [, raw] of jsonBlocks) {

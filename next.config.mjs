@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  experimental: {
+    optimizePackageImports: ['react-icons', 'recharts', 'framer-motion'],
+  },
   async redirects() {
     return [
       { source: '/about.html', destination: '/about', permanent: true },

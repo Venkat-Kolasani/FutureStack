@@ -22,6 +22,7 @@ import CampusModeSelect from '../components/opportunities/CampusModeSelect';
 import { opportunityService } from '../services/api';
 import { isActiveInternshipStatus } from '../utils/opportunityHelpers';
 import { useCampusModeFilter } from '../hooks/useCampusModeFilter';
+import { ListItemsSkeleton } from '../components/common/PageSkeleton';
 
 const InternshipList = () => {
   const router = useRouter();
@@ -262,10 +263,7 @@ const InternshipList = () => {
 
         {/* Loading State */}
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
-            <p className="text-gray-600 dark:text-gray-400">Loading internships...</p>
-          </div>
+          <ListItemsSkeleton count={5} />
         ) : (
           <OpportunityList
             opportunities={filteredOpportunities}

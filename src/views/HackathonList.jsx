@@ -20,6 +20,7 @@ import Button from '../components/common/Button';
 import CampusModeSelect from '../components/opportunities/CampusModeSelect';
 import { opportunityService } from '../services/api';
 import { useCampusModeFilter } from '../hooks/useCampusModeFilter';
+import { ListItemsSkeleton } from '../components/common/PageSkeleton';
 
 const HackathonList = () => {
   const router = useRouter();
@@ -230,10 +231,7 @@ const HackathonList = () => {
 
         {/* Loading State */}
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mb-4"></div>
-            <p className="text-gray-600 dark:text-gray-400">Loading hackathons...</p>
-          </div>
+          <ListItemsSkeleton count={5} />
         ) : (
           <OpportunityList
             opportunities={filteredOpportunities}

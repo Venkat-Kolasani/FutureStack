@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { toast } from 'react-toastify';
-import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import './Calendar.css';
 import { opportunityService, roundService } from '../services/api';
@@ -12,6 +12,12 @@ import Modal from '../components/common/Modal';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import { FaCode, FaCalendarAlt, FaClock, FaLayerGroup } from 'react-icons/fa';
+import { PageSkeleton } from '../components/common/PageSkeleton';
+
+const ReactCalendar = dynamic(() => import('react-calendar'), {
+  ssr: false,
+  loading: () => <div className="h-80 rounded-xl bg-gray-200 dark:bg-gray-800 animate-pulse" aria-hidden="true" />,
+});
 
 const CalendarPage = () => {
   const [opportunities, setOpportunities] = useState([]);
@@ -126,16 +132,7 @@ const CalendarPage = () => {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-white dark:bg-black p-4 sm:p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col items-center justify-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
-            <p className="text-gray-900 dark:text-white text-lg">Loading calendar...</p>
-          </div>
-        </div>
-      </div>
-    );
+    return <PageSkeleton variant="calendar" />;
   }
 
   return (
@@ -168,7 +165,7 @@ const CalendarPage = () => {
         {/* Calendar */}
         <Card className="p-6">
           <div className="calendar-container">
-            <Calendar
+            <ReactCalendar
               onChange={handleDateClick}
               value={selectedDate}
               tileContent={tileContent}

@@ -19,5 +19,10 @@ describe('sitemap', () => {
     for (const url of urls) {
       expect(url).not.toMatch(/\.html(\?|$)/);
     }
+
+    const internshipGuide = entries.find((entry) =>
+      entry.url.endsWith('/guides/internship-application-tracker')
+    );
+    expect(internshipGuide?.lastModified).toEqual(new Date('2026-07-31'));
   });
 });

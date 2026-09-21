@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { FaBars, FaTimes } from 'react-icons/fa';
 import { UserButton } from '@clerk/nextjs';
 import ThemeToggle from './ThemeToggle';
@@ -12,6 +12,7 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
   const clerkEnabled = hasUsableClerkKey();
+  const menuButtonRef = useRef(null);
 
   const navLinks = [
     { path: '/dashboard', label: 'Dashboard' },
@@ -26,6 +27,24 @@ const Navbar = () => {
   ];
 
   const isActive = (path) => pathname === path;
+
+  useEffect(() => {
+    setIsOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setIsOpen(false);
+        menuButtonRef.current?.focus();
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isOpen]);
 
   return (
     <nav className="backdrop-blur-sm bg-white/70 dark:bg-black/40 text-gray-900 dark:text-white border-b border-gray-200 dark:border-white/10 sticky top-0 z-50 transition-colors duration-300">
@@ -50,6 +69,7 @@ const Navbar = () => {
               <Link
                 key={link.path}
                 href={link.path}
+                aria-current={isActive(link.path) ? 'page' : undefined}
                 className={`text-sm font-medium transition-all duration-200 whitespace-nowrap ${
                   isActive(link.path)
                     ? 'text-gray-900 dark:text-white font-semibold'
@@ -81,9 +101,13 @@ const Navbar = () => {
           <div className="lg:hidden flex items-center gap-2">
             <ThemeToggle />
             <button
-              onClick={() => setIsOpen(!isOpen)}
+              ref={menuButtonRef}
+              type="button"
+              onClick={() => setIsOpen((open) => !open)}
               className="p-2 rounded-md hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
-              aria-label="Toggle menu"
+              aria-label={isOpen ? 'Close menu' : 'Toggle menu'}
+              aria-expanded={isOpen}
+              aria-controls="mobile-navigation"
             >
               {isOpen ? <FaTimes size={22} className="text-gray-900 dark:text-white" /> : <FaBars size={22} className="text-gray-900 dark:text-white" />}
             </button>
@@ -93,13 +117,14 @@ const Navbar = () => {
 
       {/* Mobile Navigation Drawer */}
       {isOpen && (
-        <div className="lg:hidden bg-white/95 dark:bg-black/80 backdrop-blur-md border-t border-gray-200 dark:border-white/10 transition-colors duration-300">
+        <div id="mobile-navigation" className="lg:hidden bg-white/95 dark:bg-black/80 backdrop-blur-md border-t border-gray-200 dark:border-white/10 transition-colors duration-300">
           <div className="px-4 py-3 space-y-1">
             {navLinks.map((link) => (
               <Link
                 key={link.path}
                 href={link.path}
                 onClick={() => setIsOpen(false)}
+                aria-current={isActive(link.path) ? 'page' : undefined}
                 className={`block py-3 px-4 rounded-md text-base font-medium transition-colors ${
                   isActive(link.path)
                     ? 'bg-black/5 dark:bg-white/10 text-gray-900 dark:text-white font-semibold'

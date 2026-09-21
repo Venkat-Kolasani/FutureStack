@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { JsonLd } from '@/components/seo/JsonLd';
 import { indexMetadata } from '@/lib/seo';
+import { SITE_NAME, SITE_URL } from '@/lib/site';
 import { MarketingDoc } from '@/components/marketing/MarketingDoc';
 
 export const metadata: Metadata = indexMetadata({
@@ -10,9 +12,30 @@ export const metadata: Metadata = indexMetadata({
   path: '/privacy',
 });
 
+const privacyLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: 'Privacy — FutureTracker.online',
+    url: `${SITE_URL}/privacy`,
+    description:
+      'Privacy overview for FutureTracker.online: Clerk authentication, user-scoped API access, and how account data is handled.',
+    isPartOf: { '@type': 'WebSite', name: SITE_NAME, url: SITE_URL },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_URL}/` },
+      { '@type': 'ListItem', position: 2, name: 'Privacy', item: `${SITE_URL}/privacy` },
+    ],
+  },
+];
+
 export default function PrivacyPage() {
   return (
     <MarketingDoc>
+      <JsonLd data={privacyLd} />
       <p className="eyebrow">Privacy</p>
       <h1>How FutureTracker.online handles your data</h1>
       <p className="lead">
