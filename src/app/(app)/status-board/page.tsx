@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
-import View from '@/views/Dashboard';
+import View from '@/views/StatusBoard';
 import { noIndexMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = noIndexMetadata('Dashboard');
+export const metadata: Metadata = noIndexMetadata('Status board');
 
 export default function Page() {
   return <View />;

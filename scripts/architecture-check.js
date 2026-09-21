@@ -12,7 +12,9 @@ const errors = [];
 const warnings = [];
 
 const SUPABASE_FROM_ALLOWLIST = new Set([
+    'src/lib/supabase.ts',
     'src/lib/supabase.js',
+    'src/views/StatusBoard.jsx',
     'src/pages/StatusBoard.jsx',
 ]);
 

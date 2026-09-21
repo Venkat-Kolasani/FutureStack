@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { FaExclamationTriangle, FaLayerGroup } from 'react-icons/fa';
 import {

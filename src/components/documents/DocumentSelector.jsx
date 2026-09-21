@@ -1,7 +1,9 @@
+'use client';
+
+import Link from 'next/link';
 // DocumentSelector - component for selecting documents to attach to an opportunity
 // Only shown for opportunity categories that support document attachments
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { FaPlus, FaTimes, FaFile, FaFilePdf, FaLink } from 'react-icons/fa';
 import { documentService } from '../../services/api';
@@ -217,7 +219,7 @@ const DocumentSelector = ({ opportunityId, category, onDocumentsChange }) => {
             {/* No documents available message */}
             {allDocuments.length === 0 && !loading && (
                 <p className="text-gray-500 text-sm">
-                    No documents in your library. <Link to="/documents" className="text-blue-400 hover:underline">Add some documents</Link> first.
+                    No documents in your library. <Link href="/documents" className="text-blue-400 hover:underline">Add some documents</Link> first.
                 </p>
             )}
         </div>
