@@ -1,28 +1,44 @@
 'use client';
 
+import { useAuth } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { useParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
 
+import { useAuthToken } from '../hooks/useAuthToken';
 import { hackathonService } from '../services/api';
 
 const AcceptTeamInvite = () => {
     const { token } = useParams();
     const router = useRouter();
+    const { isLoaded, isSignedIn } = useAuth();
+    const { isLoaded: tokenReady } = useAuthToken();
     const redeemed = useRef(false);
     const [error, setError] = useState('');
+    const [retryTick, setRetryTick] = useState(0);
 
     useEffect(() => {
+        if (!isLoaded || !tokenReady || !isSignedIn || !token) return;
         if (redeemed.current) return;
-        redeemed.current = true;
+
+        let cancelled = false;
 
         const redeemInvite = async () => {
+            redeemed.current = true;
             try {
                 const result = await hackathonService.acceptInvite(token);
-                router.replace(`/hackathons/${result.opportunityId}`);
+                if (!cancelled) {
+                    router.replace(`/hackathons/${result.opportunityId}`);
+                }
             } catch (requestError) {
+                if (cancelled) return;
                 const status = requestError.response?.status;
+                if (status === 401 && retryTick < 2) {
+                    redeemed.current = false;
+                    setRetryTick((tick) => tick + 1);
+                    return;
+                }
                 setError(
                     status === 404
                         ? 'This invite is invalid, expired, or has already been used.'
@@ -32,7 +48,10 @@ const AcceptTeamInvite = () => {
         };
 
         redeemInvite();
-    }, [navigate, token]);
+        return () => {
+            cancelled = true;
+        };
+    }, [isLoaded, tokenReady, isSignedIn, token, retryTick]);
 
     return (
         <div className="min-h-screen bg-black text-white flex items-center justify-center px-4">

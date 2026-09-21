@@ -1,16 +1,40 @@
 import type { MetadataRoute } from 'next';
 import { SITE_URL } from '@/lib/site';
 
+export const WORKSPACE_DISALLOW = [
+  '/dashboard',
+  '/internships',
+  '/hackathons',
+  '/add',
+  '/edit',
+  '/status-board',
+  '/calendar',
+  '/reports',
+  '/analytics',
+  '/documents',
+  '/notifications',
+  '/progress',
+];
+
+const AI_CRAWLERS = [
+  'GPTBot',
+  'ChatGPT-User',
+  'ClaudeBot',
+  'anthropic-ai',
+  'PerplexityBot',
+  'Google-Extended',
+];
+
 export default function robots(): MetadataRoute.Robots {
+  const publicRule = {
+    allow: '/',
+    disallow: WORKSPACE_DISALLOW,
+  };
+
   return {
     rules: [
-      { userAgent: '*', allow: '/' },
-      { userAgent: 'GPTBot', allow: '/' },
-      { userAgent: 'ChatGPT-User', allow: '/' },
-      { userAgent: 'ClaudeBot', allow: '/' },
-      { userAgent: 'anthropic-ai', allow: '/' },
-      { userAgent: 'PerplexityBot', allow: '/' },
-      { userAgent: 'Google-Extended', allow: '/' },
+      { userAgent: '*', ...publicRule },
+      ...AI_CRAWLERS.map((userAgent) => ({ userAgent, ...publicRule })),
     ],
     sitemap: `${SITE_URL}/sitemap.xml`,
   };

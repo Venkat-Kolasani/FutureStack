@@ -41,8 +41,20 @@ export function isProductionDeployment(env: ClerkEnv = process.env): boolean {
 }
 
 export function assertClerkConfigured(env: ClerkEnv = process.env): void {
+  const publishableKey = env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+  const secretKey = env.CLERK_SECRET_KEY;
+  const publishableUsable = isClerkKey(publishableKey, 'pk_');
+  const secretUsable = isClerkKey(secretKey, 'sk_');
+
+  if (publishableUsable && !secretUsable) {
+    throw new Error(
+      'Clerk publishable key is set without a usable CLERK_SECRET_KEY. ' +
+        'Refusing to start because Clerk UI would be active without auth.protect().'
+    );
+  }
+
   if (!isProductionDeployment(env)) return;
-  if (hasUsableClerkServerKeys(env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY, env.CLERK_SECRET_KEY)) return;
+  if (hasUsableClerkServerKeys(publishableKey, secretKey)) return;
 
   throw new Error(
     'Clerk is not configured for a production deployment. Set NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY and ' +

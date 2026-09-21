@@ -24,7 +24,7 @@ export default function LandingNav() {
 
         <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600 dark:text-gray-400">
           <a href="#features" className="hover:text-black dark:hover:text-white transition-colors">Features</a>
-          <a href="/about" className="hover:text-black dark:hover:text-white transition-colors">About</a>
+          <Link href="/about" className="hover:text-black dark:hover:text-white transition-colors">About</Link>
           <a href="#faq" className="hover:text-black dark:hover:text-white transition-colors">FAQ</a>
           <a href="https://github.com/Venkat-Kolasani/FutureStack" target="_blank" rel="noreferrer" className="hover:text-black dark:hover:text-white transition-colors">GitHub</a>
         </div>

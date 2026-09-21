@@ -59,6 +59,14 @@ describe('assertClerkConfigured', () => {
     expect(() => assertClerkConfigured({ ...placeholders, VERCEL_ENV: 'preview' })).not.toThrow();
   });
 
+  it('fails closed when a real publishable key is set without a secret key', () => {
+    expect(() =>
+      assertClerkConfigured({
+        NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: REAL_PUBLISHABLE,
+      })
+    ).toThrow(/without a usable CLERK_SECRET_KEY/);
+  });
+
   it('throws on a production deployment with placeholder keys', () => {
     expect(() =>
       assertClerkConfigured({ ...placeholders, VERCEL_ENV: 'production' })

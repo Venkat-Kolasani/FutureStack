@@ -167,6 +167,9 @@ async function main() {
     if (!/GPTBot/i.test(robots.body) || !robots.body.includes('sitemap.xml')) {
       fail('robots.txt missing AI crawler allow or sitemap');
     }
+    if (!robots.body.includes('Disallow: /dashboard') || !robots.body.includes('Disallow: /progress')) {
+      fail('robots.txt should disallow authenticated workspace paths');
+    }
 
     const dashboard = await fetchUrl('/dashboard', { redirect: 'manual' });
     const dashboardBody = dashboard.body || '';

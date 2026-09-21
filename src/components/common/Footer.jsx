@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { FiGithub, FiTwitter, FiLinkedin } from 'react-icons/fi';
 import StatusIndicator from './StatusIndicator';
 
@@ -29,9 +30,9 @@ const Footer = () => {
                         <ul className="space-y-4 text-gray-600 dark:text-gray-400">
                             <li><a href="#features" className="hover:text-gray-900 dark:hover:text-white transition-colors">Features</a></li>
                             <li><a href="#faq" className="hover:text-gray-900 dark:hover:text-white transition-colors">FAQ</a></li>
-                            <li><a href="/about" className="hover:text-gray-900 dark:hover:text-white transition-colors">About</a></li>
-                            <li><a href="/guides/internship-application-tracker" className="hover:text-gray-900 dark:hover:text-white transition-colors">Guides</a></li>
-                            <li><a href="/privacy" className="hover:text-gray-900 dark:hover:text-white transition-colors">Privacy</a></li>
+                            <li><Link href="/about" className="hover:text-gray-900 dark:hover:text-white transition-colors">About</Link></li>
+                            <li><Link href="/guides/internship-application-tracker" className="hover:text-gray-900 dark:hover:text-white transition-colors">Guides</Link></li>
+                            <li><Link href="/privacy" className="hover:text-gray-900 dark:hover:text-white transition-colors">Privacy</Link></li>
                         </ul>
                     </div>
 
