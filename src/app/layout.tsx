@@ -12,7 +12,7 @@ import {
   SITE_TITLE,
   SITE_URL,
 } from '@/lib/site';
-import { assertClerkConfigured, clerkPublishableKey, hasUsableClerkKey } from '@/lib/clerk';
+import { assertClerkConfigured, clerkPublishableKey, hasUsableClerkServerKeys } from '@/lib/clerk';
 import './globals.css';
 
 assertClerkConfigured();
@@ -33,7 +33,6 @@ export const metadata: Metadata = {
   keywords: SITE_KEYWORDS,
   authors: [{ name: SITE_NAME }],
   robots: { index: true, follow: true },
-  alternates: { canonical: '/' },
   openGraph: {
     type: 'website',
     url: SITE_URL,
@@ -83,7 +82,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     </html>
   );
 
-  if (!hasUsableClerkKey(clerkPublishableKey)) {
+  if (!hasUsableClerkServerKeys()) {
     return content;
   }
 

@@ -1,11 +1,12 @@
 import type { Metadata } from 'next';
-import { OG_IMAGE, SITE_DESCRIPTION, SITE_NAME } from './site';
+import { OG_IMAGE, SITE_DESCRIPTION, SITE_NAME, SITE_TITLE } from './site';
 
 export function noIndexMetadata(title: string, description?: string): Metadata {
   return {
     title,
     description: description || SITE_DESCRIPTION,
     robots: { index: false, follow: false },
+    alternates: { canonical: null },
     openGraph: {
       title: `${title} | ${SITE_NAME}`,
       description: description || SITE_DESCRIPTION,
@@ -24,20 +25,21 @@ export function indexMetadata({
   keywords,
   type = 'website',
 }: {
-  title: string;
+  title?: string;
   description: string;
   path: string;
-  keywords?: string[];
+  keywords?: string | string[];
   type?: 'website' | 'article';
 }): Metadata {
+  const pageTitle = title ? `${title} | ${SITE_NAME}` : undefined;
   return {
-    title,
+    ...(title ? { title } : {}),
     description,
     keywords,
     alternates: { canonical: path },
     robots: { index: true, follow: true },
     openGraph: {
-      title: `${title} | ${SITE_NAME}`,
+      title: pageTitle || SITE_TITLE,
       description,
       url: path,
       images: [OG_IMAGE],
@@ -47,7 +49,7 @@ export function indexMetadata({
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${title} | ${SITE_NAME}`,
+      title: pageTitle || SITE_TITLE,
       description,
       images: [OG_IMAGE],
     },

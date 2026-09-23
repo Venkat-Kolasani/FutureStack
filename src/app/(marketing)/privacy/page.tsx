@@ -6,7 +6,7 @@ import { SITE_NAME, SITE_URL } from '@/lib/site';
 import { MarketingDoc } from '@/components/marketing/MarketingDoc';
 
 export const metadata: Metadata = indexMetadata({
-  title: 'Privacy — FutureTracker.online',
+  title: 'Privacy',
   description:
     'Privacy overview for FutureTracker.online: Clerk authentication, user-scoped API access, and how account data is handled.',
   path: '/privacy',

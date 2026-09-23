@@ -3,21 +3,14 @@ module.exports = {
   testEnvironment: 'jsdom',
   setupFilesAfterEnv: ['<rootDir>/src/setupTests.js'],
   roots: ['<rootDir>/src'],
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   modulePathIgnorePatterns: [
     '<rootDir>/.next/',
     '<rootDir>/backend/',
     '<rootDir>/extensions/',
     '<rootDir>/build/',
   ],
-  testPathIgnorePatterns: [
-    '/node_modules/',
-    '<rootDir>/src/pages/',
-    '<rootDir>/src/App.test.js',
-  ],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
-    '^react-router-dom$': '<rootDir>/src/testUtils/reactRouterDomMock.js',
     '\\.(css|less|scss|sass)$': '<rootDir>/src/testUtils/styleMock.js',
   },
   transform: {

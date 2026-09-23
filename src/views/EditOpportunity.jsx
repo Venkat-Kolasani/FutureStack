@@ -33,7 +33,7 @@ const EditOpportunity = () => {
     };
 
     fetchOpportunity();
-  }, [id, navigate]);
+  }, [id]);
 
   // Called by OpportunityForm when user submits VALID data in edit mode
   const handleSubmit = async (formData) => {

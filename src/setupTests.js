@@ -70,22 +70,6 @@ jest.mock('@clerk/nextjs', () => ({
     UserButton: () => null,
 }));
 
-jest.mock('@clerk/clerk-react', () => ({
-    ClerkProvider: ({ children }) => children,
-    useUser: () => ({ isSignedIn: false, user: null, isLoaded: true }),
-    useAuth: () => ({
-        isSignedIn: false,
-        isLoaded: true,
-        getToken: jest.fn().mockResolvedValue(null),
-    }),
-    SignedIn: ({ children }) => null,
-    SignedOut: ({ children }) => children,
-    SignInButton: ({ children }) => children,
-    SignUpButton: ({ children }) => children,
-    UserButton: () => null,
-    RedirectToSignIn: () => null,
-}));
-
 jest.mock('./lib/analytics', () => ({
     initAnalytics: jest.fn(),
     trackPageView: jest.fn(),

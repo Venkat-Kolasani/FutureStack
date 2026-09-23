@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import { MarketingDoc } from '@/components/marketing/MarketingDoc';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { getGuide, guideJsonLd, GUIDES } from '@/content/guides';
-import { indexMetadata } from '@/lib/seo';
+import { indexMetadata, noIndexMetadata } from '@/lib/seo';
 
 export function generateStaticParams() {
   return GUIDES.map((guide) => ({ slug: guide.slug }));
@@ -18,7 +18,7 @@ export async function generateMetadata({
   const { slug } = await params;
   const guide = getGuide(slug);
   if (!guide) {
-    return { title: 'Guide not found' };
+    return noIndexMetadata('Guide not found');
   }
   return indexMetadata({
     title: guide.title,

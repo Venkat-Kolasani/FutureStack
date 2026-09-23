@@ -19,18 +19,5 @@
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", ".next/types/**/*.ts"],
-  "exclude": [
-    "node_modules",
-    "backend",
-    "extensions",
-    "build",
-    "src/pages",
-    "src/App.js",
-    "src/App.test.js",
-    "src/index.js",
-    "src/hooks/useAuthToken.js",
-    "src/hooks/useInterviewReminders.js",
-    "src/lib/clerk.js",
-    "src/components/auth/ProtectedRoute.jsx"
-  ]
+  "exclude": ["node_modules", "backend", "extensions", "build"]
 }

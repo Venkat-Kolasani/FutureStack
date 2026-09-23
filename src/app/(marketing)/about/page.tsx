@@ -6,7 +6,7 @@ import { SITE_NAME, SITE_URL } from '@/lib/site';
 import { MarketingDoc } from '@/components/marketing/MarketingDoc';
 
 export const metadata: Metadata = indexMetadata({
-  title: 'About FutureTracker.online — Student Career Workspace',
+  title: 'About — Student Career Workspace',
   description:
     'Learn about FutureTracker.online, a free workspace for students and developers to track internships, hackathons, and job applications.',
   path: '/about',

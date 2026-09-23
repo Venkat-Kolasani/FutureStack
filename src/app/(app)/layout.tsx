@@ -1,17 +1,11 @@
 import type { Metadata } from 'next';
-import Navbar from '@/components/common/Navbar';
+import { AppShell } from './AppShell';
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
+  alternates: { canonical: null },
 };
 
 export default function AppGroupLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="min-h-screen font-sans transition-colors duration-300">
-      <Navbar />
-      <main id="main-content" role="main">
-        {children}
-      </main>
-    </div>
-  );
+  return <AppShell>{children}</AppShell>;
 }

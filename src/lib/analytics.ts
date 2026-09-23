@@ -24,6 +24,8 @@ export const redactedPageUrl = (path: string): string => {
   }
   const safeUrl = new URL(window.location.href);
   safeUrl.pathname = path;
+  safeUrl.search = '';
+  safeUrl.hash = '';
   return safeUrl.href;
 };
 

@@ -20,3 +20,9 @@ test('renders crawlable feature copy', () => {
   expect(screen.getByText(/Application Tracker/i)).toBeInTheDocument();
   expect(screen.getByText(/Hackathon Manager/i)).toBeInTheDocument();
 });
+
+test('uses in-app links for About while leaving hash section anchors', () => {
+  renderLanding();
+  expect(screen.getAllByRole('link', { name: 'About' })[0]).toHaveAttribute('href', '/about');
+  expect(screen.getAllByRole('link', { name: 'Features' })[0]).toHaveAttribute('href', '#features');
+});

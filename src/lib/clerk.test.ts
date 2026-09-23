@@ -40,11 +40,19 @@ describe('hasUsableClerkServerKeys', () => {
 });
 
 describe('isProductionDeployment', () => {
-  it('only treats a Vercel production deploy or an explicit opt-in as production', () => {
+  it('fails closed except for CI, local dev, and Vercel preview/development', () => {
     expect(isProductionDeployment({ VERCEL_ENV: 'production' })).toBe(true);
     expect(isProductionDeployment({ REQUIRE_CLERK: 'true' })).toBe(true);
+    expect(isProductionDeployment({})).toBe(true);
     expect(isProductionDeployment({ VERCEL_ENV: 'preview' })).toBe(false);
-    expect(isProductionDeployment({})).toBe(false);
+    expect(isProductionDeployment({ VERCEL_ENV: 'development' })).toBe(false);
+    expect(isProductionDeployment({ CI: 'true' })).toBe(false);
+    expect(isProductionDeployment({ GITHUB_ACTIONS: 'true' })).toBe(false);
+    expect(isProductionDeployment({ NODE_ENV: 'development' })).toBe(false);
+  });
+
+  it('still treats REQUIRE_CLERK as production inside CI', () => {
+    expect(isProductionDeployment({ CI: 'true', REQUIRE_CLERK: 'true' })).toBe(true);
   });
 });
 
@@ -55,8 +63,20 @@ describe('assertClerkConfigured', () => {
   };
 
   it('allows placeholder keys for CI and preview builds', () => {
-    expect(() => assertClerkConfigured({ ...placeholders })).not.toThrow();
+    expect(() => assertClerkConfigured({ ...placeholders, CI: 'true' })).not.toThrow();
     expect(() => assertClerkConfigured({ ...placeholders, VERCEL_ENV: 'preview' })).not.toThrow();
+  });
+
+  it('throws on an ordinary host with placeholder keys', () => {
+    expect(() => assertClerkConfigured({ ...placeholders })).toThrow(/Clerk is not configured/);
+  });
+
+  it('fails closed when a real publishable key is set without a secret key', () => {
+    expect(() =>
+      assertClerkConfigured({
+        NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: REAL_PUBLISHABLE,
+      })
+    ).toThrow(/without a usable CLERK_SECRET_KEY/);
   });
 
   it('throws on a production deployment with placeholder keys', () => {
