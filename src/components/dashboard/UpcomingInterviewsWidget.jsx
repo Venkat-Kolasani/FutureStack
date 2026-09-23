@@ -1,12 +1,14 @@
+'use client';
+
+import { useRouter } from 'next/navigation';
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { FaLayerGroup, FaCalendarCheck } from 'react-icons/fa';
 import Card from '../common/Card';
 import { formatDate, formatTime, getDaysRemaining } from '../../utils/dateHelpers';
 import { getRoundTypeLabel } from '../../utils/roundHelpers';
 
 const UpcomingInterviewsWidget = ({ interviews = [], loading = false }) => {
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const hasUrgent = interviews.some((item) => {
     const days = getDaysRemaining(item.scheduledDate);
@@ -61,7 +63,7 @@ const UpcomingInterviewsWidget = ({ interviews = [], loading = false }) => {
               <button
                 key={item.id}
                 type="button"
-                onClick={() => navigate('/internships')}
+                onClick={() => router.push('/internships')}
                 className={`w-full text-left rounded-lg border-l-4 p-3 transition-all hover:brightness-110 ${urgencyClass}`}
               >
                 <p className="font-medium text-gray-900 dark:text-white text-sm truncate">{item.opportunityTitle}</p>

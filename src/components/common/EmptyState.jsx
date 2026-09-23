@@ -1,5 +1,7 @@
+'use client';
+
+import { useRouter } from 'next/navigation';
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { FaPlus, FaChartLine, FaCalendarAlt, FaBoxOpen } from 'react-icons/fa';
 import Button from './Button';
 
@@ -11,7 +13,7 @@ const EmptyState = ({
     actionPath = null,
     variant = 'default'
 }) => {
-    const navigate = useNavigate();
+    const router = useRouter();
 
     // Pre-configured variants
     const variants = {
@@ -54,7 +56,7 @@ const EmptyState = ({
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">{finalTitle}</h3>
             <p className="text-gray-600 dark:text-gray-400 max-w-sm mb-6">{finalDescription}</p>
             {finalActionLabel && finalActionPath && (
-                <Button onClick={() => navigate(finalActionPath)} className="inline-flex items-center gap-2">
+                <Button onClick={() => router.push(finalActionPath)} className="inline-flex items-center gap-2">
                     <FaPlus className="text-sm" />
                     {finalActionLabel}
                 </Button>

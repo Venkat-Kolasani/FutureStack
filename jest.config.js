@@ -9,12 +9,10 @@ module.exports = {
     '<rootDir>/backend/',
     '<rootDir>/extensions/',
     '<rootDir>/build/',
-    '<rootDir>/src/views/',
   ],
   testPathIgnorePatterns: [
     '/node_modules/',
     '<rootDir>/src/pages/',
-    '<rootDir>/src/views/',
     '<rootDir>/src/App.test.js',
   ],
   moduleNameMapper: {
