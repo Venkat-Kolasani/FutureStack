@@ -1,3 +1,4 @@
+import { StrictMode } from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import { useAuth } from '@clerk/nextjs';
 import AcceptTeamInvite from './AcceptTeamInvite';
@@ -80,5 +81,36 @@ describe('AcceptTeamInvite', () => {
       expect(mockReplace).toHaveBeenCalledWith('/hackathons/hack-1');
     });
     expect(screen.queryByRole('heading', { name: 'Invite unavailable' })).not.toBeInTheDocument();
+  });
+
+  it('reuses an in-flight redemption across Strict Mode replays', async () => {
+    useAuth.mockReturnValue({
+      isLoaded: true,
+      isSignedIn: true,
+      getToken: jest.fn().mockResolvedValue('session-token'),
+    });
+    let resolveInvite;
+    hackathonService.acceptInvite.mockImplementation(
+      () => new Promise((resolve) => {
+        resolveInvite = resolve;
+      })
+    );
+
+    render(
+      <StrictMode>
+        <AcceptTeamInvite />
+      </StrictMode>
+    );
+
+    await waitFor(() => {
+      expect(hackathonService.acceptInvite).toHaveBeenCalledTimes(1);
+    });
+
+    resolveInvite({ opportunityId: 'hack-1' });
+
+    await waitFor(() => {
+      expect(mockReplace).toHaveBeenCalledWith('/hackathons/hack-1');
+    });
+    expect(hackathonService.acceptInvite).toHaveBeenCalledTimes(1);
   });
 });

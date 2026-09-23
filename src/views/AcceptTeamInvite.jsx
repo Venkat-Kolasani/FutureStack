@@ -14,28 +14,32 @@ const AcceptTeamInvite = () => {
     const router = useRouter();
     const { isLoaded, isSignedIn } = useAuth();
     const { isLoaded: tokenReady } = useAuthToken();
-    const redeemed = useRef(false);
+    const redemptionRef = useRef(null);
     const [error, setError] = useState('');
     const [retryTick, setRetryTick] = useState(0);
 
     useEffect(() => {
         if (!isLoaded || !tokenReady || !isSignedIn || !token) return;
-        if (redeemed.current) return;
 
         let cancelled = false;
+        const attemptKey = `${token}:${retryTick}`;
+        if (!redemptionRef.current || redemptionRef.current.key !== attemptKey) {
+            redemptionRef.current = {
+                key: attemptKey,
+                promise: hackathonService.acceptInvite(token),
+            };
+        }
 
-        const redeemInvite = async () => {
-            redeemed.current = true;
-            try {
-                const result = await hackathonService.acceptInvite(token);
-                if (!cancelled) {
-                    router.replace(`/hackathons/${result.opportunityId}`);
-                }
-            } catch (requestError) {
+        redemptionRef.current.promise
+            .then((result) => {
+                if (cancelled) return;
+                router.replace(`/hackathons/${result.opportunityId}`);
+            })
+            .catch((requestError) => {
                 if (cancelled) return;
                 const status = requestError.response?.status;
                 if (status === 401 && retryTick < 2) {
-                    redeemed.current = false;
+                    redemptionRef.current = null;
                     setRetryTick((tick) => tick + 1);
                     return;
                 }
@@ -44,14 +48,12 @@ const AcceptTeamInvite = () => {
                         ? 'This invite is invalid, expired, or has already been used.'
                         : 'We could not accept this invite. Please try again.'
                 );
-            }
-        };
+            });
 
-        redeemInvite();
         return () => {
             cancelled = true;
         };
-    }, [isLoaded, tokenReady, isSignedIn, token, retryTick]);
+    }, [isLoaded, tokenReady, isSignedIn, token, retryTick, router]);
 
     return (
         <div className="min-h-screen bg-black text-white flex items-center justify-center px-4">
