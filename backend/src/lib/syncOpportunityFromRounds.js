@@ -1,18 +1,30 @@
 /**
  * Derive opportunity pipeline fields from interview rounds.
+ * Screening rounds (resume, OA, assignments) promote to shortlisted.
+ * Interview rounds (technical, HR, GD, managerial) promote to interviewed.
+ * Pending rounds never promote status; they only set current_round_number.
+ *
  * @param {Array<{ round_number: number, round_type: string, result: string }>} rounds
- * @param {string} [existingStatus]
- * @returns {{ status?: string, current_round_number: number | null, rejected_round_number: number | null }}
+ * @param {string} [_existingStatus] Unused; status is always derived from rounds.
+ * @returns {{ status: string, current_round_number: number | null, rejected_round_number: number | null }}
  */
-function deriveOpportunityFieldsFromRounds(rounds, existingStatus = 'applied') {
-    const sorted = [...rounds].sort((a, b) => a.round_number - b.round_number);
 
-    if (sorted.length === 0) {
-        return {
-            current_round_number: null,
-            rejected_round_number: null
-        };
-    }
+const SCREENING_ROUND_TYPES = new Set([
+    'resume_shortlisted',
+    'oa',
+    'assignment',
+    'technical_assignment'
+]);
+
+const INTERVIEW_ROUND_TYPES = new Set([
+    'technical',
+    'hr',
+    'group_discussion',
+    'managerial'
+]);
+
+function deriveOpportunityFieldsFromRounds(rounds, _existingStatus = 'applied') {
+    const sorted = [...rounds].sort((a, b) => a.round_number - b.round_number);
 
     const rejectedRound = sorted.find((round) => round.result === 'rejected');
     if (rejectedRound) {
@@ -24,38 +36,24 @@ function deriveOpportunityFieldsFromRounds(rounds, existingStatus = 'applied') {
     }
 
     const pendingRound = sorted.find((round) => round.result === 'pending');
-    if (pendingRound) {
-        return {
-            status: 'interviewed',
-            current_round_number: pendingRound.round_number,
-            rejected_round_number: null
-        };
-    }
+    const current_round_number = pendingRound ? pendingRound.round_number : null;
 
-    const lastRound = sorted[sorted.length - 1];
-    if (lastRound.round_type === 'final' && lastRound.result === 'cleared') {
-        return {
-            status: 'selected',
-            current_round_number: null,
-            rejected_round_number: null
-        };
-    }
-
-    const allComplete = sorted.every(
-        (round) => round.result === 'cleared' || round.result === 'skipped'
+    const clearedTypes = new Set(
+        sorted.filter((round) => round.result === 'cleared').map((round) => round.round_type)
     );
 
-    if (allComplete) {
-        return {
-            status: sorted.length === 1 ? 'shortlisted' : 'interviewed',
-            current_round_number: null,
-            rejected_round_number: null
-        };
+    let status = 'applied';
+    if (clearedTypes.has('final')) {
+        status = 'selected';
+    } else if ([...clearedTypes].some((type) => INTERVIEW_ROUND_TYPES.has(type))) {
+        status = 'interviewed';
+    } else if ([...clearedTypes].some((type) => SCREENING_ROUND_TYPES.has(type))) {
+        status = 'shortlisted';
     }
 
     return {
-        status: existingStatus,
-        current_round_number: null,
+        status,
+        current_round_number,
         rejected_round_number: null
     };
 }

@@ -55,11 +55,12 @@ Implemented in `backend/src/lib/syncOpportunityFromRounds.js` → `deriveOpportu
 
 | Condition | `status` | `current_round_number` | `rejected_round_number` |
 |-----------|----------|------------------------|-------------------------|
-| No rounds | unchanged | `null` | `null` |
+| No rounds | `applied` | `null` | `null` |
 | Any round `rejected` | `rejected` | `null` | that round # |
-| A round `pending` | `interviewed` | that round # | `null` |
-| All cleared/skipped, not final | `shortlisted` or `interviewed` | `null` | `null` |
-| `final` round `cleared` | `selected` | `null` | `null` |
+| `final` round `cleared` | `selected` | earliest pending, else `null` | `null` |
+| Interview round `cleared` (`technical`, `hr`, `group_discussion`, `managerial`) | `interviewed` | earliest pending, else `null` | `null` |
+| Screening round `cleared` (`resume_shortlisted`, `oa`, `assignment`, `technical_assignment`) | `shortlisted` | earliest pending, else `null` | `null` |
+| Otherwise (pending, skipped, or `other` only) | `applied` | earliest pending, else `null` | `null` |
 
 ---
 

@@ -399,12 +399,14 @@ Hackathons have a different lifecycle: `opportunities.deadline` remains the subm
 
 ### Interview rounds: one source of truth for status
 
-Each internship has ordered rounds such as online assessment, technical, HR, and final. `syncOpportunityFromRounds.js` derives the parent opportunity state after a round mutation:
+Each internship has ordered rounds such as resume shortlist, online assessment, technical, HR, and final. `syncOpportunityFromRounds.js` derives the parent opportunity state after a round mutation:
 
 - A rejected round makes the opportunity `rejected` and records the rejected round number.
-- A pending round makes it `interviewed` and records the current round number.
 - A cleared final round makes it `selected`.
-- Completed/skipped non-final rounds lead to `shortlisted` or `interviewed` depending on progress.
+- A cleared interview round (`technical`, `hr`, `group_discussion`, `managerial`) makes it `interviewed`.
+- Else a cleared screening round (`resume_shortlisted`, `oa`, `assignment`, `technical_assignment`) makes it `shortlisted`.
+- Otherwise, including no rounds, it returns to `applied`.
+- A pending round never promotes status; it only records `current_round_number` so the timeline can show the next step. Reverting or deleting a round recomputes status from the remaining results, so the card moves backward as well as forward.
 
 **Why derive instead of asking users to manually update both records?** Two editable sources would drift. Centralizing the derivation in the backend makes the timeline and Kanban board consistent. The mutation response returns the round, synchronized opportunity, and current rounds so the client can update immediately without redundant reads.
 

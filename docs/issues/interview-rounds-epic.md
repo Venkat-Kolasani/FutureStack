@@ -31,11 +31,12 @@ Today `opportunities.status` is a single flat value (`applied`, `shortlisted`, `
 
 | Condition | `opportunities.status` | `rejected_round_number` | `current_round_number` |
 |-----------|------------------------|-------------------------|------------------------|
-| No rounds | unchanged (usually `applied`) | null | null |
+| No rounds | `applied` | null | null |
 | Any round `rejected` | `rejected` | that round # | null |
-| A round `pending` | `interviewed` | null | that round # |
-| All cleared/skipped, not final | `shortlisted` or `interviewed` | null | null |
-| `final` round `cleared` | `selected` | null | null |
+| `final` round `cleared` | `selected` | null | earliest pending, else null |
+| Interview round `cleared` (`technical`, `hr`, `group_discussion`, `managerial`) | `interviewed` | null | earliest pending, else null |
+| Screening round `cleared` (`resume_shortlisted`, `oa`, `assignment`, `technical_assignment`) | `shortlisted` | null | earliest pending, else null |
+| Otherwise (pending, skipped, or `other` only) | `applied` | null | earliest pending, else null |
 
 ### Performance fix (post-launch)
 
