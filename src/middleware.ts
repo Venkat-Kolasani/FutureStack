@@ -2,7 +2,15 @@ import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import { assertClerkConfigured, hasUsableClerkServerKeys } from '@/lib/clerk';
 
-assertClerkConfigured();
+assertClerkConfigured({
+  VERCEL_ENV: process.env.VERCEL_ENV,
+  REQUIRE_CLERK: process.env.REQUIRE_CLERK,
+  CI: process.env.CI,
+  GITHUB_ACTIONS: process.env.GITHUB_ACTIONS,
+  NODE_ENV: process.env.NODE_ENV,
+  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
+  CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
+});
 
 const isProtectedRoute = createRouteMatcher([
   '/dashboard(.*)',
@@ -19,7 +27,10 @@ const isProtectedRoute = createRouteMatcher([
   '/progress(.*)',
 ]);
 
-export default hasUsableClerkServerKeys()
+export default hasUsableClerkServerKeys(
+  process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
+  process.env.CLERK_SECRET_KEY
+)
   ? clerkMiddleware(async (auth, req) => {
       if (isProtectedRoute(req)) {
         await auth.protect();

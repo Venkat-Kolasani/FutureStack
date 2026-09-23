@@ -20,16 +20,16 @@ export const GUIDES: Guide[] = [
     slug: 'internship-application-tracker',
     title: 'Internship Application Tracker for Students',
     description:
-      'Track internship applications, interview rounds, and outcomes with FutureTracker.online — a free student internship application tracker.',
+      'Track internship applications, interview rounds, and outcomes with FutureTracker, a free student internship application tracker.',
     headline: 'Internship application tracker for students',
     datePublished: '2026-07-30',
     dateModified: '2026-07-31',
     keywords: ['internship application tracker', 'student job tracker', 'interview rounds', 'FutureTracker.online'],
     eyebrow: 'Guide',
     lead:
-      'FutureTracker.online is a free internship application tracker: log every role, move stages on a Kanban board, record interview rounds, and see what is coming next on your calendar.',
+      'FutureTracker is a free internship application tracker: log every role, move stages on a Kanban board, record interview rounds, and see what is coming next on your calendar.',
     card:
-      'If recruiting season usually ends in a messy spreadsheet, start here instead. You get applications, OA and interview rounds, campus vs off-campus filters, and deadline reminders in one workspace — without building the tracker yourself.',
+      'If recruiting season usually ends in a messy spreadsheet, start here instead. You get applications, OA and interview rounds, campus vs off-campus filters, and deadline reminders in one workspace, without building the tracker yourself.',
     sections: [
       {
         heading: 'What to track each season',
@@ -42,7 +42,7 @@ export const GUIDES: Guide[] = [
         ],
       },
       {
-        heading: 'How FutureTracker.online helps',
+        heading: 'How FutureTracker helps',
         bullets: [
           'Pipeline view: Kanban and list views so status stays visual',
           'Interview rounds: OA → technical → HR style progress that updates the parent opportunity',
@@ -68,16 +68,16 @@ export const GUIDES: Guide[] = [
     slug: 'hackathon-deadline-tracker',
     title: 'Hackathon Deadline Tracker',
     description:
-      'Track hackathon teams, ideas, tasks, and submission deadlines with FutureTracker.online — a free hackathon deadline tracker for students.',
+      'Track hackathon teams, ideas, tasks, and submission deadlines with FutureTracker, a free hackathon deadline tracker for students.',
     headline: 'Hackathon deadline tracker',
     datePublished: '2026-07-30',
     dateModified: '2026-07-31',
     keywords: ['hackathon deadline tracker', 'hackathon team tracker', 'submission checklist', 'FutureTracker.online'],
     eyebrow: 'Guide',
     lead:
-      'FutureTracker.online includes a hackathon workspace: keep the submission deadline visible, coordinate teammates, capture ideas, and close the checklist before the clock runs out.',
+      'FutureTracker includes a hackathon workspace: keep the submission deadline visible, coordinate teammates, capture ideas, and close the checklist before the clock runs out.',
     card:
-      'Need a free place for hackathon deadlines, team invites, idea voting, tasks, and reminders — without losing the internship pipeline in another tab? That is what this workspace is for.',
+      'Need a free place for hackathon deadlines, team invites, idea voting, tasks, and reminders, without losing the internship pipeline in another tab? That is what this workspace is for.',
     sections: [
       {
         heading: 'Why hackathons need a dedicated tracker',
@@ -88,7 +88,7 @@ export const GUIDES: Guide[] = [
         ],
       },
       {
-        heading: 'What FutureTracker.online covers',
+        heading: 'What FutureTracker covers',
         bullets: [
           'Hackathon records with submission deadlines on the calendar',
           'Account-backed owner / editor / viewer access',
@@ -115,23 +115,23 @@ export const GUIDES: Guide[] = [
     slug: 'job-tracker-vs-spreadsheet',
     title: 'Job Tracker vs Spreadsheet',
     description:
-      'Compare a dedicated job and internship tracker to Google Sheets or Notion. Why FutureTracker.online works better for interview rounds and deadlines.',
+      'Compare a dedicated job and internship tracker to Google Sheets or Notion. Why FutureTracker works better for interview rounds and deadlines.',
     headline: 'Job tracker vs spreadsheet',
     datePublished: '2026-07-30',
     dateModified: '2026-07-31',
     keywords: ['job tracker vs spreadsheet', 'internship tracker', 'Notion alternative', 'FutureTracker.online'],
     eyebrow: 'Guide',
     lead:
-      'Spreadsheets work until interview season gets real. FutureTracker.online is a free, purpose-built job and internship tracker with stages, rounds, calendars, and reports already modeled.',
+      'Spreadsheets work until interview season gets real. FutureTracker is a free, purpose-built job and internship tracker with stages, rounds, calendars, and reports already modeled.',
     card:
-      'Keep a sheet for custom analysis if you like. Use FutureTracker.online as the day-to-day system for applications, interview rounds, hackathon deadlines, and mentor-ready PDF or share links.',
+      'Keep a sheet for custom analysis if you like. Use FutureTracker as the day-to-day system for applications, interview rounds, hackathon deadlines, and mentor-ready PDF or share links.',
     sections: [
       {
         heading: 'Where spreadsheets break down',
         bullets: [
           'Status columns drift; everyone invents their own stage names',
           'Multi-round interviews need nested rows the sheet was not designed for',
-          'Deadlines live in another calendar app — easy to miss',
+          'Deadlines live in another calendar app, which makes them easy to miss',
           'Sharing a messy sheet with a mentor exposes everything',
           'Mobile edits and browser saving are clumsy',
         ],
@@ -148,7 +148,7 @@ export const GUIDES: Guide[] = [
         ],
       },
       {
-        heading: 'When FutureTracker.online is the better default',
+        heading: 'When FutureTracker is the better default',
         bullets: [
           'You are applying to more than a handful of roles',
           'You have OAs and multi-round loops on overlapping weeks',
@@ -180,7 +180,7 @@ export function guideJsonLd(guide: Guide) {
         '@type': 'Organization',
         name: SITE_NAME,
         url: SITE_URL,
-        logo: { '@type': 'ImageObject', url: `${SITE_URL}/logo512.png` },
+        logo: { '@type': 'ImageObject', url: `${SITE_URL}/og-image.png` },
       },
       datePublished: guide.datePublished,
       dateModified: guide.dateModified,

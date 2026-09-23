@@ -11,6 +11,7 @@ import {
   SITE_NAME,
   SITE_TITLE,
   SITE_URL,
+  LLMS_ALTERNATE_TYPES,
 } from '@/lib/site';
 import { assertClerkConfigured, clerkPublishableKey, hasUsableClerkServerKeys } from '@/lib/clerk';
 import './globals.css';
@@ -50,6 +51,9 @@ export const metadata: Metadata = {
   },
   icons: { icon: '/favicon.png', apple: '/favicon.png' },
   manifest: '/manifest.json',
+  alternates: {
+    types: { ...LLMS_ALTERNATE_TYPES },
+  },
 };
 
 const themeScript = `(function () {

@@ -16,11 +16,20 @@ describe('route metadata', () => {
   it('gives marketing routes indexable titles, descriptions, and canonicals', () => {
     expect(landingMetadata.alternates?.canonical).toBe('/');
     expect(landingMetadata.robots).toEqual({ index: true, follow: true });
+    expect(landingMetadata.alternates?.types?.['text/plain']).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ url: '/llms.txt' }),
+        expect.objectContaining({ url: '/llms-full.txt' }),
+      ])
+    );
     expect(String(landingMetadata.description).length).toBeGreaterThan(20);
     expect(String(landingMetadata.description).length).toBeLessThanOrEqual(160);
 
     expect(String(aboutMetadata.title)).toMatch(/About/);
     expect(aboutMetadata.alternates?.canonical).toBe('/about');
+    expect(aboutMetadata.alternates?.types?.['text/plain']).toEqual(
+      expect.arrayContaining([expect.objectContaining({ url: '/llms.txt' })])
+    );
     expect(String(aboutMetadata.description).length).toBeLessThanOrEqual(160);
 
     expect(String(privacyMetadata.title)).toMatch(/Privacy/);

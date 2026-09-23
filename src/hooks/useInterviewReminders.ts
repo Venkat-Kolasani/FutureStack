@@ -105,7 +105,7 @@ export function useInterviewReminders() {
 
         for (const round of rounds) {
           const typeLabel = getRoundTypeLabel(round.roundType);
-          const baseBody = `${round.opportunityTitle} — Round ${round.roundNumber} (${typeLabel})`;
+          const baseBody = `${round.opportunityTitle}: Round ${round.roundNumber} (${typeLabel})`;
 
           const dayBeforeTimer = scheduleNotification({
             id: `${round.id}:day_before`,

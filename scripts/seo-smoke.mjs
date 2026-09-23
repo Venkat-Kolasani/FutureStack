@@ -66,6 +66,11 @@ function assertPublicPage(name, html, { canonical, h1, copy }) {
   if (copy && !html.includes(copy)) fail(`${name}: missing feature copy ${copy}`);
 }
 
+function landingStructuredData(html) {
+  const jsonBlocks = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)];
+  return jsonBlocks.map(([, raw]) => JSON.parse(raw));
+}
+
 function waitForServer() {
   return new Promise((resolve, reject) => {
     const started = Date.now();
@@ -94,6 +99,7 @@ async function main() {
       stdio: 'inherit',
       env: {
         ...process.env,
+        CI: process.env.CI || 'true',
         NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:
           process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || 'pk_test_ci_placeholder',
         CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY || 'sk_test_ci_placeholder',
@@ -109,6 +115,7 @@ async function main() {
     env: {
       ...process.env,
       PORT,
+      CI: process.env.CI || 'true',
       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:
         process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || 'pk_test_ci_placeholder',
       CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY || 'sk_test_ci_placeholder',
@@ -133,6 +140,25 @@ async function main() {
       h1: 'Build Your Future',
       copy: 'Application Tracker',
     });
+    if (!landing.body.includes('/llms.txt')) {
+      fail('landing HTML should link /llms.txt for agents');
+    }
+    if (!landing.body.includes('replaces scattered spreadsheets')) {
+      fail('landing HTML should include FAQ answers without JavaScript');
+    }
+    const landingLd = landingStructuredData(landing.body);
+    const faqPage = landingLd.find((block) => block['@type'] === 'FAQPage');
+    if (!faqPage || !Array.isArray(faqPage.mainEntity) || faqPage.mainEntity.length !== 5) {
+      fail(`landing FAQ JSON-LD should have 5 questions, got ${faqPage?.mainEntity?.length ?? 0}`);
+    }
+    const website = landingLd.find((block) => block['@type'] === 'WebSite');
+    if (!website?.disambiguatingDescription) {
+      fail('landing JSON-LD should include a WebSite disambiguatingDescription');
+    }
+    const webApp = landingLd.find((block) => block['@type'] === 'WebApplication');
+    if (webApp?.isAccessibleForFree !== true) {
+      fail('landing WebApplication JSON-LD should set isAccessibleForFree');
+    }
 
     const about = await fetchUrl('/about');
     if (about.status !== 200) fail(`about status ${about.status}`);
@@ -145,7 +171,7 @@ async function main() {
     if (privacy.status !== 200) fail(`privacy status ${privacy.status}`);
     assertPublicPage('privacy', privacy.body, {
       canonical: '/privacy',
-      h1: 'How FutureTracker.online handles your data',
+      h1: 'How FutureTracker handles your data',
     });
 
     const guide = await fetchUrl('/guides/internship-application-tracker');
@@ -154,6 +180,12 @@ async function main() {
       canonical: '/guides/internship-application-tracker',
       h1: 'Internship application tracker',
     });
+    if (guide.body.includes('logo512.png')) {
+      fail('guide JSON-LD should not reference missing /logo512.png');
+    }
+    if (!guide.body.includes('/og-image.png')) {
+      fail('guide JSON-LD should use /og-image.png as the publisher logo');
+    }
 
     const sitemap = await fetchUrl('/sitemap.xml');
     if (sitemap.status !== 200) fail(`sitemap status ${sitemap.status}`);
@@ -164,11 +196,46 @@ async function main() {
 
     const robots = await fetchUrl('/robots.txt');
     if (robots.status !== 200) fail(`robots status ${robots.status}`);
-    if (!/GPTBot/i.test(robots.body) || !robots.body.includes('sitemap.xml')) {
-      fail('robots.txt missing AI crawler allow or sitemap');
+    const requiredCrawlers = [
+      'GPTBot',
+      'OAI-SearchBot',
+      'Claude-SearchBot',
+      'Applebot-Extended',
+      'Amazonbot',
+      'CCBot',
+      'meta-externalagent',
+    ];
+    for (const crawler of requiredCrawlers) {
+      if (!robots.body.includes(crawler)) {
+        fail(`robots.txt missing crawler ${crawler}`);
+      }
+    }
+    if (!robots.body.includes('sitemap.xml')) {
+      fail('robots.txt missing sitemap');
     }
     if (!robots.body.includes('Disallow: /dashboard') || !robots.body.includes('Disallow: /progress')) {
       fail('robots.txt should disallow authenticated workspace paths');
+    }
+    if (!robots.body.includes('Disallow: /share')) {
+      fail('robots.txt should disallow share token URLs');
+    }
+
+    const llms = await fetchUrl('/llms.txt');
+    if (llms.status !== 200) fail(`llms.txt status ${llms.status}`);
+    if (/\.html(\/|"|'|\s|$)/.test(llms.body) || llms.body.includes('.html')) {
+      fail('llms.txt should use clean URLs, not .html paths');
+    }
+    if (!llms.body.includes('https://futuretracker.online/about')) {
+      fail('llms.txt should cite /about without .html');
+    }
+
+    const llmsFull = await fetchUrl('/llms-full.txt');
+    if (llmsFull.status !== 200) fail(`llms-full.txt status ${llmsFull.status}`);
+    if (llmsFull.body.includes('.html')) {
+      fail('llms-full.txt should use clean URLs, not .html paths');
+    }
+    if (!llmsFull.body.includes('Next.js') || !llmsFull.body.includes('src/services/api.ts')) {
+      fail('llms-full.txt should describe Next.js App Router and src/services/api.ts');
     }
 
     const dashboard = await fetchUrl('/dashboard', { redirect: 'manual' });

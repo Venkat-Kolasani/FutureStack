@@ -66,7 +66,7 @@ const InterviewRejectionInsights = ({
           <Card className="p-4 bg-purple-500/10 border-purple-500/20">
             <p className="text-xs text-gray-600 dark:text-gray-400">Avg round reached</p>
             <p className="text-2xl font-bold text-purple-600 dark:text-purple-200">
-              {pipeline.averageRoundsBeforeRejection ?? '—'}
+              {pipeline.averageRoundsBeforeRejection ?? '-'}
             </p>
           </Card>
           <Card className="p-4 bg-blue-500/10 border-blue-500/20">

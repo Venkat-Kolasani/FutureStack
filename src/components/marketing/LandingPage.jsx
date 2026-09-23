@@ -2,7 +2,8 @@ import { FiBarChart2, FiBookOpen, FiBriefcase, FiCode, FiFileText, FiLayers } fr
 import FAQ from '@/components/common/FAQ';
 import Footer from '@/components/common/Footer';
 import { JsonLd } from '@/components/seo/JsonLd';
-import { GITHUB_URL, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/lib/site';
+import { FAQ_ITEMS } from '@/content/faq';
+import { GITHUB_URL, OG_IMAGE, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/lib/site';
 import LandingCtas from './LandingCtas';
 import LandingNav from './LandingNav';
 
@@ -62,17 +63,31 @@ const ICONS = {
 
 const cardBaseClass = 'border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-white/[0.03]';
 
+const websiteLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  '@id': `${SITE_URL}/#website`,
+  name: SITE_NAME,
+  url: SITE_URL,
+  description: SITE_DESCRIPTION,
+  disambiguatingDescription:
+    'Student career workspace at futuretracker.online. Not the sustainability company at futuretracker.com.',
+  publisher: { '@id': `${SITE_URL}/#organization` },
+};
+
 const webApplicationLd = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
   name: SITE_NAME,
-  alternateName: ['FutureTracker', 'FutureStack'],
+  alternateName: ['FutureTracker.online', 'FutureStack'],
   url: SITE_URL,
   description: SITE_DESCRIPTION,
   applicationCategory: 'ProductivityApplication',
   operatingSystem: 'Web',
+  isAccessibleForFree: true,
   browserRequirements: 'Requires JavaScript. Requires HTML5.',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  publisher: { '@id': `${SITE_URL}/#organization` },
   featureList: [
     'Internship Application Tracking',
     'Interview Round Pipeline',
@@ -88,10 +103,11 @@ const webApplicationLd = {
 const organizationLd = {
   '@context': 'https://schema.org',
   '@type': 'Organization',
+  '@id': `${SITE_URL}/#organization`,
   name: SITE_NAME,
-  alternateName: 'FutureTracker',
+  alternateName: 'FutureTracker.online',
   url: SITE_URL,
-  logo: `${SITE_URL}/og-image.png`,
+  logo: OG_IMAGE,
   sameAs: [GITHUB_URL],
   contactPoint: {
     '@type': 'ContactPoint',
@@ -105,37 +121,20 @@ const organizationLd = {
 const faqLd = {
   '@context': 'https://schema.org',
   '@type': 'FAQPage',
-  mainEntity: [
-    {
-      '@type': 'Question',
-      name: 'What is FutureTracker.online?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'FutureTracker.online is a free opportunity tracker for students and developers to organize job applications, track internship interview rounds, and never miss hackathon deadlines. It is not affiliated with the sustainability company at futuretracker.com.',
-      },
+  mainEntity: FAQ_ITEMS.map((item) => ({
+    '@type': 'Question',
+    name: item.question,
+    acceptedAnswer: {
+      '@type': 'Answer',
+      text: item.answer,
     },
-    {
-      '@type': 'Question',
-      name: 'Is FutureTracker.online free to use?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Yes, FutureTracker.online is free to use. You can track unlimited opportunities, use the Kanban board, calendar view, and export PDF reports at no cost.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: 'What features does FutureTracker.online offer?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'FutureTracker.online offers internship and hackathon tracking, interview-round pipelines, a Kanban status board, calendar deadlines, analytics, PDF reports, document vault, and a Chrome extension to save listings.',
-      },
-    },
-  ],
+  })),
 };
 
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-white font-sans selection:bg-blue-500 overflow-x-hidden transition-colors duration-300">
+      <JsonLd data={websiteLd} />
       <JsonLd data={webApplicationLd} />
       <JsonLd data={organizationLd} />
       <JsonLd data={faqLd} />
@@ -158,7 +157,7 @@ export default function LandingPage() {
             </span>
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-400 mb-12 max-w-2xl mx-auto leading-relaxed">
-            FutureTracker.online is the all-in-one workspace for students and developers to track
+            FutureTracker is the all-in-one workspace for students and developers to track
             internships round-by-round, manage hackathons, and see exactly where your applications stand.
           </p>
           <LandingCtas />

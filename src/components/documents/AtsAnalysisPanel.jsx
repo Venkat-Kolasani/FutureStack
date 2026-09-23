@@ -75,7 +75,7 @@ const AtsAnalysisPanel = ({
             <div className="mt-3 rounded-lg border border-dashed border-white/15 bg-white/[0.03] px-4 py-3">
                 <p className="text-sm font-medium text-gray-900 dark:text-white">No ATS score yet</p>
                 <p className="mt-1 text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
-                    Use Check ATS Score below to analyze this resume. Rule-based hints only — not an official ATS score.
+                    Use Check ATS Score below to analyze this resume. Rule-based hints only, not an official ATS score.
                 </p>
             </div>
         );
@@ -88,7 +88,7 @@ const AtsAnalysisPanel = ({
     return (
         <div className="mt-3 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-black/20 p-3">
             <div className="flex items-center justify-between gap-3">
-                <p className="text-xs text-gray-600 dark:text-gray-400">Rule-based hints — not an official ATS score</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400">Rule-based hints, not an official ATS score</p>
                 {onToggle && (
                     <button
                         type="button"

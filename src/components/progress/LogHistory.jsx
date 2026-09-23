@@ -36,7 +36,7 @@ const LogHistory = ({ logs = [], emptyLabel = 'No prep logged.' }) => {
                 {log.logDate ? ` · ${formatDate(log.logDate)}` : ''}
               </p>
               <p className="mt-1 text-sm leading-relaxed text-gray-800 dark:text-gray-200">
-                {log.didLog ? (log.whatDidYouDo || 'Logged prep.') : 'Off day — kept the grid honest.'}
+                {log.didLog ? (log.whatDidYouDo || 'Logged prep.') : 'Off day: kept the grid honest.'}
               </p>
               {log.didLog && log.whatDidYouLearn && (
                 <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{log.whatDidYouLearn}</p>

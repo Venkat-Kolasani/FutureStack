@@ -20,7 +20,7 @@ const Footer = () => {
                             </span>
                         </div>
                         <p className="text-gray-600 dark:text-gray-400 leading-relaxed max-w-sm">
-                            FutureTracker.online — the all-in-one workspace for students and developers.
+                            FutureTracker is the all-in-one workspace for students and developers.
                             Track internships, manage hackathons, and build your future.
                         </p>
                     </div>
@@ -69,7 +69,7 @@ const Footer = () => {
 
                 <div className="border-t border-gray-200 dark:border-white/10 pt-8 flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-6">
                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                        © {new Date().getFullYear()} FutureTracker.online. All rights reserved.
+                        © {new Date().getFullYear()} FutureTracker. All rights reserved.
                     </p>
                     <StatusIndicator />
                 </div>

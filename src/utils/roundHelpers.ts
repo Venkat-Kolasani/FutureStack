@@ -161,7 +161,7 @@ export const filterPipelineAnalyticsForOpportunities = (
 
 export const ROUND_RESULT_HINTS = {
   pending: 'Scheduled or awaiting outcome',
-  cleared: 'Passed — you can add the next round',
-  rejected: 'Marks the pipeline as rejected — internship moves out of your active list',
+  cleared: 'Passed: you can add the next round',
+  rejected: 'Marks the pipeline as rejected: internship moves out of your active list',
   skipped: 'Round was cancelled or not required',
 };

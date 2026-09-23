@@ -53,7 +53,7 @@ export default async function GuidePage({
       <p className="eyebrow">{guide.eyebrow}</p>
       <h1>{guide.headline}</h1>
       <p className="lead">
-        <strong>FutureTracker.online</strong> {guide.lead.replace(/^FutureTracker\.online\s+/i, '')}
+        <strong>FutureTracker</strong> {guide.lead.replace(/^FutureTracker\s+/i, '')}
       </p>
       <div className="card">
         <p>{guide.card}</p>
@@ -81,7 +81,7 @@ export default async function GuidePage({
         </section>
       ))}
       <p className="disclaimer">
-        Note: FutureTracker.online is a student career product and is not affiliated with the company at futuretracker.com.
+        Note: FutureTracker is a student career product and is not affiliated with the company at futuretracker.com.
       </p>
       <p>
         <Link className="cta" href={guide.cta.href}>

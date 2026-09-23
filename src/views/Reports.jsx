@@ -58,7 +58,7 @@ const EXPORT_OPTIONS = [
   {
     value: 'summary',
     label: 'Summary only',
-    description: 'Statistics and rejection breakdown — no detail rows',
+    description: 'Statistics and rejection breakdown: no detail rows',
   },
 ];
 
@@ -232,7 +232,7 @@ const Reports = () => {
             <Card className="p-4 bg-red-500/5 border-red-500/15">
               <p className="text-xs text-gray-600 dark:text-gray-400">Avg round at rejection</p>
               <p className="text-2xl font-bold text-red-300 tabular-nums">
-                {displayPipeline.averageRoundsBeforeRejection ?? '—'}
+                {displayPipeline.averageRoundsBeforeRejection ?? '-'}
               </p>
             </Card>
             <Card className="p-4 bg-purple-500/5 border-purple-500/15">

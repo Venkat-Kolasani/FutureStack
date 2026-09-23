@@ -113,7 +113,7 @@ export const generatePDF = async (
     checkPageBreak(40);
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
-    doc.text('Interview Pipeline — Where You Were Rejected', margin, yPosition);
+    doc.text('Interview Pipeline: Where You Were Rejected', margin, yPosition);
     yPosition += 8;
 
     const pipelineLines = [
@@ -153,7 +153,7 @@ export const generatePDF = async (
 
       pipelineAnalytics.rejections.forEach((item) => {
         writeWrappedText(
-          `• ${item.title} — ${item.roundTypeLabel} (cleared ${item.clearedRoundsBeforeRejection} before)`,
+          `• ${item.title} - ${item.roundTypeLabel} (cleared ${item.clearedRoundsBeforeRejection} before)`,
           5
         );
       });

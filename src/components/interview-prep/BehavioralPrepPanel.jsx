@@ -223,19 +223,19 @@ const BehavioralPrepPanel = ({ behavioral, onCreateBehavioral, onUpdateBehaviora
                             <div className="grid grid-cols-2 gap-2 text-xs">
                                 <div className="bg-white dark:bg-black/30 rounded p-2">
                                     <span className="text-orange-400 font-medium">S:</span>
-                                    <p className="text-gray-600 dark:text-gray-400 mt-0.5">{entry.situation || '—'}</p>
+                                    <p className="text-gray-600 dark:text-gray-400 mt-0.5">{entry.situation || '-'}</p>
                                 </div>
                                 <div className="bg-white dark:bg-black/30 rounded p-2">
                                     <span className="text-orange-400 font-medium">T:</span>
-                                    <p className="text-gray-600 dark:text-gray-400 mt-0.5">{entry.task || '—'}</p>
+                                    <p className="text-gray-600 dark:text-gray-400 mt-0.5">{entry.task || '-'}</p>
                                 </div>
                                 <div className="bg-white dark:bg-black/30 rounded p-2">
                                     <span className="text-orange-400 font-medium">A:</span>
-                                    <p className="text-gray-600 dark:text-gray-400 mt-0.5">{entry.action || '—'}</p>
+                                    <p className="text-gray-600 dark:text-gray-400 mt-0.5">{entry.action || '-'}</p>
                                 </div>
                                 <div className="bg-white dark:bg-black/30 rounded p-2">
                                     <span className="text-orange-400 font-medium">R:</span>
-                                    <p className="text-gray-600 dark:text-gray-400 mt-0.5">{entry.result || '—'}</p>
+                                    <p className="text-gray-600 dark:text-gray-400 mt-0.5">{entry.result || '-'}</p>
                                 </div>
                             </div>
                         </div>

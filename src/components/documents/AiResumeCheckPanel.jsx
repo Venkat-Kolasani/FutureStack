@@ -14,8 +14,13 @@ const CATEGORY_LABELS = {
     technical_skills: 'Technical Skills',
 };
 
-/** Each category is scored 0–25 (matches backend evaluator schema). */
-const CATEGORY_MAX = 25;
+/** Matches CATEGORY_MAX in backend/src/lib/resume-agent/resumeText.js (35/30/25/10). */
+export const HIRING_AGENT_CATEGORY_MAX = {
+    open_source: 35,
+    self_projects: 30,
+    production: 25,
+    technical_skills: 10,
+};
 
 const LOADING_STEPS = [
     'Extracting resume text',
@@ -38,7 +43,7 @@ function formatCheckedAt(dateStr) {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-const CategoryBar = ({ label, score, max = CATEGORY_MAX }) => {
+const CategoryBar = ({ label, score, max }) => {
     const pct = max > 0 ? Math.min(100, Math.round((score / max) * 100)) : 0;
     const color =
         pct >= 70 ? 'bg-emerald-500' :
@@ -65,7 +70,7 @@ const ComingSoonPanel = () => (
     <div className="mt-3 rounded-lg border border-violet-500/25 bg-gradient-to-br from-violet-500/10 to-transparent px-4 py-3.5">
         <div className="flex items-center gap-2 mb-2">
             <FaTools className="text-violet-400 shrink-0" size={13} />
-            <p className="text-sm font-medium text-violet-200">AI Resume Check — under development</p>
+            <p className="text-sm font-medium text-violet-200">AI Resume Check: under development</p>
         </div>
         <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
             This feature will score open source work, projects, production experience, and technical skills
@@ -82,7 +87,7 @@ const ComingSoonPanel = () => (
             <FaExternalLinkAlt size={9} className="opacity-70" />
         </a>
         <p className="mt-2 text-[10px] text-gray-600">
-            MIT © HackerRank — rule-based ATS scoring above remains available today.
+            MIT © HackerRank. Rule-based ATS scoring above remains available today.
         </p>
     </div>
 );
@@ -228,6 +233,7 @@ const AiResumeCheckPanel = ({
                                 key={key}
                                 label={label}
                                 score={cats[key] ?? 0}
+                                max={checkResult.category_max?.[key] ?? HIRING_AGENT_CATEGORY_MAX[key]}
                             />
                         ))}
                     </div>
@@ -322,7 +328,7 @@ const AiResumeCheckPanel = ({
                     )}
 
                     <p className="text-[10px] text-gray-600 leading-relaxed border-t border-white/5 pt-2">
-                        AI-generated — not an official score. Model: {provider || 'LLM'}/{model || 'unknown'}.
+                        AI-generated, not an official score. Model: {provider || 'LLM'}/{model || 'unknown'}.
                     </p>
                 </div>
             )}

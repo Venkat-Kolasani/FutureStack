@@ -8,7 +8,7 @@ import Modal from '../common/Modal';
 import Button from '../common/Button';
 
 const MODEL_OPTIONS = [
-    { value: 'gemini-2.5-flash', label: 'gemini-2.5-flash', hint: 'Recommended — reliable for most keys' },
+    { value: 'gemini-2.5-flash', label: 'gemini-2.5-flash', hint: 'Recommended: reliable for most keys' },
     { value: 'gemini-3.1-flash-lite', label: 'gemini-3.1-flash-lite', hint: 'Lowest cost when your key has access' },
     { value: 'gemini-2.0-flash', label: 'gemini-2.0-flash', hint: 'Legacy flash model' },
     { value: 'gemini-2.5-pro', label: 'gemini-2.5-pro', hint: 'Highest quality, uses more quota' },
@@ -50,7 +50,7 @@ const AiSettingsModal = ({
                         <p className="text-sm text-gray-200 font-medium">Bring your own API key</p>
                         <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 leading-relaxed">
                             Use a key from Google AI Studio. Keys with HTTP referrer or IP restrictions
-                            will fail here — create an unrestricted key.
+                            will fail here. Create an unrestricted key.
                         </p>
                     </div>
                 </div>

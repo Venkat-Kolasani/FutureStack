@@ -47,7 +47,7 @@ const HOW_SCORED = [
   'Structure: up to 60 points for Contact, Education, Skills, Experience, and Projects.',
   'Content: up to 25 points for skills depth, matched role keywords, projects, and experience detail.',
   'ATS-friendly: up to 15 points for resume length, contact details, and LinkedIn/GitHub signals.',
-  'Keywords are matched from skills, experience, and projects — not your contact header.',
+  'Keywords are matched from skills, experience, and projects, not your contact header.',
   'Different resumes should score differently when skills, projects, or experience change.'
 ];
 

@@ -364,8 +364,8 @@ const TeamManagementPanel = ({
                                 onChange={(event) => setInviteRole(event.target.value)}
                                 className="w-full px-4 py-2.5 bg-[#151515] border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                             >
-                                <option value="editor">Editor — can update ideas, tasks, and checklist</option>
-                                <option value="viewer">Viewer — can view the workspace and vote</option>
+                                <option value="editor">Editor: can update ideas, tasks, and checklist</option>
+                                <option value="viewer">Viewer: can view the workspace and vote</option>
                             </select>
                         </div>
                         <div className="flex justify-end gap-3 mt-6">

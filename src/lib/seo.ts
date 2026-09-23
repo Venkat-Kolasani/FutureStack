@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { OG_IMAGE, SITE_DESCRIPTION, SITE_NAME, SITE_TITLE } from './site';
+import { LLMS_ALTERNATE_TYPES, OG_IMAGE, SITE_DESCRIPTION, SITE_NAME, SITE_TITLE } from './site';
 
 export function noIndexMetadata(title: string, description?: string): Metadata {
   return {
@@ -36,7 +36,10 @@ export function indexMetadata({
     ...(title ? { title } : {}),
     description,
     keywords,
-    alternates: { canonical: path },
+    alternates: {
+      canonical: path,
+      types: { ...LLMS_ALTERNATE_TYPES },
+    },
     robots: { index: true, follow: true },
     openGraph: {
       title: pageTitle || SITE_TITLE,

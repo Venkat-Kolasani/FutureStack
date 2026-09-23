@@ -6,18 +6,18 @@ import { SITE_NAME, SITE_URL } from '@/lib/site';
 import { MarketingDoc } from '@/components/marketing/MarketingDoc';
 
 export const metadata: Metadata = indexMetadata({
-  title: 'About — Student Career Workspace',
+  title: 'About: Student Career Workspace',
   description:
-    'Learn about FutureTracker.online, a free workspace for students and developers to track internships, hackathons, and job applications.',
+    'Learn about FutureTracker, a free workspace for students and developers to track internships, hackathons, and job applications.',
   path: '/about',
 });
 
 const aboutLd = {
   '@context': 'https://schema.org',
   '@type': 'AboutPage',
-  name: 'About FutureTracker.online',
+  name: 'About FutureTracker',
   url: `${SITE_URL}/about`,
-  description: 'About the FutureTracker.online student career workspace.',
+  description: 'About the FutureTracker student career workspace.',
   isPartOf: { '@type': 'WebSite', name: SITE_NAME, url: SITE_URL },
 };
 
@@ -28,7 +28,7 @@ export default function AboutPage() {
       <p className="eyebrow">About</p>
       <h1>Built for the messy middle of recruiting season</h1>
       <p className="lead">
-        FutureTracker.online is a free career workspace for students and developers. It keeps internships,
+        FutureTracker is a free career workspace for students and developers. It keeps internships,
         hackathons, interview rounds, and documents in one place so you are not juggling spreadsheets,
         calendar invites, and half-finished Notion boards.
       </p>
@@ -56,7 +56,7 @@ export default function AboutPage() {
       <h2>A note on the name</h2>
       <p className="disclaimer">
         There is a separate sustainability company at futuretracker.com. This product is
-        <strong> FutureTracker.online</strong> — a student career tracker — and is not affiliated with that company.
+        <strong> FutureTracker</strong> at futuretracker.online, a student career tracker, and is not affiliated with that company.
       </p>
       <p>
         <Link className="cta" href="/">Get started free</Link>

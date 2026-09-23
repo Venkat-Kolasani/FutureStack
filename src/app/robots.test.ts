@@ -1,4 +1,4 @@
-import robots, { WORKSPACE_DISALLOW } from './robots';
+import robots, { AI_CRAWLERS, WORKSPACE_DISALLOW } from './robots';
 
 describe('robots', () => {
   it('allows marketing pages and AI crawlers while disallowing workspace routes', () => {
@@ -6,14 +6,20 @@ describe('robots', () => {
     const rules = Array.isArray(result.rules) ? result.rules : [result.rules];
     const agents = rules.map((rule) => rule.userAgent);
 
-    expect(agents).toEqual(expect.arrayContaining([
-      '*',
+    expect(agents).toEqual(expect.arrayContaining(['*', ...AI_CRAWLERS]));
+    expect(AI_CRAWLERS).toEqual(expect.arrayContaining([
       'GPTBot',
       'ChatGPT-User',
       'ClaudeBot',
       'anthropic-ai',
       'PerplexityBot',
       'Google-Extended',
+      'OAI-SearchBot',
+      'Claude-SearchBot',
+      'Applebot-Extended',
+      'Amazonbot',
+      'CCBot',
+      'meta-externalagent',
     ]));
 
     for (const rule of rules) {
@@ -34,6 +40,7 @@ describe('robots', () => {
       '/documents',
       '/notifications',
       '/progress',
+      '/share',
     ]));
 
     expect(result.sitemap).toBe('https://futuretracker.online/sitemap.xml');

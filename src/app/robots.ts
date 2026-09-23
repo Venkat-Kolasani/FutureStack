@@ -14,15 +14,22 @@ export const WORKSPACE_DISALLOW = [
   '/documents',
   '/notifications',
   '/progress',
+  '/share',
 ];
 
-const AI_CRAWLERS = [
+export const AI_CRAWLERS = [
   'GPTBot',
   'ChatGPT-User',
   'ClaudeBot',
   'anthropic-ai',
   'PerplexityBot',
   'Google-Extended',
+  'OAI-SearchBot',
+  'Claude-SearchBot',
+  'Applebot-Extended',
+  'Amazonbot',
+  'CCBot',
+  'meta-externalagent',
 ];
 
 export default function robots(): MetadataRoute.Robots {

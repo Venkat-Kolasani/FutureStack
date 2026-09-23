@@ -8,7 +8,7 @@ import { MarketingDoc } from '@/components/marketing/MarketingDoc';
 export const metadata: Metadata = indexMetadata({
   title: 'Privacy',
   description:
-    'Privacy overview for FutureTracker.online: Clerk authentication, user-scoped API access, and how account data is handled.',
+    'Privacy overview for FutureTracker: Clerk authentication, user-scoped API access, and how account data is handled.',
   path: '/privacy',
 });
 
@@ -16,10 +16,10 @@ const privacyLd = [
   {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
-    name: 'Privacy — FutureTracker.online',
+    name: 'Privacy: FutureTracker',
     url: `${SITE_URL}/privacy`,
     description:
-      'Privacy overview for FutureTracker.online: Clerk authentication, user-scoped API access, and how account data is handled.',
+      'Privacy overview for FutureTracker: Clerk authentication, user-scoped API access, and how account data is handled.',
     isPartOf: { '@type': 'WebSite', name: SITE_NAME, url: SITE_URL },
   },
   {
@@ -37,14 +37,14 @@ export default function PrivacyPage() {
     <MarketingDoc>
       <JsonLd data={privacyLd} />
       <p className="eyebrow">Privacy</p>
-      <h1>How FutureTracker.online handles your data</h1>
+      <h1>How FutureTracker handles your data</h1>
       <p className="lead">
-        This page summarizes the privacy posture of the FutureTracker.online product at{' '}
+        This page summarizes the privacy posture of FutureTracker at{' '}
         <a href="https://futuretracker.online">https://futuretracker.online</a>.
       </p>
       <h2>Authentication</h2>
       <p>
-        Sign-in is handled by <strong>Clerk</strong>. FutureTracker.online does not store your password.
+        Sign-in is handled by <strong>Clerk</strong>. FutureTracker does not store your password.
         After you authenticate, the API verifies your session and scopes all data access to your account.
       </p>
       <h2>What we store</h2>
@@ -80,11 +80,11 @@ export default function PrivacyPage() {
         <a href="https://github.com/Venkat-Kolasani/FutureStack/issues">GitHub Issues</a>.
       </p>
       <p className="disclaimer">
-        Note: FutureTracker.online is not affiliated with the company at futuretracker.com.
+        Note: FutureTracker is not affiliated with the company at futuretracker.com.
         Last updated: 30 July 2026.
       </p>
       <p>
-        <Link className="cta" href="/">Return to FutureTracker.online</Link>
+        <Link className="cta" href="/">Return to FutureTracker</Link>
       </p>
     </MarketingDoc>
   );

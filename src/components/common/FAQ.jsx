@@ -1,76 +1,9 @@
-'use client';
-
-import { useState } from 'react';
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import { FiPlus, FiMinus } from 'react-icons/fi';
-
-const FAQItem = ({ question, answer, isOpen, onClick, reduceMotion }) => {
-    return (
-        <motion.div
-            initial={false}
-            className="border border-gray-200 dark:border-white/10 rounded-2xl bg-gray-50/50 dark:bg-white/5 overflow-hidden hover:bg-gray-100/50 dark:hover:bg-white/10 transition-colors"
-        >
-            <button
-                onClick={onClick}
-                className="w-full px-6 py-5 flex items-center justify-between text-left gap-4"
-            >
-                <span className="text-lg font-medium text-gray-900 dark:text-white">{question}</span>
-                <div className={`flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full border border-gray-300 dark:border-white/20 transition-colors ${isOpen ? 'bg-gray-900 text-gray-900 dark:text-white dark:bg-white dark:text-black' : 'text-gray-900 dark:text-white'}`}>
-                    {isOpen ? <FiMinus size={14} /> : <FiPlus size={14} />}
-                </div>
-            </button>
-            <AnimatePresence>
-                {isOpen && (
-                    <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: reduceMotion ? 0 : 0.3, ease: "easeInOut" }}
-                    >
-                        <div className="px-6 pb-6 text-gray-600 dark:text-gray-400 leading-relaxed">
-                            {answer}
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-        </motion.div>
-    );
-};
+import { FiMinus, FiPlus } from 'react-icons/fi';
+import { FAQ_ITEMS } from '@/content/faq';
 
 const FAQ = () => {
-    const [openIndex, setOpenIndex] = useState(null);
-    const reduceMotion = useReducedMotion();
-
-    const faqs = [
-        {
-            question: "What is FutureTracker.online?",
-            answer: "FutureTracker.online is an all-in-one career workspace for students and developers. It replaces scattered spreadsheets with a dedicated platform to track internships, manage hackathons, log interview rounds, and visualize your funnel. It is not affiliated with the sustainability company at futuretracker.com."
-        },
-        {
-            question: "Why should I use this instead of spreadsheets?",
-            answer: "Spreadsheets are static and manual. FutureTracker.online provides Kanban boards for visual stages, deadlines on a calendar, analytics for your success rate, and specialized hackathon team tools—features spreadsheets lack out of the box."
-        },
-        {
-            question: "How does interview tracking work?",
-            answer: "For each internship you log rounds (OA, technical, HR, and more) with optional scheduled times. Cleared, pending, and rejected rounds update the parent opportunity automatically. The dashboard highlights upcoming interviews; hackathon submission deadlines appear on the calendar separately."
-        },
-        {
-            question: "Is FutureTracker.online really free?",
-            answer: "Yes. Core features including application tracking, hackathon management, and analytics are free to use at futuretracker.online."
-        },
-        {
-            question: "How do I get started?",
-            answer: "Sign up at futuretracker.online with email or a social account, add your first internship or hackathon, or install the Chrome extension from the repository docs to save from a job listing tab. No credit card required."
-        }
-    ];
-
-    const handleToggle = (index) => {
-        setOpenIndex(openIndex === index ? null : index);
-    };
-
     return (
         <section id="faq" className="py-32 relative">
-            {/* Background Glow */}
             <div className="absolute top-[20%] left-[50%] -translate-x-1/2 w-[600px] h-[600px] bg-blue-500/10 rounded-full blur-[120px] pointer-events-none" />
 
             <div className="max-w-3xl mx-auto px-6 relative z-10">
@@ -85,15 +18,22 @@ const FAQ = () => {
                 </div>
 
                 <div className="flex flex-col gap-4">
-                    {faqs.map((faq, index) => (
-                        <FAQItem
-                            key={index}
-                            question={faq.question}
-                            answer={faq.answer}
-                            isOpen={openIndex === index}
-                            onClick={() => handleToggle(index)}
-                            reduceMotion={reduceMotion}
-                        />
+                    {FAQ_ITEMS.map((faq) => (
+                        <details
+                            key={faq.question}
+                            className="group border border-gray-200 dark:border-white/10 rounded-2xl bg-gray-50/50 dark:bg-white/5 overflow-hidden hover:bg-gray-100/50 dark:hover:bg-white/10 transition-colors"
+                        >
+                            <summary className="w-full px-6 py-5 flex items-center justify-between text-left gap-4 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+                                <span className="text-lg font-medium text-gray-900 dark:text-white">{faq.question}</span>
+                                <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full border border-gray-300 dark:border-white/20 text-gray-900 dark:text-white group-open:bg-gray-900 group-open:text-white dark:group-open:bg-white dark:group-open:text-black">
+                                    <FiPlus size={14} className="group-open:hidden" aria-hidden="true" />
+                                    <FiMinus size={14} className="hidden group-open:block" aria-hidden="true" />
+                                </span>
+                            </summary>
+                            <div className="px-6 pb-6 text-gray-600 dark:text-gray-400 leading-relaxed">
+                                {faq.answer}
+                            </div>
+                        </details>
                     ))}
                 </div>
             </div>

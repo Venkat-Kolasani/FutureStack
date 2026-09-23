@@ -128,10 +128,11 @@ Marketing routes in `src/app/(marketing)/` are the SEO surface: the landing page
 
 Marketing HTML is produced by the Next.js server, not by a client bundle. Crawlers that never execute JavaScript still see titles, descriptions, canonicals, Open Graph tags, and JSON-LD.
 
-- `/`, `/about`, `/privacy`, and `/guides/[slug]` are indexable App Router routes.
-- `src/app/sitemap.ts` and `src/app/robots.ts` generate `/sitemap.xml` and `/robots.txt`, including the AI-crawler allow rules.
+- `/`, `/about`, `/privacy`, and `/guides/[slug]` are indexable App Router routes. The visible product name is **FutureTracker**; the canonical domain is `https://futuretracker.online`.
+- `src/app/sitemap.ts` and `src/app/robots.ts` generate `/sitemap.xml` and `/robots.txt`. Robots allow the public site for search and answer-engine crawlers (`GPTBot`, `ChatGPT-User`, `ClaudeBot`, `anthropic-ai`, `PerplexityBot`, `Google-Extended`, `OAI-SearchBot`, `Claude-SearchBot`, `Applebot-Extended`, `Amazonbot`, `CCBot`, `meta-externalagent`) and disallow authenticated workspace routes plus `/share`.
 - Permanent redirects map previously indexed `*.html` URLs (`/about.html`, `/privacy.html`, `/guides/*.html`) onto the clean routes.
-- `public/llms.txt` and `public/llms-full.txt` remain curated agent briefs.
+- `public/llms.txt` and `public/llms-full.txt` are curated agent briefs at those clean URLs. They describe the frontend as Next.js App Router on Vercel and the API client as `src/services/api.ts`. Public HTML links both files via metadata `alternates.types`.
+- Landing JSON-LD includes `WebSite` (with a `disambiguatingDescription` that this is not the company at futuretracker.com), `WebApplication` (`isAccessibleForFree: true`), `Organization`, and a five-question `FAQPage` that matches the visible FAQ. FAQ answers are present in the initial HTML through `<details>`.
 - Authenticated app routes stay `noindex` through the Metadata API. `scripts/seo-smoke.mjs` (`npm run test:seo`) fetches raw HTML without running JavaScript and is wired as a CI job.
 
 After deploy, submit the sitemap in Google Search Console and Bing Webmaster Tools. Third-party citations (directories, Product Hunt, student communities) remain the main lever for AI recommendations.
@@ -525,7 +526,7 @@ npm run check:architecture
 (cd extensions && npm ci && npm test && npm run build)
 ```
 
-`check:architecture` enforces the frontend API boundary. Tests mock Clerk and Supabase, so they do not require live secrets. `npm run test:seo` builds the Next.js app, serves it, and asserts on raw HTML (title, description, canonical, Open Graph, JSON-LD, `noindex` on app routes, and `.html` redirects). Manual smoke checks remain important for sign-in, pages changed, an expected error case, upload flows, public share behavior, responsive UI, and the extension's sign-in → save → dashboard path once its Clerk/CORS configuration is present. The repository does not yet have a disposable PostgreSQL-backed concurrency suite for the vote functions; ADR-003 defines that required release-gate coverage, so the invariant must not be described as end-to-end concurrency-tested until that fixture is added.
+`check:architecture` enforces the frontend API boundary. Tests mock Clerk and Supabase, so they do not require live secrets. `npm run test:seo` builds the Next.js app, serves it, and asserts on raw HTML (title, description, canonical, Open Graph, JSON-LD including a five-question FAQ and WebSite disambiguation, `/llms.txt` discovery, `noindex` on app routes, and `.html` redirects). Manual smoke checks remain important for sign-in, pages changed, an expected error case, upload flows, public share behavior, responsive UI, and the extension's sign-in → save → dashboard path once its Clerk/CORS configuration is present. The repository does not yet have a disposable PostgreSQL-backed concurrency suite for the vote functions; ADR-003 defines that required release-gate coverage, so the invariant must not be described as end-to-end concurrency-tested until that fixture is added.
 
 ### Frontend delivery (measured September 21, 2026)
 
@@ -540,7 +541,7 @@ npm run check:architecture
 | Historical CRA JS | ~3.7 MB uncompressed `build/static/js` | Phase 0 baseline before the App Router port; not a current Lighthouse score |
 | Historical landing first-load JS | 206 kB | `npx next build` immediately after the CRA→Next port, before this pass |
 
-Authenticated `(app)` routes are prerendered static shells (`○` in the route table) after removing `force-dynamic` from `src/app/(app)/layout.tsx`. Clerk still gates them in middleware. `npm run test:seo` is the current proof that marketing HTML is crawlable without executing JavaScript (title, description, canonical, Open Graph including `og:url`, JSON-LD on every public route including privacy, `noindex` on app routes, and `.html` redirects).
+Authenticated `(app)` routes are prerendered static shells (`○` in the route table) after removing `force-dynamic` from `src/app/(app)/layout.tsx`. Clerk still gates them in middleware. `npm run test:seo` is the current proof that marketing HTML is crawlable without executing JavaScript (title, description, canonical, Open Graph including `og:url`, JSON-LD on every public route including privacy, five FAQ questions and a WebSite entity on the landing page, `/llms.txt` linked from public HTML, `noindex` on app routes, and `.html` redirects).
 
 Prior marketing-HTML Lighthouse figures from the static `.html` workaround, and the “not re-run after the App Router port” row, are historical.
 

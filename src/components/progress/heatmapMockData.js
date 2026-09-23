@@ -37,7 +37,7 @@ const TRACKS = {
     name: 'Mock Interviews',
     takeaways: [
       'Talked through trade-offs out loud; still rushed the code.',
-      'Behavioral story was too long — cut it to situation and result.',
+      'Behavioral story was too long: cut it to situation and result.',
       'Needed hints on the graph prompt; reviewing BFS next.',
     ],
   },
@@ -45,7 +45,7 @@ const TRACKS = {
     name: 'Reading / Courses',
     takeaways: [
       'Finished the indexing chapter; btree vs hash is clearer now.',
-      'Notes on CAP are still fuzzy — revisit with a concrete system.',
+      'Notes on CAP are still fuzzy: revisit with a concrete system.',
       'Watched a mock system-design and paused to redraw the board.',
     ],
   },
