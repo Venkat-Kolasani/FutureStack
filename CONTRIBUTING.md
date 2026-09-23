@@ -38,7 +38,7 @@ cd backend && npm install && cd ..
 cd backend && npm run dev
 
 # Terminal 2 — frontend (port 3000)
-npm start
+npm run dev
 ```
 
 Copy `.env.example` and `backend/.env.example` to `.env` files and fill in Clerk + Supabase credentials. See the README **Environment Variables** section.

@@ -24,14 +24,16 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          REACT_APP_CLERK_PUBLISHABLE_KEY: pk_test_ci_placeholder
-          REACT_APP_API_URL: http://localhost:3001/api
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_ci_placeholder
+          CLERK_SECRET_KEY: sk_test_ci_placeholder
+          NEXT_PUBLIC_API_URL: http://localhost:3001/api
 
       - name: Test
         run: npm run test:ci
         env:
-          REACT_APP_CLERK_PUBLISHABLE_KEY: pk_test_ci_placeholder
-          REACT_APP_API_URL: http://localhost:3001/api
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_ci_placeholder
+          CLERK_SECRET_KEY: sk_test_ci_placeholder
+          NEXT_PUBLIC_API_URL: http://localhost:3001/api
 
   backend:
     name: backend
@@ -88,6 +90,27 @@ jobs:
         run: npm audit --audit-level=high
         working-directory: backend
         continue-on-error: true
+
+  seo:
+    name: seo
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: SEO smoke
+        run: npm run test:seo
+        env:
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_ci_placeholder
+          CLERK_SECRET_KEY: sk_test_ci_placeholder
+          NEXT_PUBLIC_API_URL: http://localhost:3001/api
 
   extension:
     name: extension

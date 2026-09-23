@@ -2,7 +2,7 @@
 
 FutureTracker.online is a full-stack career-application workspace for students and early-career professionals. It brings post-application internship tracking, hackathons, interview preparation, documents, and application insights into one focused workflow. 
 
-[Live app](https://futuretracker.online) · [About](https://futuretracker.online/about.html) · [Guides](https://futuretracker.online/guides/internship-application-tracker.html) · [API health](https://futurestack-aeyn.onrender.com/api/v1/health) · [Documentation](docs/DOCUMENTATION.md) · [Contributing](CONTRIBUTING.md)
+[Live app](https://futuretracker.online) · [About](https://futuretracker.online/about) · [Guides](https://futuretracker.online/guides/internship-application-tracker) · [API health](https://futurestack-aeyn.onrender.com/api/v1/health) · [Documentation](docs/DOCUMENTATION.md) · [Contributing](CONTRIBUTING.md)
 
 ## Project status
 
@@ -27,7 +27,7 @@ For databases created before July 2026, apply [`20260716110000_rounds_drive_acti
 
 | Area | Technologies |
 | --- | --- |
-| Frontend | React 19, React Router 7, Tailwind CSS, Framer Motion, Recharts, Chrome MV3 extension (Vite + CRXJS) |
+| Frontend | Next.js 15 App Router, React 19, TypeScript (config/lib/hooks/services), Tailwind CSS, Framer Motion, Recharts, Chrome MV3 extension (Vite + CRXJS) |
 | API | Node.js, Express, Joi validation, Helmet, rate limiting |
 | Identity and data | Clerk, Supabase PostgreSQL, Row-Level Security, Supabase Realtime |
 | Documents and AI | pdfjs-dist, mammoth, pdf-parse, Vercel AI SDK, Gemini or Ollama |
@@ -37,7 +37,7 @@ For databases created before July 2026, apply [`20260716110000_rounds_drive_acti
 
 ```mermaid
 flowchart LR
-  U["Browser"] --> F["React application"]
+  U["Browser"] --> F["Next.js application"]
   F -->|"Clerk JWT"| A["Express API"]
   A -->|"service-role queries scoped to user"| S[("Supabase PostgreSQL")]
   F -. "Status board subscriptions" .-> R["Supabase Realtime"]
@@ -45,7 +45,7 @@ flowchart LR
   F --> C["Clerk authentication"]
 ```
 
-The browser uses `src/services/api.js` for application data. Direct Supabase CRUD from the frontend is prohibited; the one exception is a realtime subscription used to refresh the status board. See [the codebase guide](docs/CODEBASE_GUIDE.md) for the request flow and file map.
+The browser uses `src/services/api.ts` for application data. Direct Supabase CRUD from the frontend is prohibited; the one exception is a realtime subscription used to refresh the status board. See [the codebase guide](docs/CODEBASE_GUIDE.md) for the request flow and file map.
 
 ## Quick start
 
@@ -74,10 +74,10 @@ cd backend && npm run dev
 ```
 
 ```bash
-npm start
+npm run dev
 ```
 
-The client runs at `http://localhost:3000`; the API runs at `http://localhost:3001`.
+The Next.js app runs at `http://localhost:3000`; the API runs at `http://localhost:3001`.
 
 ## Configuration
 
@@ -85,11 +85,11 @@ The checked-in templates are the complete configuration reference: [`.env.exampl
 
 | File | Required values |
 | --- | --- |
-| `.env` | `REACT_APP_CLERK_PUBLISHABLE_KEY`, `REACT_APP_API_URL`, `REACT_APP_SUPABASE_URL`, `REACT_APP_SUPABASE_ANON_KEY` |
+| `.env` | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` |
 | `backend/.env` | `CLERK_SECRET_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `CORS_ORIGIN` |
 | `extensions/.env` | `VITE_CLERK_PUBLISHABLE_KEY`, `VITE_API_BASE`, `VITE_SYNC_HOST` |
 
-For production, set Vercel's build-time `REACT_APP_API_URL` to `https://futurestack-aeyn.onrender.com/api/v1` and redeploy the frontend. Also set `CLERK_JWT_PUBLIC_KEY` for local JWT verification. Share links need `SHARE_LINK_ENCRYPTION_KEY`. Account invites use `FRONTEND_URL`; the optional reminder dispatcher uses `JOB_DISPATCH_TOKEN`, with `JOB_ADMIN_USER_IDS` controlling the dead-letter view. Optional Resend delivery is backend-only: after applying its migration, set `REMINDER_EMAILS_ENABLED=true`, `RESEND_API_KEY`, and `REMINDER_EMAIL_FROM` on Render. The optional AI pipeline is configured only in `backend/.env` with `RESUME_AI_ENABLED`, provider/model values, and either a server Gemini key or user-managed BYOK settings. Never expose service-role, Clerk secret, job-dispatch, Resend, or AI keys in frontend variables.
+For production, switch the Vercel framework preset to Next.js, set build-time `NEXT_PUBLIC_API_URL` to `https://futurestack-aeyn.onrender.com/api/v1`, rename the former `REACT_APP_*` variables to `NEXT_PUBLIC_*`, and add server-only `CLERK_SECRET_KEY` for Clerk middleware. Also set `CLERK_JWT_PUBLIC_KEY` on the API for local JWT verification. Share links need `SHARE_LINK_ENCRYPTION_KEY`. Account invites use `FRONTEND_URL`; the optional reminder dispatcher uses `JOB_DISPATCH_TOKEN`, with `JOB_ADMIN_USER_IDS` controlling the dead-letter view. Optional Resend delivery is backend-only: after applying its migration, set `REMINDER_EMAILS_ENABLED=true`, `RESEND_API_KEY`, and `REMINDER_EMAIL_FROM` on Render. The optional AI pipeline is configured only in `backend/.env` with `RESUME_AI_ENABLED`, provider/model values, and either a server Gemini key or user-managed BYOK settings. Never expose service-role, job-dispatch, Resend, or AI keys in `NEXT_PUBLIC_*` variables. The Next.js `CLERK_SECRET_KEY` stays server-only on Vercel and is not sent to the browser.
 
 The Chrome extension is built and loaded separately; its Clerk publishable key, API base URL, and session sync host belong in `extensions/.env`. To enable authenticated saves, add its deterministic `chrome-extension://` origin to Clerk's allowed origins and to backend `CORS_ORIGIN`. Follow the complete [extension setup and manual test guide](extensions/readme.md).
 
@@ -123,6 +123,7 @@ The implementation is intentionally best-effort: an email provider error retries
 ```bash
 npm run test:ci
 npm run build
+npm run test:seo
 npm run check:architecture
 (cd backend && npm test)
 (cd extensions && npm ci && npm test && npm run build)

@@ -1,0 +1,40 @@
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [{ "name": "next" }],
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", ".next/types/**/*.ts"],
+  "exclude": [
+    "node_modules",
+    "backend",
+    "extensions",
+    "build",
+    "src/pages",
+    "src/views",
+    "src/App.js",
+    "src/App.test.js",
+    "src/index.js",
+    "src/hooks/useAuthToken.js",
+    "src/hooks/useInterviewReminders.js",
+    "src/lib/clerk.js",
+    "src/components/auth/ProtectedRoute.jsx",
+    "src/components/documents/DocumentSelector.jsx",
+    "src/components/dashboard/UpcomingInterviewsWidget.jsx",
+    "src/components/common/EmptyState.jsx"
+  ]
+}
