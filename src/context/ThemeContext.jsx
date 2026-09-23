@@ -1,84 +1,101 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState, useSyncExternalStore } from 'react';
 
 const ThemeContext = createContext();
+const THEME_KEY = 'futurestack-theme';
+const listeners = new Set();
+
+function emitThemeChange() {
+  listeners.forEach((listener) => listener());
+}
 
 function readIsDark() {
-  if (typeof window === 'undefined') {
-    return true;
-  }
   try {
-    const item = window.localStorage.getItem('futurestack-theme');
+    const item = window.localStorage.getItem(THEME_KEY);
     if (item) {
       return item === 'dark';
     }
     return window.matchMedia('(prefers-color-scheme: dark)').matches;
   } catch (error) {
     console.warn('Error reading theme from localStorage', error);
-    return true;
+    return document.documentElement.classList.contains('dark');
+  }
+}
+
+function subscribe(onStoreChange) {
+  listeners.add(onStoreChange);
+  const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+  const handleSystemChange = () => {
+    try {
+      if (!window.localStorage.getItem(THEME_KEY)) {
+        emitThemeChange();
+      }
+    } catch {
+      emitThemeChange();
+    }
+  };
+  mediaQuery.addEventListener('change', handleSystemChange);
+  return () => {
+    listeners.delete(onStoreChange);
+    mediaQuery.removeEventListener('change', handleSystemChange);
+  };
+}
+
+function getClientSnapshot() {
+  return readIsDark();
+}
+
+function getServerSnapshot() {
+  return false;
+}
+
+function applyTheme(isDark) {
+  const root = document.documentElement;
+  let metaThemeColor = document.querySelector('meta[name="theme-color"]');
+
+  if (!metaThemeColor) {
+    metaThemeColor = document.createElement('meta');
+    metaThemeColor.name = 'theme-color';
+    document.head.appendChild(metaThemeColor);
+  }
+
+  if (isDark) {
+    root.classList.add('dark');
+    metaThemeColor.setAttribute('content', '#000000');
+  } else {
+    root.classList.remove('dark');
+    metaThemeColor.setAttribute('content', '#ffffff');
   }
 }
 
 export function ThemeProvider({ children }) {
-  const [isDark, setIsDark] = useState(true);
+  const isDark = useSyncExternalStore(subscribe, getClientSnapshot, getServerSnapshot);
+  const [themeReady, setThemeReady] = useState(false);
 
   useEffect(() => {
-    if (document.documentElement.classList.contains('dark')) {
-      setIsDark(true);
-      return;
-    }
-    setIsDark(readIsDark());
+    setThemeReady(true);
   }, []);
 
   useEffect(() => {
-    const root = window.document.documentElement;
-    let metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    if (!themeReady) return undefined;
+    applyTheme(isDark);
+    return undefined;
+  }, [isDark, themeReady]);
 
-    if (!metaThemeColor) {
-      metaThemeColor = document.createElement('meta');
-      metaThemeColor.name = 'theme-color';
-      document.head.appendChild(metaThemeColor);
+  const toggleTheme = useCallback(() => {
+    const next = !readIsDark();
+    try {
+      window.localStorage.setItem(THEME_KEY, next ? 'dark' : 'light');
+    } catch (error) {
+      console.warn('Error saving theme to localStorage', error);
     }
-
-    if (isDark) {
-      root.classList.add('dark');
-      metaThemeColor.setAttribute('content', '#000000');
-    } else {
-      root.classList.remove('dark');
-      metaThemeColor.setAttribute('content', '#ffffff');
-    }
-  }, [isDark]);
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleChange = (e) => {
-      try {
-        if (!window.localStorage.getItem('futurestack-theme')) {
-          setIsDark(e.matches);
-        }
-      } catch (error) {
-        setIsDark(e.matches);
-      }
-    };
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
+    applyTheme(next);
+    emitThemeChange();
   }, []);
-
-  const toggleTheme = () => {
-    setIsDark((prev) => {
-      const next = !prev;
-      try {
-        window.localStorage.setItem('futurestack-theme', next ? 'dark' : 'light');
-      } catch (error) {
-        console.warn('Error saving theme to localStorage', error);
-      }
-      return next;
-    });
-  };
 
   return (
-    <ThemeContext.Provider value={{ isDark, toggleTheme }}>
+    <ThemeContext.Provider value={{ isDark, themeReady, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );

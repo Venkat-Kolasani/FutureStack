@@ -20,6 +20,22 @@ function getReminderFireTime(scheduledDate: string, kind: 'day_before' | 'mornin
   return base.getTime();
 }
 
+function readStorage(storage: Storage, key: string): string | null {
+  try {
+    return storage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function writeStorage(storage: Storage, key: string, value: string): void {
+  try {
+    storage.setItem(key, value);
+  } catch {
+    // Continue without persistence or deduplication.
+  }
+}
+
 function scheduleNotification({
   id,
   title,
@@ -37,12 +53,12 @@ function scheduleNotification({
   }
 
   const sessionKey = `reminder:${id}`;
-  if (sessionStorage.getItem(sessionKey)) {
+  if (readStorage(sessionStorage, sessionKey)) {
     return null;
   }
 
   return setTimeout(() => {
-    sessionStorage.setItem(sessionKey, '1');
+    writeStorage(sessionStorage, sessionKey, '1');
 
     if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
       new Notification(title, { body, tag: id });
@@ -77,10 +93,10 @@ export function useInterviewReminders() {
         const rounds = await roundService.listUpcoming({ from: fromStr, to: toStr });
         if (cancelled) return;
 
-        const pref = localStorage.getItem(REMINDER_PREF_KEY);
+        const pref = readStorage(localStorage, REMINDER_PREF_KEY);
         if (pref !== 'off' && typeof Notification !== 'undefined' && Notification.permission === 'default') {
           Notification.requestPermission().then((result) => {
-            localStorage.setItem(REMINDER_PREF_KEY, result === 'denied' ? 'off' : 'on');
+            writeStorage(localStorage, REMINDER_PREF_KEY, result === 'denied' ? 'off' : 'on');
           });
         }
 

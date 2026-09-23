@@ -25,19 +25,35 @@ export function hasUsableClerkServerKeys(
 
 /**
  * `NODE_ENV` is always "production" during `next build`, including in CI, so it cannot
- * distinguish a real deployment. Vercel sets `VERCEL_ENV=production` only for the
- * production deployment; `REQUIRE_CLERK=true` covers any other host.
+ * distinguish a real deployment. Missing Clerk config must fail closed on ordinary hosts.
+ * Opt-outs are CI, `next dev`, and Vercel preview/development. `REQUIRE_CLERK=true`
+ * and `VERCEL_ENV=production` still force the production check.
  */
 export type ClerkEnv = {
   [key: string]: string | undefined;
   VERCEL_ENV?: string;
   REQUIRE_CLERK?: string;
+  CI?: string;
+  GITHUB_ACTIONS?: string;
+  NODE_ENV?: string;
   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?: string;
   CLERK_SECRET_KEY?: string;
 };
 
 export function isProductionDeployment(env: ClerkEnv = process.env): boolean {
-  return env.VERCEL_ENV === 'production' || env.REQUIRE_CLERK === 'true';
+  if (env.REQUIRE_CLERK === 'true' || env.VERCEL_ENV === 'production') {
+    return true;
+  }
+  if (env.VERCEL_ENV === 'preview' || env.VERCEL_ENV === 'development') {
+    return false;
+  }
+  if (env.CI === 'true' || env.GITHUB_ACTIONS === 'true') {
+    return false;
+  }
+  if (env.NODE_ENV === 'development') {
+    return false;
+  }
+  return true;
 }
 
 export function assertClerkConfigured(env: ClerkEnv = process.env): void {

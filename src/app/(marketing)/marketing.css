@@ -7,7 +7,7 @@
   --card: #ffffff;
   --link: #1d4ed8;
   min-height: 100vh;
-  font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+  font-family: var(--font-ibm-plex), "Segoe UI", sans-serif;
   background:
     linear-gradient(180deg, rgba(234, 88, 12, 0.06), transparent 28%),
     radial-gradient(ellipse at top, rgba(0,0,0,0.03), transparent 55%),
@@ -16,16 +16,14 @@
   line-height: 1.65;
 }
 
-@media (prefers-color-scheme: dark) {
-  .marketing-root {
-    --bg: #050505;
-    --fg: #f5f5f5;
-    --muted: #a3a3a3;
-    --border: #262626;
-    --accent: #fb923c;
-    --card: #0a0a0a;
-    --link: #93c5fd;
-  }
+.dark .marketing-root {
+  --bg: #050505;
+  --fg: #f5f5f5;
+  --muted: #a3a3a3;
+  --border: #262626;
+  --accent: #fb923c;
+  --card: #0a0a0a;
+  --link: #93c5fd;
 }
 
 .marketing-root a { color: var(--link); text-decoration-thickness: 1px; text-underline-offset: 3px; }
@@ -44,8 +42,8 @@
 .marketing-root .nav-links a { color: var(--muted); text-decoration: none; }
 .marketing-root .nav-links a:hover { color: var(--fg); }
 .marketing-root .eyebrow { color: var(--accent); font-size: 0.8rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
-.marketing-root h1 { font-family: "Fraunces", Georgia, serif; font-size: clamp(2rem, 5vw, 2.75rem); line-height: 1.15; margin: 0.4rem 0 1rem; }
-.marketing-root h2 { font-family: "Fraunces", Georgia, serif; font-size: 1.45rem; margin: 2.25rem 0 0.75rem; }
+.marketing-root h1 { font-family: var(--font-fraunces), Georgia, serif; font-size: clamp(2rem, 5vw, 2.75rem); line-height: 1.15; margin: 0.4rem 0 1rem; }
+.marketing-root h2 { font-family: var(--font-fraunces), Georgia, serif; font-size: 1.45rem; margin: 2.25rem 0 0.75rem; }
 .marketing-root p.lead { font-size: 1.125rem; color: var(--muted); margin: 0 0 1.25rem; }
 .marketing-root ul, .marketing-root ol { padding-left: 1.2rem; }
 .marketing-root li { margin: 0.4rem 0; }
