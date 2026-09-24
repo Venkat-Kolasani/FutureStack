@@ -193,7 +193,32 @@ Child panels call `interviewPrepService` mutations and update local React state 
 | **Interview rounds** | `opportunity_rounds`, `/api/v1/opportunities/:id/rounds` | Which round are you in? Cleared / pending / rejected? |
 | **Interview prep** | `interview_prep` + children, `/api/v1/interview-prep/:id` | What are you studying? What will you say? |
 
-Use both together: rounds for pipeline status on the Kanban board; prep for study materials per company.
+Use both together: rounds for pipeline status on the Kanban board; prep for the study session for the next round. A pending round's **Prepare** action opens `/internships/:id/prep?round=<type>`.
+
+### Session
+
+The Session tab is the default. It follows the earliest pending round, or the `round` query when opened from the pipeline. Focus values are `oa`, `technical`, `behavioral`, `assignment`, and `general`.
+
+- **Add a starter pack** inserts a static checklist for that focus. A second click skips questions and topics that already exist.
+- **Start practice** hides answers until reveal, then marks a question prepared.
+- **Generate** appears after the user saves a Gemini, Groq, or Claude key in AI Settings. Choices are Plan, Questions, STAR, and Mock exam. The draft is not stored until **Add selected**. Mock exam questions are flagged `is_exam` and open in practice with answers hidden.
+- Generation is billed to the user's key. It does not use a server API key. Static packs still work with no key.
+
+`GET /api/v1/interview-prep/stories` returns the user's STAR rows from other internships so one story can be copied into the current prep.
+
+Reflection notes use three sections — Asked, Landed, Fix next — stored in `reflection_notes`.
+
+### Generate API
+
+| Method | Endpoint | Body |
+|--------|----------|------|
+| POST | `/:opportunityId/starter` | `{ focus }` |
+| POST | `/:opportunityId/generate` | `{ kind, focus, provider }` — returns a draft |
+| POST | `/:opportunityId/generate/accept` | selected checklist, topics, questions, or STAR rows |
+
+`kind` is `plan`, `questions`, `star`, or `exam`. `provider` is `gemini`, `groq`, `anthropic`, or `ollama`. Generate is limited to 5 requests per minute per user.
+
+Child rows store optional `focus`. Questions also store `is_exam`.
 
 Full rounds guide: [`interview-rounds.md`](interview-rounds.md).
 

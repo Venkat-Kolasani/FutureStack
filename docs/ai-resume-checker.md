@@ -92,6 +92,8 @@ Uses the **[Vercel AI SDK](https://sdk.vercel.ai/)** (`ai` package) with pluggab
 | `LLM_PROVIDER` | Package | Default model |
 |---|---|---|
 | `gemini` (default) | `@ai-sdk/google` | `gemini-3.1-flash-lite` |
+| `groq` | `@ai-sdk/groq` | `openai/gpt-oss-120b` |
+| `anthropic` | `@ai-sdk/anthropic` | `claude-sonnet-4-5` |
 | `ollama` | `ollama-ai-provider` | `llama3.2` (or any pulled model) |
 
 Adding a new provider (e.g. OpenAI) requires a single `case` in `lib/llm/index.js` and
