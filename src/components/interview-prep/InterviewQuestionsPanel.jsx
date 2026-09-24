@@ -173,6 +173,14 @@ const InterviewQuestionsPanel = ({ questions, onCreateQuestion, onUpdateQuestion
                                 </div>
                                 <div className="flex items-center gap-1 shrink-0">
                                     <button
+                                        type="button"
+                                        onClick={() => onUpdateQuestion(q.id, { is_prepared: !q.is_prepared })}
+                                        className="p-1.5 text-gray-400 hover:text-green-400"
+                                        title={q.is_prepared ? 'Mark unprepared' : 'Mark prepared'}
+                                    >
+                                        <FaCheck size={12} />
+                                    </button>
+                                    <button
                                         onClick={() => handleEdit(q)}
                                         disabled={isLoading}
                                         className="p-1.5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
