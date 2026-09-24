@@ -57,53 +57,56 @@ const GeneratePrep = ({
     const items = draftItems(draft?.draft, draft?.kind);
 
     return (
-        <div className="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0A0A0A] p-4 space-y-3">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                <label className="block text-sm text-gray-700 dark:text-gray-300">
-                    Provider
-                    <select
-                        value={provider}
-                        onChange={(e) => setProvider(e.target.value)}
-                        className="mt-1 block w-full sm:w-64 bg-white dark:bg-black border border-gray-300 dark:border-white/20 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white"
-                    >
-                        {PROVIDER_OPTIONS.map((option) => {
-                            const row = usable.find((item) => item.provider === option.id);
-                            return (
-                                <option key={option.id} value={option.id}>
-                                    {option.label}{row ? ' · key saved' : ''}
-                                </option>
-                            );
-                        })}
-                    </select>
-                </label>
-                <Button variant="outline" onClick={() => onOpenSettings(provider)}>
+        <div className="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0A0A0A] p-3">
+            <div className="flex flex-wrap items-center gap-2">
+                <label className="sr-only" htmlFor="prep-provider">Provider</label>
+                <select
+                    id="prep-provider"
+                    value={provider}
+                    onChange={(e) => setProvider(e.target.value)}
+                    className="h-9 bg-white dark:bg-black border border-gray-300 dark:border-white/20 rounded-lg px-3 text-sm text-gray-900 dark:text-white"
+                >
+                    {PROVIDER_OPTIONS.map((option) => {
+                        const row = usable.find((item) => item.provider === option.id);
+                        return (
+                            <option key={option.id} value={option.id}>
+                                {option.label}{row ? ' · key saved' : ''}
+                            </option>
+                        );
+                    })}
+                </select>
+                <Button variant="outline" onClick={() => onOpenSettings(provider)} className="!h-9 !px-3 !py-0 text-sm">
                     {saved ? 'Update API key' : 'Add API key'}
                 </Button>
-            </div>
-            {!saved && (
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Save a key for this provider before generating. Groq uses openai/gpt-oss-120b.
-                </p>
-            )}
-            <div className="flex flex-wrap items-center gap-2">
+                <span className="mx-1 hidden h-6 w-px bg-gray-200 dark:bg-white/10 sm:block" aria-hidden="true" />
                 {KINDS.map((item) => (
                     <button
                         key={item.id}
                         type="button"
                         onClick={() => setKind(item.id)}
-                        className={`rounded-full border px-3 py-1 text-xs ${kind === item.id ? 'border-blue-400 text-white' : 'border-white/10 text-gray-400'}`}
+                        className={`h-9 rounded-full border px-3 text-xs font-medium ${kind === item.id
+                            ? 'border-blue-500 bg-blue-500/10 text-gray-900 dark:text-white'
+                            : 'border-gray-300 text-gray-700 dark:border-white/20 dark:text-gray-300'
+                            }`}
                     >
                         {item.label}
                     </button>
                 ))}
-                <Button variant="primary" onClick={handleGenerate} disabled={generating || !saved} className="!px-3 !py-1.5 text-xs">
+                <Button variant="primary" onClick={handleGenerate} disabled={generating || !saved} className="!h-9 !px-3 !py-0 text-sm">
                     {generating ? 'Generating…' : 'Generate'}
                 </Button>
             </div>
+            {!saved && (
+                <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                    {provider === 'groq'
+                        ? 'Save a Groq key before generating. Groq uses openai/gpt-oss-120b.'
+                        : 'Save a key for this provider before generating.'}
+                </p>
+            )}
             {items.length > 0 && (
-                <div className="space-y-2">
+                <div className="mt-3 space-y-2 border-t border-gray-200 pt-3 dark:border-white/10">
                     {items.map((item) => (
-                        <label key={item.key} className="flex gap-2 text-sm text-gray-200">
+                        <label key={item.key} className="flex gap-2 text-sm text-gray-800 dark:text-gray-200">
                             <input type="checkbox" checked={Boolean(selected[item.key])} onChange={() => toggle(item.key)} />
                             <span>{item.label}</span>
                         </label>

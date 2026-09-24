@@ -41,11 +41,11 @@ const PracticeSession = ({ questions, behavioral, examOnly, onUpdateQuestion, on
         <div className="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0A0A0A] p-6">
             <div className="flex items-center justify-between mb-4">
                 <p className="text-xs text-gray-500">{index + 1} of {cards.length}</p>
-                <button type="button" onClick={onClose} className="text-xs text-gray-400 hover:text-white">Close</button>
+                <button type="button" onClick={onClose} className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">Close</button>
             </div>
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">{card.prompt}</h3>
             {revealed ? (
-                <p className="text-sm text-gray-300 whitespace-pre-wrap mb-6">{card.answer || 'No answer written yet.'}</p>
+                <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap mb-6">{card.answer || 'No answer written yet.'}</p>
             ) : (
                 <p className="text-sm text-gray-500 mb-6">Answer out loud, then reveal the notes.</p>
             )}

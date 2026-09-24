@@ -413,7 +413,7 @@ Each internship has ordered rounds such as resume shortlist, online assessment, 
 
 ### Interview preparation
 
-The preparation workspace is intentionally separate from the interview timeline. The timeline represents process state; prep represents work the candidate does around that process. It holds company research, questions, technical topics, behavioral STAR stories, and reflection. A pending round can open a session for that round. Static starter packs work with no API key. Optional generation (study plan, questions, STAR drafts, or an 8-question mock exam) uses the signed-in user's saved Gemini, Groq, or Claude key and does not fall back to a server key. The backend rejects prep operations for non-internship opportunities because the feature is semantically scoped to interviews.
+The page header shows the company, the current round, and one primary action. Practice replaces the body until Close. Generation is a row on the Session tab, and the role description sits on Company Research. The preparation workspace is intentionally separate from the interview timeline. The timeline represents process state; prep represents work the candidate does around that process. It holds company research, questions, technical topics, behavioral STAR stories, and reflection. A pending round can open a session for that round. Static starter packs work with no API key. Optional generation (study plan, questions, STAR drafts, or an 8-question mock exam) uses the signed-in user's saved Gemini, Groq, or Claude key and does not fall back to a server key. The backend rejects prep operations for non-internship opportunities because the feature is semantically scoped to interviews.
 
 ### Documents and ATS guidance
 

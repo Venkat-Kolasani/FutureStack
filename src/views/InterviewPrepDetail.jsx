@@ -36,6 +36,7 @@ import PracticeSession from '../components/interview-prep/PracticeSession';
 import GeneratePrep from '../components/interview-prep/GeneratePrep';
 import AiSettingsModal from '../components/documents/AiSettingsModal';
 import { opportunityService, interviewPrepService, aiSettingsService, roundService } from '../services/api';
+import { useAuthToken } from '../hooks/useAuthToken';
 import { inFocus, resolveSessionFocus } from '../utils/interviewPrepSession';
 
 const tabs = [
@@ -59,6 +60,7 @@ const statusColors = {
 const InterviewPrepDetail = () => {
     const { id } = useParams();
     const router = useRouter();
+    const { isLoaded: authLoaded, isSignedIn } = useAuthToken();
 
     const [activeTab, setActiveTab] = useState('overview');
     const [loading, setLoading] = useState(true);
@@ -84,10 +86,11 @@ const InterviewPrepDetail = () => {
 
     // Load all data on mount
     useEffect(() => {
+        if (!authLoaded || !isSignedIn) return;
         setRoundQuery(new URLSearchParams(window.location.search).get('round'));
         loadData();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [id]);
+    }, [id, authLoaded, isSignedIn]);
 
     const loadData = async () => {
         try {
@@ -384,52 +387,68 @@ const InterviewPrepDetail = () => {
                     Back to Internships
                 </button>
 
-                {/* Header */}
-                <div className="mb-6">
-                    <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
-                        <div>
-                            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                                {internship.title}
-                            </h1>
-                            <div className="flex flex-wrap items-center gap-3">
-                                <span className={`text-sm px-3 py-1 rounded-full border ${statusColors[internship.status] || statusColors.applied}`}>
-                                    {internship.status?.charAt(0).toUpperCase() + internship.status?.slice(1)}
+                <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                    <div>
+                        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                            {internship.title}
+                        </h1>
+                        <div className="flex flex-wrap items-center gap-3">
+                            <span className={`text-sm px-3 py-1 rounded-full border ${statusColors[internship.status] || statusColors.applied}`}>
+                                {internship.status?.charAt(0).toUpperCase() + internship.status?.slice(1)}
+                            </span>
+                            {internship.applied_on && (
+                                <span className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-1">
+                                    <FaCalendar size={12} />
+                                    Applied {new Date(`${internship.applied_on}T12:00:00`).toLocaleDateString()}
                                 </span>
-                                {internship.applied_on && (
-                                    <span className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-1">
-                                        <FaCalendar size={12} />
-                                        Applied {new Date(`${internship.applied_on}T12:00:00`).toLocaleDateString()}
-                                    </span>
-                                )}
-                                {internship.link && (
-                                    <a
-                                        href={internship.link}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1"
-                                    >
-                                        <FaExternalLinkAlt size={10} />
-                                        Website
-                                    </a>
-                                )}
-                            </div>
+                            )}
+                            {internship.link && (
+                                <a
+                                    href={internship.link}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-500 flex items-center gap-1"
+                                >
+                                    <FaExternalLinkAlt size={10} />
+                                    Website
+                                </a>
+                            )}
                         </div>
                     </div>
+                    {!practicing && (
+                        <PrepSession
+                            focus={focus}
+                            questions={questions}
+                            topics={topics}
+                            behavioral={behavioral}
+                            onStartPractice={() => { setExamOnly(false); setPracticing(true); }}
+                            onStarter={handleStarter}
+                            seeding={seeding}
+                        />
+                    )}
                 </div>
 
-                {/* Progress Bar */}
+                {practicing ? (
+                    <PracticeSession
+                        questions={focusedQuestions}
+                        behavioral={focusedBehavioral}
+                        examOnly={examOnly}
+                        onUpdateQuestion={handleUpdateQuestion}
+                        onClose={() => { setPracticing(false); setExamOnly(false); }}
+                    />
+                ) : (
+                <>
                 <div className="mb-6">
                     <PrepProgressBar questions={questions} topics={topics} behavioral={behavioral} />
                 </div>
 
-                {/* Tabs */}
                 <div className="flex gap-1 overflow-x-auto pb-2 mb-6 border-b border-gray-200 dark:border-white/10">
                     {tabs.map((tab) => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={`flex items-center gap-2 px-4 py-2.5 rounded-t-lg font-medium text-sm whitespace-nowrap transition-colors ${activeTab === tab.id
-                                ? 'bg-white/10 text-gray-900 dark:text-white border-b-2 border-blue-500'
+                                ? 'bg-gray-100 text-gray-900 dark:bg-white/10 dark:text-white border-b-2 border-blue-500'
                                 : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
                                 }`}
                         >
@@ -439,59 +458,40 @@ const InterviewPrepDetail = () => {
                     ))}
                 </div>
 
-                {/* Tab Content */}
                 <div className="min-h-[400px]">
                     {activeTab === 'overview' && (
+                        <GeneratePrep
+                            providers={aiSettings?.providers || []}
+                            focus={focus}
+                            onOpenSettings={(provider) => {
+                                setSettingsProvider(provider || 'gemini');
+                                setSettingsOpen(true);
+                            }}
+                            onGenerate={handleGenerate}
+                            onAccept={handleAcceptGenerated}
+                            generating={generating}
+                        />
+                    )}
+
+                    {activeTab === 'research' && (
                         <div className="space-y-4">
-                            <GeneratePrep
-                                providers={aiSettings?.providers || []}
-                                focus={focus}
-                                onOpenSettings={(provider) => {
-                                    setSettingsProvider(provider || 'gemini');
-                                    setSettingsOpen(true);
-                                }}
-                                onGenerate={handleGenerate}
-                                onAccept={handleAcceptGenerated}
-                                generating={generating}
-                            />
-                            {practicing ? (
-                                <PracticeSession
-                                    questions={focusedQuestions}
-                                    behavioral={focusedBehavioral}
-                                    examOnly={examOnly}
-                                    onUpdateQuestion={handleUpdateQuestion}
-                                    onClose={() => { setPracticing(false); setExamOnly(false); }}
-                                />
-                            ) : (
-                                <PrepSession
-                                    focus={focus}
-                                    questions={questions}
-                                    topics={topics}
-                                    behavioral={behavioral}
-                                    onStartPractice={() => { setExamOnly(false); setPracticing(true); }}
-                                    onStarter={handleStarter}
-                                    seeding={seeding}
-                                />
-                            )}
                             {(internship.description || internship.notes) && (
                                 <div className="bg-white dark:bg-[#0A0A0A] rounded-xl p-6 border border-gray-200 dark:border-white/10">
+                                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Role</h2>
                                     {internship.description && (
                                         <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{internship.description}</p>
                                     )}
                                     {internship.notes && (
-                                        <p className="mt-4 text-sm text-gray-500 whitespace-pre-wrap">{internship.notes}</p>
+                                        <p className="mt-4 text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap">{internship.notes}</p>
                                     )}
                                 </div>
                             )}
+                            <CompanyResearchPanel
+                                prep={prep}
+                                onUpdate={handleUpdatePrep}
+                                isLoading={isLoading}
+                            />
                         </div>
-                    )}
-
-                    {activeTab === 'research' && (
-                        <CompanyResearchPanel
-                            prep={prep}
-                            onUpdate={handleUpdatePrep}
-                            isLoading={isLoading}
-                        />
                     )}
 
                     {activeTab === 'questions' && (
@@ -533,6 +533,8 @@ const InterviewPrepDetail = () => {
                         />
                     )}
                 </div>
+                </>
+                )}
             </div>
             <AiSettingsModal
                 isOpen={settingsOpen}

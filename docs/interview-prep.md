@@ -197,11 +197,12 @@ Use both together: rounds for pipeline status on the Kanban board; prep for the 
 
 ### Session
 
-The Session tab is the default. It follows the earliest pending round, or the `round` query when opened from the pipeline. Focus values are `oa`, `technical`, `behavioral`, `assignment`, and `general`.
+The page header shows the company, the current round, readiness, and one primary action. The round follows the earliest pending interview, or the `round` query when opened from the pipeline. Focus values are `oa`, `technical`, `behavioral`, `assignment`, and `general`.
 
-- **Add a starter pack** inserts a static checklist for that focus. A second click skips questions and topics that already exist.
-- **Start practice** hides answers until reveal, then marks a question prepared.
-- **Generate** appears after the user saves a Gemini, Groq, or Claude key in AI Settings. Choices are Plan, Questions, STAR, and Mock exam. The draft is not stored until **Add selected**. Mock exam questions are flagged `is_exam` and open in practice with answers hidden.
+- **Add a starter pack** is the primary action when that round has no checklist. A second click skips questions and topics that already exist.
+- **Start practice** replaces the page body. Close returns to the same round. Answers stay hidden until reveal, then a question can be marked prepared.
+- The Session tab is a generate row: provider, API key, and Plan, Questions, STAR, or Mock exam. Generate stays disabled until that provider has a saved key. The draft is not stored until **Add selected**. Mock exam questions are flagged `is_exam` and open in practice with answers hidden.
+- The job description and notes live on Company Research. Questions, Topics, Behavioral, and Reflection stay the library for editing.
 - Generation is billed to the user's key. It does not use a server API key. Static packs still work with no key.
 
 `GET /api/v1/interview-prep/stories` returns the user's STAR rows from other internships so one story can be copied into the current prep.
