@@ -39,6 +39,12 @@ const createInterviewQuestionSchema = Joi.object({
   }),
 
   is_prepared: Joi.boolean().optional(),
+
+  is_exam: Joi.boolean().optional(),
+
+  focus: Joi.string()
+    .valid("oa", "technical", "behavioral", "assignment", "general")
+    .optional(),
 });
 
 /**
@@ -55,6 +61,12 @@ const updateInterviewQuestionSchema = Joi.object({
   }),
 
   is_prepared: Joi.boolean().optional(),
+
+  is_exam: Joi.boolean().optional(),
+
+  focus: Joi.string()
+    .valid("oa", "technical", "behavioral", "assignment", "general")
+    .optional(),
 }).min(1);
 
 /**
@@ -73,6 +85,10 @@ const createTechnicalTopicSchema = Joi.object({
   }),
 
   is_reviewed: Joi.boolean().optional(),
+
+  focus: Joi.string()
+    .valid("oa", "technical", "behavioral", "assignment", "general")
+    .optional(),
 });
 
 /**
@@ -89,6 +105,10 @@ const updateTechnicalTopicSchema = Joi.object({
   }),
 
   is_reviewed: Joi.boolean().optional(),
+
+  focus: Joi.string()
+    .valid("oa", "technical", "behavioral", "assignment", "general")
+    .optional(),
 }).min(1);
 
 /**
@@ -117,6 +137,10 @@ const createBehavioralPrepSchema = Joi.object({
   result: Joi.string().trim().max(2000).allow(null, "").optional().messages({
     "string.max": "Result cannot exceed 2000 characters",
   }),
+
+  focus: Joi.string()
+    .valid("oa", "technical", "behavioral", "assignment", "general")
+    .optional(),
 });
 
 /**
@@ -143,7 +167,61 @@ const updateBehavioralPrepSchema = Joi.object({
   result: Joi.string().trim().max(2000).allow(null, "").optional().messages({
     "string.max": "Result cannot exceed 2000 characters",
   }),
+
+  focus: Joi.string()
+    .valid("oa", "technical", "behavioral", "assignment", "general")
+    .optional(),
 }).min(1);
+
+const focusSchema = Joi.string()
+  .valid("oa", "technical", "behavioral", "assignment", "general")
+  .required();
+
+const starterPackSchema = Joi.object({
+  focus: focusSchema,
+});
+
+const generatePrepSchema = Joi.object({
+  kind: Joi.string().valid("plan", "questions", "star", "exam").required(),
+  focus: focusSchema,
+  provider: Joi.string().valid("gemini", "groq", "anthropic", "ollama").required(),
+});
+
+const acceptGeneratedPrepSchema = Joi.object({
+  focus: focusSchema,
+  checklist: Joi.array().items(Joi.string().trim().max(200)).max(8).optional(),
+  topics: Joi.array()
+    .items(
+      Joi.object({
+        topic: Joi.string().trim().min(1).max(200).required(),
+        priority: Joi.string().valid("low", "medium", "high").optional(),
+      }),
+    )
+    .max(12)
+    .optional(),
+  questions: Joi.array()
+    .items(
+      Joi.object({
+        question: Joi.string().trim().min(1).max(500).required(),
+        answer: Joi.string().trim().max(5000).allow("").optional(),
+        is_exam: Joi.boolean().optional(),
+      }),
+    )
+    .max(12)
+    .optional(),
+  behavioral: Joi.array()
+    .items(
+      Joi.object({
+        question: Joi.string().trim().min(1).max(500).required(),
+        situation: Joi.string().trim().max(2000).allow("").optional(),
+        task: Joi.string().trim().max(2000).allow("").optional(),
+        action: Joi.string().trim().max(2000).allow("").optional(),
+        result: Joi.string().trim().max(2000).allow("").optional(),
+      }),
+    )
+    .max(8)
+    .optional(),
+}).or("checklist", "topics", "questions", "behavioral");
 
 module.exports = {
   createInterviewPrepSchema,
@@ -153,4 +231,7 @@ module.exports = {
   updateTechnicalTopicSchema,
   createBehavioralPrepSchema,
   updateBehavioralPrepSchema,
+  starterPackSchema,
+  generatePrepSchema,
+  acceptGeneratedPrepSchema,
 };

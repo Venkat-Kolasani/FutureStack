@@ -47,4 +47,34 @@ const aiCheckRunLimiter = rateLimit({
     },
 });
 
-module.exports = { aiCheckRunLimiter, formatWindow };
+const interviewGenerateLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 5,
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) => {
+        if (req.auth?.internalUserId) {
+            return `interview-generate:user:${req.auth.internalUserId}`;
+        }
+        const ip = req.ips?.length > 0 ? req.ips[0] : req.ip;
+        return `interview-generate:ip:${ipKeyGenerator(ip)}`;
+    },
+    handler: (req, res) => {
+        const resetTime = req.rateLimit?.resetTime
+            ? new Date(req.rateLimit.resetTime)
+            : new Date(Date.now() + 60 * 1000);
+        const retryAfterSeconds = Math.max(1, Math.ceil((resetTime.getTime() - Date.now()) / 1000));
+        res.set('Retry-After', retryAfterSeconds.toString());
+        res.status(429).json({
+            error: 'AI Rate Limit Exceeded',
+            code: 'INTERVIEW_GENERATE_RATE_LIMIT',
+            message: 'You have reached the limit for interview prep generation (5 per minute). Please wait before generating again.',
+            retryAfter: resetTime.toISOString(),
+            retryAfterSeconds,
+            limit: 5,
+            window: '1 minute',
+        });
+    },
+});
+
+module.exports = { aiCheckRunLimiter, interviewGenerateLimiter, formatWindow };
