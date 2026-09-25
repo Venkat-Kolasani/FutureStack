@@ -1,4 +1,10 @@
 const Joi = require("joi");
+const { FOCUS_VALUES } = require("../lib/interviewPrepFocus");
+const { GENERATE_KINDS } = require("../lib/interviewPrepGenerate");
+const { PREP_PROVIDERS } = require("../lib/providerModels");
+
+const optionalFocusSchema = Joi.string().valid(...FOCUS_VALUES).optional();
+const focusSchema = Joi.string().valid(...FOCUS_VALUES).required();
 
 /**
  * Validation schema for creating/updating interview prep main record
@@ -42,9 +48,7 @@ const createInterviewQuestionSchema = Joi.object({
 
   is_exam: Joi.boolean().optional(),
 
-  focus: Joi.string()
-    .valid("oa", "technical", "behavioral", "assignment", "general")
-    .optional(),
+  focus: optionalFocusSchema,
 });
 
 /**
@@ -64,9 +68,7 @@ const updateInterviewQuestionSchema = Joi.object({
 
   is_exam: Joi.boolean().optional(),
 
-  focus: Joi.string()
-    .valid("oa", "technical", "behavioral", "assignment", "general")
-    .optional(),
+  focus: optionalFocusSchema,
 }).min(1);
 
 /**
@@ -86,9 +88,7 @@ const createTechnicalTopicSchema = Joi.object({
 
   is_reviewed: Joi.boolean().optional(),
 
-  focus: Joi.string()
-    .valid("oa", "technical", "behavioral", "assignment", "general")
-    .optional(),
+  focus: optionalFocusSchema,
 });
 
 /**
@@ -106,9 +106,7 @@ const updateTechnicalTopicSchema = Joi.object({
 
   is_reviewed: Joi.boolean().optional(),
 
-  focus: Joi.string()
-    .valid("oa", "technical", "behavioral", "assignment", "general")
-    .optional(),
+  focus: optionalFocusSchema,
 }).min(1);
 
 /**
@@ -138,9 +136,7 @@ const createBehavioralPrepSchema = Joi.object({
     "string.max": "Result cannot exceed 2000 characters",
   }),
 
-  focus: Joi.string()
-    .valid("oa", "technical", "behavioral", "assignment", "general")
-    .optional(),
+  focus: optionalFocusSchema,
 });
 
 /**
@@ -168,23 +164,17 @@ const updateBehavioralPrepSchema = Joi.object({
     "string.max": "Result cannot exceed 2000 characters",
   }),
 
-  focus: Joi.string()
-    .valid("oa", "technical", "behavioral", "assignment", "general")
-    .optional(),
+  focus: optionalFocusSchema,
 }).min(1);
-
-const focusSchema = Joi.string()
-  .valid("oa", "technical", "behavioral", "assignment", "general")
-  .required();
 
 const starterPackSchema = Joi.object({
   focus: focusSchema,
 });
 
 const generatePrepSchema = Joi.object({
-  kind: Joi.string().valid("plan", "questions", "star", "exam").required(),
+  kind: Joi.string().valid(...GENERATE_KINDS).required(),
   focus: focusSchema,
-  provider: Joi.string().valid("gemini", "groq", "anthropic", "ollama").required(),
+  provider: Joi.string().valid(...PREP_PROVIDERS).required(),
 });
 
 const acceptGeneratedPrepSchema = Joi.object({

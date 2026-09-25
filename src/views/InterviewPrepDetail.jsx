@@ -238,8 +238,12 @@ const InterviewPrepDetail = () => {
     };
 
     const handleRemoveSettings = async (provider) => {
-        const saved = await aiSettingsService.remove(provider);
-        setAiSettings(saved);
+        try {
+            await aiSettingsService.remove(provider);
+            setAiSettings(await aiSettingsService.get());
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Could not remove the API key');
+        }
     };
 
     // Prep handlers
@@ -257,7 +261,7 @@ const InterviewPrepDetail = () => {
     const handleCreateQuestion = async (data) => {
         setIsLoading(true);
         try {
-            const question = await interviewPrepService.createQuestion(id, data);
+            const question = await interviewPrepService.createQuestion(id, { ...data, focus });
             setQuestions([...questions, question]);
             toast.success('Question added!');
         } catch (error) {
@@ -293,7 +297,7 @@ const InterviewPrepDetail = () => {
     const handleCreateTopic = async (data) => {
         setIsLoading(true);
         try {
-            const topic = await interviewPrepService.createTopic(id, data);
+            const topic = await interviewPrepService.createTopic(id, { ...data, focus });
             setTopics([...topics, topic]);
             toast.success('Topic added!');
         } catch (error) {
@@ -329,7 +333,7 @@ const InterviewPrepDetail = () => {
     const handleCreateBehavioral = async (data) => {
         setIsLoading(true);
         try {
-            const entry = await interviewPrepService.createBehavioral(id, data);
+            const entry = await interviewPrepService.createBehavioral(id, { ...data, focus });
             setBehavioral([...behavioral, entry]);
             toast.success('Behavioral entry added!');
         } catch (error) {

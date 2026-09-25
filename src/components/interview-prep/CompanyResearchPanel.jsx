@@ -75,6 +75,10 @@ const CompanyResearchPanel = ({ prep, onUpdate, isLoading }) => {
                         key={heading}
                         type="button"
                         onClick={() => {
+                            if (saveTimeout) {
+                                clearTimeout(saveTimeout);
+                                setSaveTimeout(null);
+                            }
                             const next = insertResearchHeading(notes, heading);
                             setNotes(next);
                             onUpdate({ company_research: next });

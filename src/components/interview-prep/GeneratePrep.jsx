@@ -38,8 +38,7 @@ const GeneratePrep = ({
         const result = await onGenerate({ kind, focus, provider });
         if (!result?.draft) return;
         const next = {};
-        const items = result.draft.questions || result.draft.topics || result.draft.behavioral || result.draft.checklist || [];
-        items.forEach((_, index) => { next[index] = true; });
+        draftItems(result.draft, result.kind).forEach((item) => { next[item.key] = true; });
         setSelected(next);
         setDraft(result);
     };

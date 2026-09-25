@@ -434,6 +434,8 @@ The AI system is a server-side pipeline:
 
 It supports Gemini, Groq, Claude, and local Ollama through the Vercel AI SDK. A user can save one encrypted key per provider. Interview prep generation uses only that user key. Resume checks still prefer the user's Gemini key and can fall back to the server Gemini key. A user-provided API key is encrypted with AES-256-GCM at rest; the API returns only safe metadata such as a key suffix.
 
+**Status: migration-gated.** Apply `supabase/migrations/20260925010000_interview_prep_focus_and_provider_keys.sql` before deploying this API. To roll back the settings key, delete every extra `user_ai_settings` row so each user has at most one provider row, drop the composite primary key on `(user_id, provider)`, and restore the primary key on `user_id`.
+
 **Why keep it gated?** LLM calls are costly, variable, and slow (the current synchronous flow can take tens of seconds). Releasing it needs provider budgeting, abuse protection, privacy copy, monitoring, an asynchronous job experience, and a deliberate feature flag rollout. Code existing is not the same as a feature being production-ready.
 
 ### Hackathon collaboration

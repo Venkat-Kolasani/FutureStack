@@ -7,7 +7,26 @@ const { defaultModelFor, isAllowedModel } = require('./providerModels');
 
 const VERIFY_TIMEOUT_MS = 10_000;
 
-async function probeModel(model) {
+function verificationFailure(classified, providerLabel) {
+    if (classified?.code === 'LLM_QUOTA_EXCEEDED' || classified?.code === 'LLM_RATE_LIMITED') {
+        return { ok: true };
+    }
+    if (!classified) {
+        return {
+            ok: false,
+            code: 'LLM_AUTH_ERROR',
+            message: `The ${providerLabel} API key could not be verified.`,
+        };
+    }
+    const message = classified.code === 'LLM_AUTH_ERROR'
+        ? `${providerLabel} rejected this API key.`
+        : classified.code === 'LLM_TIMEOUT'
+            ? `${providerLabel} did not respond in time. Try again.`
+            : classified.message;
+    return { ok: false, code: classified.code, message };
+}
+
+async function probeModel(model, providerLabel) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), VERIFY_TIMEOUT_MS);
     try {
@@ -19,12 +38,7 @@ async function probeModel(model) {
         });
         return { ok: true };
     } catch (error) {
-        const classified = classifyLlmError(error);
-        return {
-            ok: false,
-            code: classified.code || 'LLM_AUTH_ERROR',
-            message: classified.message || 'The API key could not be verified.',
-        };
+        return verificationFailure(classifyLlmError(error), providerLabel);
     } finally {
         clearTimeout(timer);
     }
@@ -50,8 +64,9 @@ async function verifyProviderKey(provider, apiKey, model) {
 
     const { createGroq } = require('@ai-sdk/groq');
     const { createAnthropic } = require('@ai-sdk/anthropic');
+    const providerLabel = provider === 'groq' ? 'Groq' : 'Claude';
     const client = provider === 'groq' ? createGroq({ apiKey }) : createAnthropic({ apiKey });
-    const result = await probeModel(client(model));
+    const result = await probeModel(client(model), providerLabel);
     return result.ok ? { ok: true, model } : result;
 }
 
