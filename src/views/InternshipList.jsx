@@ -132,9 +132,10 @@ const InternshipList = () => {
   };
 
   // Prep handler - closes detail modal and navigates to prep page
-  const handlePrep = (id) => {
+  const handlePrep = (id, roundType) => {
     setSelectedOpportunity(null);
-    router.push(`/internships/${id}/prep`);
+    const query = roundType ? `?round=${encodeURIComponent(roundType)}` : '';
+    router.push(`/internships/${id}/prep${query}`);
   };
 
   // Delete handlers

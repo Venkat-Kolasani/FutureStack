@@ -9,30 +9,36 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { FaLightbulb, FaSave } from 'react-icons/fa';
+import { parseReflection, serializeReflection } from '../../utils/interviewPrepSession';
 
 const ReflectionPanel = ({ prep, onUpdate, isLoading }) => {
-    const [notes, setNotes] = useState(prep?.reflection_notes || '');
+    const parsed = parseReflection(prep?.reflection_notes);
+    const [fields, setFields] = useState({
+        asked: parsed.legacy || parsed.asked,
+        landed: parsed.landed,
+        fix: parsed.fix,
+    });
     const [isSaving, setIsSaving] = useState(false);
     const [saveTimeout, setSaveTimeout] = useState(null);
 
     useEffect(() => {
-        setNotes(prep?.reflection_notes || '');
+        const next = parseReflection(prep?.reflection_notes);
+        setFields({
+            asked: next.legacy || next.asked,
+            landed: next.landed,
+            fix: next.fix,
+        });
     }, [prep]);
 
-    const handleChange = (e) => {
-        const newNotes = e.target.value;
-        setNotes(newNotes);
+    const handleChange = (key, value) => {
+        const next = { ...fields, [key]: value };
+        setFields(next);
 
-        // Clear existing timeout
-        if (saveTimeout) {
-            clearTimeout(saveTimeout);
-        }
-
-        // Set new timeout for autosave (debounce by 1 second)
+        if (saveTimeout) clearTimeout(saveTimeout);
         const timeout = setTimeout(async () => {
             setIsSaving(true);
             try {
-                await onUpdate({ reflection_notes: newNotes });
+                await onUpdate({ reflection_notes: serializeReflection(next) });
             } catch (error) {
                 console.error('Error saving reflection notes:', error);
                 toast.error('Could not save reflection notes. Please try again.');
@@ -40,7 +46,6 @@ const ReflectionPanel = ({ prep, onUpdate, isLoading }) => {
                 setIsSaving(false);
             }
         }, 1000);
-
         setSaveTimeout(timeout);
     };
 
@@ -68,16 +73,22 @@ const ReflectionPanel = ({ prep, onUpdate, isLoading }) => {
                 )}
             </div>
 
-            <textarea
-                value={notes}
-                onChange={handleChange}
-                disabled={isLoading}
-                placeholder="Reflect on your interview: What went well? What could be improved? Any follow-up actions needed?"
-                className="w-full h-48 bg-black/5 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg p-4 text-gray-700 dark:text-gray-300 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-500 resize-none"
-            />
-
-            <div className="mt-3 text-xs text-gray-500">
-                Tips: Note questions you struggled with, topics to review, and any follow-up emails or tasks.
+            <div className="space-y-4">
+                {[
+                    ['asked', 'What they asked'],
+                    ['landed', 'What landed'],
+                    ['fix', 'What to fix next'],
+                ].map(([key, label]) => (
+                    <label key={key} className="block">
+                        <span className="text-sm text-gray-400">{label}</span>
+                        <textarea
+                            value={fields[key]}
+                            onChange={(e) => handleChange(key, e.target.value)}
+                            disabled={isLoading}
+                            className="mt-1 w-full h-24 bg-black/5 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg p-3 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-500 resize-none"
+                        />
+                    </label>
+                ))}
             </div>
         </div>
     );

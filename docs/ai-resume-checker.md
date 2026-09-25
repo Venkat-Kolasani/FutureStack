@@ -94,6 +94,8 @@ Uses the **[Vercel AI SDK](https://sdk.vercel.ai/)** (`ai` package) with pluggab
 | `gemini` (default) | `@ai-sdk/google` | `gemini-3.1-flash-lite` |
 | `ollama` | `ollama-ai-provider` | `llama3.2` (or any pulled model) |
 
+Groq and Claude are not server `LLM_PROVIDER` values. They are available only with a user-saved key for interview prep generation.
+
 Adding a new provider (e.g. OpenAI) requires a single `case` in `lib/llm/index.js` and
 installing `@ai-sdk/openai`.
 

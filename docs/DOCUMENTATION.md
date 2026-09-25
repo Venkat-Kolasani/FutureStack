@@ -413,7 +413,7 @@ Each internship has ordered rounds such as resume shortlist, online assessment, 
 
 ### Interview preparation
 
-The preparation workspace is intentionally separate from the interview timeline. The timeline represents process state; prep represents work the candidate does around that process. It holds company research, questions, technical topics, behavioral STAR stories, and reflection. The backend rejects prep operations for non-internship opportunities because the feature is semantically scoped to interviews.
+The page header shows the company, the current round, and one primary action. Practice replaces the body until Close. Generation is a row on the Session tab, and the role description sits on Company Research. The preparation workspace is intentionally separate from the interview timeline. The timeline represents process state; prep represents work the candidate does around that process. It holds company research, questions, technical topics, behavioral STAR stories, and reflection. A pending round can open a session for that round. Static starter packs work with no API key. Optional generation (study plan, questions, STAR drafts, or an 8-question mock exam) uses the signed-in user's saved Gemini, Groq, or Claude key and does not fall back to a server key. The backend rejects prep operations for non-internship opportunities because the feature is semantically scoped to interviews.
 
 ### Documents and ATS guidance
 
@@ -432,7 +432,9 @@ The AI system is a server-side pipeline:
 5. Evaluate four evidence-backed categories and generate strengths, suggestions, evidence, and scores.
 6. Persist the result in `resume_ai_checks`.
 
-It supports Gemini and local Ollama through the Vercel AI SDK. A user-provided API key can be encrypted with AES-256-GCM at rest; the API returns only safe metadata such as a key suffix.
+It supports Gemini, Groq, Claude, and local Ollama through the Vercel AI SDK. A user can save one encrypted key per provider. Interview prep generation uses only that user key. Resume checks still prefer the user's Gemini key and can fall back to the server Gemini key. A user-provided API key is encrypted with AES-256-GCM at rest; the API returns only safe metadata such as a key suffix.
+
+**Status: migration-gated.** Apply `supabase/migrations/20260925010000_interview_prep_focus_and_provider_keys.sql` before deploying this API. To roll back the settings key, delete every extra `user_ai_settings` row so each user has at most one provider row, drop the composite primary key on `(user_id, provider)`, and restore the primary key on `user_id`.
 
 **Why keep it gated?** LLM calls are costly, variable, and slow (the current synchronous flow can take tens of seconds). Releasing it needs provider budgeting, abuse protection, privacy copy, monitoring, an asynchronous job experience, and a deliberate feature flag rollout. Code existing is not the same as a feature being production-ready.
 

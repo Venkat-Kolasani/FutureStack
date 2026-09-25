@@ -31,10 +31,16 @@ import TechnicalTopicsPanel from '../components/interview-prep/TechnicalTopicsPa
 import BehavioralPrepPanel from '../components/interview-prep/BehavioralPrepPanel';
 import ReflectionPanel from '../components/interview-prep/ReflectionPanel';
 import PrepProgressBar from '../components/interview-prep/PrepProgressBar';
-import { opportunityService, interviewPrepService } from '../services/api';
+import PrepSession from '../components/interview-prep/PrepSession';
+import PracticeSession from '../components/interview-prep/PracticeSession';
+import GeneratePrep from '../components/interview-prep/GeneratePrep';
+import AiSettingsModal from '../components/documents/AiSettingsModal';
+import { opportunityService, interviewPrepService, aiSettingsService, roundService } from '../services/api';
+import { useAuthToken } from '../hooks/useAuthToken';
+import { inFocus, resolveSessionFocus } from '../utils/interviewPrepSession';
 
 const tabs = [
-    { id: 'overview', label: 'Overview', icon: FaInfoCircle },
+    { id: 'overview', label: 'Session', icon: FaInfoCircle },
     { id: 'research', label: 'Company Research', icon: FaBuilding },
     { id: 'questions', label: 'Questions', icon: FaQuestionCircle },
     { id: 'topics', label: 'Topics', icon: FaCode },
@@ -54,6 +60,7 @@ const statusColors = {
 const InterviewPrepDetail = () => {
     const { id } = useParams();
     const router = useRouter();
+    const { isLoaded: authLoaded, isSignedIn } = useAuthToken();
 
     const [activeTab, setActiveTab] = useState('overview');
     const [loading, setLoading] = useState(true);
@@ -65,12 +72,25 @@ const InterviewPrepDetail = () => {
     const [questions, setQuestions] = useState([]);
     const [topics, setTopics] = useState([]);
     const [behavioral, setBehavioral] = useState([]);
+    const [rounds, setRounds] = useState([]);
+    const [roundQuery, setRoundQuery] = useState(null);
+    const [stories, setStories] = useState([]);
+    const [aiSettings, setAiSettings] = useState(null);
+    const [settingsOpen, setSettingsOpen] = useState(false);
+    const [settingsProvider, setSettingsProvider] = useState('gemini');
+    const [savingSettings, setSavingSettings] = useState(false);
+    const [practicing, setPracticing] = useState(false);
+    const [examOnly, setExamOnly] = useState(false);
+    const [seeding, setSeeding] = useState(false);
+    const [generating, setGenerating] = useState(false);
 
     // Load all data on mount
     useEffect(() => {
+        if (!authLoaded || !isSignedIn) return;
+        setRoundQuery(new URLSearchParams(window.location.search).get('round'));
         loadData();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [id]);
+    }, [id, authLoaded, isSignedIn]);
 
     const loadData = async () => {
         try {
@@ -85,6 +105,15 @@ const InterviewPrepDetail = () => {
             }
             setInternship(opp);
 
+            const [roundRows, storyRows, settings] = await Promise.all([
+                roundService.list(id).catch(() => []),
+                interviewPrepService.listStories().catch(() => ({ stories: [] })),
+                aiSettingsService.get().catch(() => null),
+            ]);
+            setRounds(Array.isArray(roundRows) ? roundRows : []);
+            setStories(storyRows?.stories || []);
+            setAiSettings(settings);
+
             // Load interview prep data
             try {
                 const prepData = await interviewPrepService.getPrep(id);
@@ -97,6 +126,14 @@ const InterviewPrepDetail = () => {
                         setTopics([]);
                         setBehavioral([]);
                     } catch (createError) {
+                        if (createError.response?.status === 400) {
+                            const existing = await interviewPrepService.getPrep(id);
+                            setPrep(existing.prep);
+                            setQuestions(existing.questions || []);
+                            setTopics(existing.topics || []);
+                            setBehavioral(existing.behavioral || []);
+                            return;
+                        }
                         console.error('Error creating prep record:', createError);
                         toast.error('Failed to create interview prep. Please try again.');
                         setPrep(null);
@@ -133,6 +170,82 @@ const InterviewPrepDetail = () => {
         }
     };
 
+    const reloadPrep = async () => {
+        const prepData = await interviewPrepService.getPrep(id);
+        setPrep(prepData.prep);
+        setQuestions(prepData.questions || []);
+        setTopics(prepData.topics || []);
+        setBehavioral(prepData.behavioral || []);
+    };
+
+    const focus = resolveSessionFocus(rounds, roundQuery);
+    const focusedQuestions = questions.filter((item) => inFocus(item, focus));
+    const focusedTopics = topics.filter((item) => inFocus(item, focus));
+    const focusedBehavioral = behavioral.filter((item) => inFocus(item, focus));
+
+    const handleStarter = async () => {
+        setSeeding(true);
+        try {
+            await interviewPrepService.seedStarter(id, focus);
+            await reloadPrep();
+            toast.success('Starter pack added');
+        } catch (error) {
+            toast.error(error.response?.data?.error || 'Could not add the starter pack');
+        } finally {
+            setSeeding(false);
+        }
+    };
+
+    const handleGenerate = async (payload) => {
+        setGenerating(true);
+        try {
+            return await interviewPrepService.generate(id, payload);
+        } catch (error) {
+            const message = error.response?.data?.message || error.response?.data?.error || 'Generation failed';
+            toast.error(message);
+            return null;
+        } finally {
+            setGenerating(false);
+        }
+    };
+
+    const handleAcceptGenerated = async (payload) => {
+        const saved = await interviewPrepService.acceptGenerated(id, payload);
+        setQuestions((current) => [...current, ...(saved.questions || [])]);
+        setTopics((current) => [...current, ...(saved.topics || [])]);
+        setBehavioral((current) => [...current, ...(saved.behavioral || [])]);
+        if (saved.prep) setPrep(saved.prep);
+        toast.success('Added to your prep');
+        if (payload.questions?.some((item) => item.is_exam)) {
+            setExamOnly(true);
+            setPracticing(true);
+        }
+    };
+
+    const handleSaveSettings = async (payload) => {
+        setSavingSettings(true);
+        try {
+            const saved = await aiSettingsService.save(payload);
+            setAiSettings(saved);
+            toast.success('API key saved');
+            return saved;
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Could not save the API key');
+            return null;
+        } finally {
+            setSavingSettings(false);
+        }
+    };
+
+    const handleRemoveSettings = async (provider) => {
+        try {
+            await aiSettingsService.remove(provider);
+            setAiSettings(await aiSettingsService.get());
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Could not remove the API key');
+        }
+    };
+
     // Prep handlers
     const handleUpdatePrep = async (data) => {
         try {
@@ -148,7 +261,7 @@ const InterviewPrepDetail = () => {
     const handleCreateQuestion = async (data) => {
         setIsLoading(true);
         try {
-            const question = await interviewPrepService.createQuestion(id, data);
+            const question = await interviewPrepService.createQuestion(id, { ...data, focus });
             setQuestions([...questions, question]);
             toast.success('Question added!');
         } catch (error) {
@@ -184,7 +297,7 @@ const InterviewPrepDetail = () => {
     const handleCreateTopic = async (data) => {
         setIsLoading(true);
         try {
-            const topic = await interviewPrepService.createTopic(id, data);
+            const topic = await interviewPrepService.createTopic(id, { ...data, focus });
             setTopics([...topics, topic]);
             toast.success('Topic added!');
         } catch (error) {
@@ -220,7 +333,7 @@ const InterviewPrepDetail = () => {
     const handleCreateBehavioral = async (data) => {
         setIsLoading(true);
         try {
-            const entry = await interviewPrepService.createBehavioral(id, data);
+            const entry = await interviewPrepService.createBehavioral(id, { ...data, focus });
             setBehavioral([...behavioral, entry]);
             toast.success('Behavioral entry added!');
         } catch (error) {
@@ -278,52 +391,68 @@ const InterviewPrepDetail = () => {
                     Back to Internships
                 </button>
 
-                {/* Header */}
-                <div className="mb-6">
-                    <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
-                        <div>
-                            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                                {internship.title}
-                            </h1>
-                            <div className="flex flex-wrap items-center gap-3">
-                                <span className={`text-sm px-3 py-1 rounded-full border ${statusColors[internship.status] || statusColors.applied}`}>
-                                    {internship.status?.charAt(0).toUpperCase() + internship.status?.slice(1)}
+                <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                    <div>
+                        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                            {internship.title}
+                        </h1>
+                        <div className="flex flex-wrap items-center gap-3">
+                            <span className={`text-sm px-3 py-1 rounded-full border ${statusColors[internship.status] || statusColors.applied}`}>
+                                {internship.status?.charAt(0).toUpperCase() + internship.status?.slice(1)}
+                            </span>
+                            {internship.applied_on && (
+                                <span className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-1">
+                                    <FaCalendar size={12} />
+                                    Applied {new Date(`${internship.applied_on}T12:00:00`).toLocaleDateString()}
                                 </span>
-                                {internship.applied_on && (
-                                    <span className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-1">
-                                        <FaCalendar size={12} />
-                                        Applied {new Date(`${internship.applied_on}T12:00:00`).toLocaleDateString()}
-                                    </span>
-                                )}
-                                {internship.link && (
-                                    <a
-                                        href={internship.link}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1"
-                                    >
-                                        <FaExternalLinkAlt size={10} />
-                                        Website
-                                    </a>
-                                )}
-                            </div>
+                            )}
+                            {internship.link && (
+                                <a
+                                    href={internship.link}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-500 flex items-center gap-1"
+                                >
+                                    <FaExternalLinkAlt size={10} />
+                                    Website
+                                </a>
+                            )}
                         </div>
                     </div>
+                    {!practicing && (
+                        <PrepSession
+                            focus={focus}
+                            questions={questions}
+                            topics={topics}
+                            behavioral={behavioral}
+                            onStartPractice={() => { setExamOnly(false); setPracticing(true); }}
+                            onStarter={handleStarter}
+                            seeding={seeding}
+                        />
+                    )}
                 </div>
 
-                {/* Progress Bar */}
+                {practicing ? (
+                    <PracticeSession
+                        questions={focusedQuestions}
+                        behavioral={focusedBehavioral}
+                        examOnly={examOnly}
+                        onUpdateQuestion={handleUpdateQuestion}
+                        onClose={() => { setPracticing(false); setExamOnly(false); }}
+                    />
+                ) : (
+                <>
                 <div className="mb-6">
                     <PrepProgressBar questions={questions} topics={topics} behavioral={behavioral} />
                 </div>
 
-                {/* Tabs */}
                 <div className="flex gap-1 overflow-x-auto pb-2 mb-6 border-b border-gray-200 dark:border-white/10">
                     {tabs.map((tab) => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={`flex items-center gap-2 px-4 py-2.5 rounded-t-lg font-medium text-sm whitespace-nowrap transition-colors ${activeTab === tab.id
-                                ? 'bg-white/10 text-gray-900 dark:text-white border-b-2 border-blue-500'
+                                ? 'bg-gray-100 text-gray-900 dark:bg-white/10 dark:text-white border-b-2 border-blue-500'
                                 : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
                                 }`}
                         >
@@ -333,34 +462,40 @@ const InterviewPrepDetail = () => {
                     ))}
                 </div>
 
-                {/* Tab Content */}
                 <div className="min-h-[400px]">
                     {activeTab === 'overview' && (
-                        <div className="bg-white dark:bg-[#0A0A0A] rounded-xl p-6 border border-gray-200 dark:border-white/10">
-                            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                                <FaInfoCircle className="text-blue-400" />
-                                Overview
-                            </h3>
-                            {internship.description ? (
-                                <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{internship.description}</p>
-                            ) : (
-                                <p className="text-gray-500 italic">No description provided</p>
-                            )}
-                            {internship.notes && (
-                                <div className="mt-6 pt-6 border-t border-gray-200 dark:border-white/10">
-                                    <h4 className="font-medium text-gray-900 dark:text-white mb-2">Notes</h4>
-                                    <p className="text-gray-600 dark:text-gray-400 whitespace-pre-wrap">{internship.notes}</p>
-                                </div>
-                            )}
-                        </div>
+                        <GeneratePrep
+                            providers={aiSettings?.providers || []}
+                            focus={focus}
+                            onOpenSettings={(provider) => {
+                                setSettingsProvider(provider || 'gemini');
+                                setSettingsOpen(true);
+                            }}
+                            onGenerate={handleGenerate}
+                            onAccept={handleAcceptGenerated}
+                            generating={generating}
+                        />
                     )}
 
                     {activeTab === 'research' && (
-                        <CompanyResearchPanel
-                            prep={prep}
-                            onUpdate={handleUpdatePrep}
-                            isLoading={isLoading}
-                        />
+                        <div className="space-y-4">
+                            {(internship.description || internship.notes) && (
+                                <div className="bg-white dark:bg-[#0A0A0A] rounded-xl p-6 border border-gray-200 dark:border-white/10">
+                                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Role</h2>
+                                    {internship.description && (
+                                        <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{internship.description}</p>
+                                    )}
+                                    {internship.notes && (
+                                        <p className="mt-4 text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap">{internship.notes}</p>
+                                    )}
+                                </div>
+                            )}
+                            <CompanyResearchPanel
+                                prep={prep}
+                                onUpdate={handleUpdatePrep}
+                                isLoading={isLoading}
+                            />
+                        </div>
                     )}
 
                     {activeTab === 'questions' && (
@@ -389,6 +524,7 @@ const InterviewPrepDetail = () => {
                             onCreateBehavioral={handleCreateBehavioral}
                             onUpdateBehavioral={handleUpdateBehavioral}
                             onDeleteBehavioral={handleDeleteBehavioral}
+                            stories={stories.filter((story) => story.prep_id !== prep?.id)}
                             isLoading={isLoading}
                         />
                     )}
@@ -401,7 +537,18 @@ const InterviewPrepDetail = () => {
                         />
                     )}
                 </div>
+                </>
+                )}
             </div>
+            <AiSettingsModal
+                isOpen={settingsOpen}
+                onClose={() => setSettingsOpen(false)}
+                settings={aiSettings}
+                initialProvider={settingsProvider}
+                onSave={handleSaveSettings}
+                onRemove={handleRemoveSettings}
+                isSaving={savingSettings}
+            />
         </div>
     );
 };
