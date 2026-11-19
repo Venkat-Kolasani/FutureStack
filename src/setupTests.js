@@ -28,7 +28,7 @@ global.matchMedia = function(query) {
         dispatchEvent: function() { return false; },
     };
 };
-window.matchMedia = global.matchMedia;
+if (typeof window !== 'undefined') window.matchMedia = global.matchMedia;
 
 process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY =
     process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || 'pk_test_ci_placeholder';
