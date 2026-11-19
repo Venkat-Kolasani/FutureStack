@@ -18,7 +18,7 @@
     "jest": "^30.4.2",
     "jest-cli": "^30.4.2",
     "linkedom": "^0.18.13",
-    "vite": "^5.4.21"
+    "vite": "^6.4.6"
   },
   "dependencies": {
     "@clerk/chrome-extension": "^3.1.51",
