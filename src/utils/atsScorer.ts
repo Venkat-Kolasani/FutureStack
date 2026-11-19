@@ -270,7 +270,10 @@ export function analyzeText(text = ''): AtsAnalysis {
 export async function extractTextFromPDF(arrayBuffer: ArrayBuffer): Promise<string> {
   try {
     const { getDocument, GlobalWorkerOptions } = await import('pdfjs-dist/legacy/build/pdf.mjs');
-    GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
+    GlobalWorkerOptions.workerSrc = new URL(
+      'pdfjs-dist/legacy/build/pdf.worker.min.mjs',
+      import.meta.url
+    ).toString();
     const loadingTask = getDocument({ data: arrayBuffer });
     const pdf = await loadingTask.promise;
     let text = '';
