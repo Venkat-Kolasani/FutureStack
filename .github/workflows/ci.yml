@@ -15,7 +15,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version-file: .nvmrc
           cache: npm
 
       - name: Install dependencies
@@ -46,7 +46,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version-file: .nvmrc
           cache: npm
           cache-dependency-path: backend/package-lock.json
 
@@ -66,7 +66,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version-file: .nvmrc
 
       - name: Architecture guardrails
         run: npm run check:architecture
@@ -80,7 +80,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version-file: .nvmrc
 
       - name: Audit root dependencies
         run: npm audit --audit-level=high
@@ -103,7 +103,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version-file: .nvmrc
           cache: npm
 
       - name: Install dependencies
@@ -127,7 +127,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version-file: .nvmrc
           cache: npm
           cache-dependency-path: extensions/package-lock.json
 
