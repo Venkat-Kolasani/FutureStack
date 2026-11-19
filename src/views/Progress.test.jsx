@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import Progress from './Progress';
+import { formatLocalDate } from '../utils/heatmapHelpers';
 import { progressService } from '../services/api';
 
 jest.mock('../services/api', () => ({
@@ -79,6 +80,38 @@ describe('Progress page', () => {
     expect(screen.getByText('prep days in the last year')).toBeInTheDocument();
     fireEvent.click(screen.getAllByRole('button', { name: 'Log today' })[0]);
     expect(await screen.findByText('What did you do?')).toBeInTheDocument();
+  });
+
+  it('opens the header Log today button on today even after selecting a past day', async () => {
+    const todayKey = formatLocalDate(new Date());
+    progressService.listTracks.mockResolvedValue([track]);
+    progressService.listLogsByDate.mockImplementation((date) => Promise.resolve(
+      date === todayKey
+        ? [{
+          id: 'log-today',
+          trackId: 'track-1',
+          trackName: 'DSA',
+          logDate: todayKey,
+          didLog: true,
+          whatDidYouDo: 'Today note',
+          whatDidYouLearn: '',
+          metadata: {},
+        }]
+        : []
+    ));
+
+    renderPage();
+
+    expect(await screen.findByRole('heading', { name: 'DSA' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'heatmap-20' }));
+    await waitFor(() => {
+      expect(screen.queryByText('Today note')).not.toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'Log today' })[0]);
+
+    expect(await screen.findByLabelText('Date')).toHaveValue(todayKey);
+    expect(await screen.findByText('Today note')).toBeInTheDocument();
   });
 
   it('ignores stale day log responses when the selected date changes quickly', async () => {

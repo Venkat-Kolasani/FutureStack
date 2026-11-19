@@ -101,8 +101,14 @@ const Progress = () => {
       || null;
     setActiveTrack(targetTrack);
     setExistingLog(match);
-    setSelectedDate(date);
     setLogOpen(true);
+    if (date !== selectedDate) {
+      setSelectedDate(date);
+      loadDayLogs(date).catch((error) => {
+        console.error('Unable to load logs for date', error);
+        toast.error('Unable to load that day.');
+      });
+    }
   };
 
   const handleSaveLog = async (payload) => {
@@ -177,7 +183,7 @@ const Progress = () => {
           </div>
           <div className="flex gap-2">
             <Button variant="secondary" onClick={() => setCreateOpen(true)}>New track</Button>
-            <Button variant="primary" onClick={() => openLog()} disabled={activeTracks.length === 0}>
+            <Button variant="primary" onClick={() => openLog(null, todayKey)} disabled={activeTracks.length === 0}>
               Log today
             </Button>
           </div>
