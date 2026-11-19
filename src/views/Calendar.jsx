@@ -24,36 +24,41 @@ const CalendarPage = () => {
   const [upcomingRounds, setUpcomingRounds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [activeStartDate, setActiveStartDate] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
   const [showModal, setShowModal] = useState(false);
   const [selectedDateOpportunities, setSelectedDateOpportunities] = useState([]);
   const [selectedDateRounds, setSelectedDateRounds] = useState([]);
 
   useEffect(() => {
+    let cancelled = false;
+    const fetchData = async () => {
+      try {
+        // Include neighboring-month days shown at either edge of the calendar.
+        const from = new Date(activeStartDate.getFullYear(), activeStartDate.getMonth(), -6);
+        const to = new Date(activeStartDate.getFullYear(), activeStartDate.getMonth() + 1, 7);
+        const dateKey = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+
+        const [opps, rounds] = await Promise.all([
+          opportunityService.getAll(),
+          roundService.listUpcoming({ from: dateKey(from), to: dateKey(to) }),
+        ]);
+        if (!cancelled) {
+          setOpportunities(opps);
+          setUpcomingRounds(rounds);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          console.error('Error fetching calendar data:', error);
+          toast.error('Failed to load calendar');
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    setUpcomingRounds([]);
     fetchData();
-  }, []);
-
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      const today = new Date();
-      const from = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-      const to = new Date(today.getFullYear(), today.getMonth() + 3, 0);
-      const fromStr = from.toISOString().slice(0, 10);
-      const toStr = to.toISOString().slice(0, 10);
-
-      const [opps, rounds] = await Promise.all([
-        opportunityService.getAll(),
-        roundService.listUpcoming({ from: fromStr, to: toStr }),
-      ]);
-      setOpportunities(opps);
-      setUpcomingRounds(rounds);
-    } catch (error) {
-      console.error('Error fetching calendar data:', error);
-      toast.error('Failed to load calendar');
-    } finally {
-      setLoading(false);
-    }
-  };
+    return () => { cancelled = true; };
+  }, [activeStartDate]);
 
   // Job applications are recorded after applying. The calendar only maps
   // hackathon submission dates; internship events come from interview rounds.
@@ -166,6 +171,8 @@ const CalendarPage = () => {
         <Card className="p-6">
           <div className="calendar-container">
             <ReactCalendar
+              activeStartDate={activeStartDate}
+              onActiveStartDateChange={({ activeStartDate }) => setActiveStartDate(activeStartDate)}
               onChange={handleDateClick}
               value={selectedDate}
               tileContent={tileContent}
