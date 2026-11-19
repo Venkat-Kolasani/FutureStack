@@ -182,7 +182,7 @@ Requires [`../supabase/migrations/20260715151132_progress_logger.sql`](../supaba
 | GET | `/api/v1/progress/heatmap` | Yearly logged-day heatmap (optional `end` date) |
 | GET | `/api/v1/progress/logs/date/:date` | Logs for one calendar date |
 | GET | `/api/v1/progress/logs/:trackId` | Logs for one track |
-| POST | `/api/v1/progress/logs` | Create a daily log for an owned track |
+| POST | `/api/v1/progress/logs` | Create or replace the daily log for an owned track and date (upsert on track + date) |
 | PATCH/DELETE | `/api/v1/progress/logs/:id` | Update or delete a log |
 
 ### Notifications and background jobs
