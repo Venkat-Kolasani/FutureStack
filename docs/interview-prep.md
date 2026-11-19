@@ -19,13 +19,13 @@ Interview **round tracking** (`opportunity_rounds`) answers *where you are in th
 | Layer | What we built |
 |-------|----------------|
 | **Database** | `interview_prep`, `interview_questions`, `technical_topics`, `behavioral_prep` — see [`interview-prep-migration.sql`](interview-prep-migration.sql) |
-| **Backend** | `/api/v1/interview-prep/*` routes with Zod validation and internship-only guards |
+| **Backend** | `/api/v1/interview-prep/*` routes with Joi validation and internship-only guards |
 | **Frontend** | `InterviewPrepDetail` page + six panel components under `src/components/interview-prep/` |
 | **Entry point** | Internship detail drawer → **Interview Prep** → `/internships/:id/prep` |
 
 **Scope:** internships only (`category === 'internship'`). Hackathons use the collaboration workspace instead.
 
-**Architecture rule:** all prep reads/writes go through Express (`interviewPrepService` in `src/services/api.js`). No `supabase.from()` for prep data in the frontend.
+**Architecture rule:** all prep reads/writes go through Express (`interviewPrepService` in `src/services/api.ts`). No `supabase.from()` for prep data in the frontend.
 
 ---
 
@@ -161,7 +161,7 @@ Validation schemas live in `backend/src/validation/interview-prep-schemas.js`. I
 
 ```
 src/
-├── pages/InterviewPrepDetail.jsx       # Route: /internships/:id/prep
+├── views/InterviewPrepDetail.jsx       # Route: /internships/[id]/prep
 ├── components/interview-prep/
 │   ├── PrepProgressBar.jsx
 │   ├── CompanyResearchPanel.jsx
@@ -171,7 +171,7 @@ src/
 │   └── ReflectionPanel.jsx
 ├── components/opportunities/
 │   └── OpportunityDetailModal.jsx      # "Interview Prep" button (internships only)
-└── services/api.js                     # interviewPrepService
+└── services/api.ts                     # interviewPrepService
 ```
 
 ### Loading pattern

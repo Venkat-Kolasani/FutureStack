@@ -1,6 +1,6 @@
 # AI Resume Checker
 
-> **Rollout status:** The API, persistence layer, provider settings, and UI components are implemented, but the user-facing controls are currently disabled by `AI_RESUME_CHECK_ENABLED = false` in `src/config/features.js`. This guide documents the implementation and the requirements to enable it safely; it does not mean the feature is live in the product.
+> **Rollout status:** The API, persistence layer, provider settings, and UI components are implemented, but the user-facing controls are currently disabled by `AI_RESUME_CHECK_ENABLED = false` in `src/config/features.ts`. This guide documents the implementation and the requirements to enable it safely; it does not mean the feature is live in the product.
 
 > **Feature:** Agentic AI-powered resume evaluation inside the FutureTracker Documents vault.
 > Scores overall quality across four evidence-backed categories, surfaces GitHub signals, and
@@ -192,8 +192,8 @@ Pull the model first: `ollama pull qwen2.5`
 |---|---|
 | `src/components/documents/AiResumeCheckPanel.jsx` | Score ring, category bars, strengths, suggestions, GitHub signals, evidence, disclaimer |
 | `src/components/documents/DocumentCard.jsx` | "AI Resume Check" button (violet, resume+non-external only) wired to `onAiCheck` prop |
-| `src/pages/Documents.jsx` | `handleAiCheck` handler, `aiCheckingId` state, `aiCheckResults` map |
-| `src/services/api.js` | `resumeCheckerService.runCheck()` and `.getCheck()` |
+| `src/views/Documents.jsx` | `handleAiCheck` handler, `aiCheckingId` state, `aiCheckResults` map |
+| `src/services/api.ts` | `resumeCheckerService.runCheck()` and `.getCheck()` |
 
 ---
 

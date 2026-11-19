@@ -19,7 +19,7 @@ This is the source of truth for the repository's product status. It distinguishe
 | Hackathon submission reminders | Available, scheduler-configured | Transactional outbox writes in-app notifications for hackathon submission dates. Optional GitHub Actions dispatcher is best-effort on the free tier. |
 | Optional Resend email reminders | Implemented, migration/config-gated | User opt-in on the Notifications page; dispatcher sends after in-app notification when `REMINDER_EMAILS_ENABLED` and Resend env vars are set. Missing `users.email` is resolved from Clerk at send time. |
 | Read-only share links | Available | Expiring or revocable snapshots with optional passcode verification. |
-| AI Resume Checker | Implemented, UI gated | Backend pipeline, persistence, provider settings, and tests exist. `AI_RESUME_CHECK_ENABLED` is `false` in `src/config/features.js`. |
+| AI Resume Checker | Implemented, UI gated | Backend pipeline, persistence, provider settings, and tests exist. `AI_RESUME_CHECK_ENABLED` is `false` in `src/config/features.ts`. |
 | Tags, bulk import/export, advanced filters | Planned | See [future.md](future.md). |
 | Progress Logger | Available | `/progress` now logs real prep tracks against `/api/v1/progress`. The heatmap is live user data, not a mock. |
 

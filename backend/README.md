@@ -86,6 +86,7 @@ Nested under opportunities. See [`../docs/interview-rounds.md`](../docs/intervie
 | POST | `/api/v1/opportunities/:id/rounds` | Accepts optional `scheduled_date` / `scheduled_time` after the rounds active-events migration; returns `{ round, opportunity, rounds }` |
 | PATCH | `/api/v1/opportunities/:id/rounds/:roundId` | Updates optional scheduling and syncs parent status |
 | DELETE | `/api/v1/opportunities/:id/rounds/:roundId` | Re-syncs after delete |
+| GET | `/api/v1/opportunities/rounds/upcoming?from=YYYY-MM-DD&to=YYYY-MM-DD` | Pending internship rounds scheduled in the date range (dashboard and calendar) |
 
 ### Interview prep (internships)
 
@@ -148,7 +149,7 @@ Authenticated owners manage links through `/api/v1/share-links`; viewers use the
 
 ### Hackathons
 
-Team collaboration workspace. Its UI lives in `src/pages/HackathonDetail.jsx` and `src/components/hackathons/`; apply [`../docs/hackathon-collaboration-migration.sql`](../docs/hackathon-collaboration-migration.sql) before using it against a new database.
+Team collaboration workspace. Its UI lives in `src/views/HackathonDetail.jsx` (route `/hackathons/[id]`, invite acceptance at `/hackathons/invites/[token]`) and `src/components/hackathons/`; apply [`../docs/hackathon-collaboration-migration.sql`](../docs/hackathon-collaboration-migration.sql) before using it against a new database.
 
 Apply the July 16 migrations through `20260716100000_review_hardening.sql` in timestamp order after the base collaboration schema before deploying these routes. The membership migration backfills team owners, stores only hashed invite tokens, and makes the API role checks effective; the hardening migration preserves owner roles during invite redemption and adds the final vote-count invariant.
 
@@ -170,12 +171,28 @@ Owners manage the team, roster, and invites; editors may change workspace conten
 |--------|----------|-------------|
 | GET | `/api/v1/analytics` | Dashboard stats and chart data |
 
+### Progress logger
+
+Requires [`../supabase/migrations/20260715151132_progress_logger.sql`](../supabase/migrations/20260715151132_progress_logger.sql) and its follow-up track-owner migration.
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET/POST | `/api/v1/progress/tracks` | List or create the user's learning tracks |
+| PATCH/DELETE | `/api/v1/progress/tracks/:id` | Update or delete a track |
+| GET | `/api/v1/progress/heatmap` | Yearly logged-day heatmap (optional `end` date) |
+| GET | `/api/v1/progress/logs/date/:date` | Logs for one calendar date |
+| GET | `/api/v1/progress/logs/:trackId` | Logs for one track |
+| POST | `/api/v1/progress/logs` | Create or replace the daily log for an owned track and date (upsert on track + date) |
+| PATCH/DELETE | `/api/v1/progress/logs/:id` | Update or delete a log |
+
 ### Notifications and background jobs
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/api/v1/notifications` | List the authenticated user's in-app reminders |
 | PATCH | `/api/v1/notifications/:id/read` | Mark one notification as read |
+| GET | `/api/v1/notification-preferences` | Read the user's email deadline-reminder opt-in |
+| PUT | `/api/v1/notification-preferences` | Set `{ deadlineEmailEnabled: boolean }` |
 | POST | `/api/v1/internal/jobs/dispatch` | Token-protected reminder dispatcher for GitHub Actions |
 | GET | `/api/v1/admin/jobs/dead` | Configured-admin visibility into dead-letter jobs |
 
@@ -248,7 +265,9 @@ backend/
 │   │           └── index.js
 │   ├── middleware/
 │   │   ├── auth.js            # Clerk JWT verification
-│   │   └── validate.js        # Request validation
+│   │   ├── aiLimiter.js       # AI-check rate limit
+│   │   ├── requireJobAdmin.js / requireJobDispatcher.js
+│   │   └── validate.js        # Joi request validation
 │   ├── routes/
 │   │   ├── opportunities.js
 │   │   ├── opportunity-rounds.js
@@ -259,7 +278,13 @@ backend/
 │   │   ├── share-links.js     # Authenticated share management
 │   │   ├── public-share-links.js
 │   │   ├── hackathons.js
-│   │   └── analytics.js
+│   │   ├── analytics.js
+│   │   ├── upcoming-rounds.js # Mounted under /opportunities/rounds
+│   │   ├── progress.js        # Progress logger
+│   │   ├── notifications.js
+│   │   ├── notification-preferences.js
+│   │   ├── internal-jobs.js   # Token-protected outbox dispatcher
+│   │   └── admin-jobs.js      # Dead-letter job view
 │   └── validation/            # Schemas per route module
 ├── tests/
 │   ├── integration/
@@ -268,4 +293,4 @@ backend/
 └── package.json
 ```
 
-**Frontend integration:** all calls go through `src/services/api.js` — see [`../docs/CODEBASE_GUIDE.md`](../docs/CODEBASE_GUIDE.md).
+**Frontend integration:** all calls go through `src/services/api.ts` — see [`../docs/CODEBASE_GUIDE.md`](../docs/CODEBASE_GUIDE.md).

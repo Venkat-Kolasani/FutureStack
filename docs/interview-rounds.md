@@ -34,6 +34,7 @@
 | POST | `/api/v1/opportunities/:opportunityId/rounds` | Create round (auto `round_number` if omitted) |
 | PATCH | `/api/v1/opportunities/:opportunityId/rounds/:roundId` | Update type, scheduled date/time, result, notes |
 | DELETE | `/api/v1/opportunities/:opportunityId/rounds/:roundId` | Delete round; re-sync parent opportunity |
+| GET | `/api/v1/opportunities/rounds/upcoming?from=YYYY-MM-DD&to=YYYY-MM-DD` | Pending internship rounds with a scheduled date in range (dashboard and calendar) |
 
 ### Mutation response shape (POST / PATCH / DELETE)
 
@@ -114,7 +115,7 @@ The modal stayed on **Saving…** until both completed, even after the create re
 | `backend/src/routes/opportunity-rounds.js` | Optimized create/update/delete flow |
 | `backend/src/lib/syncOpportunityFromRounds.js` | Optional `existingStatus` + `rounds` to skip reads |
 | `src/components/opportunities/OpportunityDetailModal.jsx` | `applyRoundMutationResult()` — no post-save refetch |
-| `src/services/api.js` | `roundService` |
+| `src/services/api.ts` | `roundService` |
 
 ### Interview one-liner
 
@@ -129,8 +130,8 @@ src/components/rounds/
 ├── RoundTimeline.jsx    # Vertical stepper (presentational)
 └── AddRoundModal.jsx    # Create / edit form
 
-src/utils/roundHelpers.js   # Labels, enums, card summary text
-src/services/api.js           # roundService
+src/utils/roundHelpers.ts   # Labels, enums, card summary text
+src/services/api.ts         # roundService
 ```
 
 **Integration points:**

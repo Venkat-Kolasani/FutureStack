@@ -39,13 +39,13 @@ ATS-related columns on `documents`:
 | POST | `/:id/assign` | Link document to opportunity |
 | DELETE | `/:id/unassign/:opportunityId` | Remove link |
 
-Frontend service: `documentService` in `src/services/api.js`.
+Frontend service: `documentService` in `src/services/api.ts`.
 
 ### UI
 
 ```
 src/
-├── pages/Documents.jsx
+├── views/Documents.jsx
 └── components/documents/
     ├── DocumentUpload.jsx        # Upload + ATS analysis on save
     ├── DocumentCard.jsx          # Shows document metadata and ATS score badge
@@ -61,7 +61,7 @@ src/
 
 ### Module
 
-`src/utils/atsScorer.js`
+`src/utils/atsScorer.ts`
 
 | Export | Purpose |
 |--------|---------|
@@ -84,7 +84,7 @@ Keywords (`KEYWORDS` array) are **suggested** to the user but do **not** change 
 sequenceDiagram
     participant U as User
     participant UI as DocumentUpload
-    participant ATS as atsScorer.js
+    participant ATS as atsScorer.ts
     participant API as POST/PATCH /api/v1/documents
 
     U->>UI: Select PDF or DOCX

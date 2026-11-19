@@ -34,7 +34,7 @@ FutureStack/
 │       ├── app.js                # Express app, middleware, route mounting
 │       ├── middleware/auth.js    # Clerk JWT → internal user id
 │       ├── routes/               # REST handlers per domain
-│       ├── validation/           # Zod/Joi-style request schemas
+│       ├── validation/           # Joi request schemas (shared validate middleware)
 │       └── lib/                  # Supabase admin client, sync helpers
 ├── extensions/                   # Chrome MV3 opportunity saver
 │   ├── src/content.js            # Optional on-demand page metadata listener
@@ -90,6 +90,7 @@ sequenceDiagram
 | `/internships/[id]/prep` | `InterviewPrepDetail.jsx` | ✅ | Interview prep workspace |
 | `/hackathons` | `HackathonList.jsx` | ✅ | |
 | `/hackathons/[id]` | `HackathonDetail.jsx` | ✅ | Team, ideas, tasks, checklist |
+| `/hackathons/invites/[token]` | `AcceptTeamInvite.jsx` | ✅ | Redeems a single-use team invite |
 | `/status-board` | `StatusBoard.jsx` | ✅ | Kanban + realtime |
 | `/calendar` | `Calendar.jsx` | ✅ | |
 | `/documents` | `Documents.jsx` | ✅ | Upload, document links, ATS analysis, and gated AI controls |
@@ -116,12 +117,14 @@ sequenceDiagram
 | `/api/v1/ai-settings` | `routes/ai-settings.js` | Encrypted user AI-provider settings |
 | `/api/v1/notifications` | `routes/notifications.js` | Authenticated in-app hackathon-submission reminders |
 | `/api/v1/notification-preferences` | `routes/notification-preferences.js` | Email deadline-reminder opt-in |
+| `/api/v1/progress` | `routes/progress.js` | Progress logger tracks, daily logs, heatmap |
+| `/api/v1/me` | `app.js` | Current Clerk and internal user ids |
 | `/api/v1/internal/jobs/dispatch` | `routes/internal-jobs.js` | Token-protected outbox dispatcher |
 | `/api/v1/admin/jobs/dead` | `routes/admin-jobs.js` | Configured-admin dead-letter view |
 | `/api/v1/health` | `app.js` | Liveness |
 | `/api/v1/health/deps` | `app.js` | Supabase, AI-table, reminder-outbox, and Resend configuration readiness |
 
-Round-specific logic also lives in `routes/opportunity-rounds.js` (mounted from opportunities router) and `lib/syncOpportunityFromRounds.js`.
+Round-specific logic also lives in `routes/opportunity-rounds.js` and `routes/upcoming-rounds.js` (both mounted from the opportunities router; the latter serves `GET /opportunities/rounds/upcoming`) and `lib/syncOpportunityFromRounds.js`.
 
 The AI resume check pipeline lives in `lib/resume-agent/` (extract → parse → github → evaluate)
 and the provider-agnostic LLM layer in `lib/llm/`. See [`ai-resume-checker.md`](ai-resume-checker.md).
@@ -133,7 +136,7 @@ and the provider-agnostic LLM layer in `lib/llm/`. See [`ai-resume-checker.md`](
 | Export | Backend prefix |
 |--------|----------------|
 | `opportunityService` | `/opportunities` |
-| `roundService` | `/opportunities/:id/rounds` |
+| `roundService` | `/opportunities/:id/rounds`, `/opportunities/rounds/upcoming` |
 | `documentService` | `/documents` |
 | `resumeCheckerService` | `/documents/:id/ai-check` |
 | `aiSettingsService` | `/ai-settings` |
@@ -143,6 +146,7 @@ and the provider-agnostic LLM layer in `lib/llm/`. See [`ai-resume-checker.md`](
 | `shareLinkService` | `/share-links`, `/public/share-links` |
 | `notificationService` | `/notifications` |
 | `notificationPreferenceService` | `/notification-preferences` |
+| `progressService` | `/progress/tracks`, `/progress/logs`, `/progress/heatmap` |
 
 Always add new endpoints here — pages should not construct URLs manually.
 
@@ -159,6 +163,7 @@ Always add new endpoints here — pages should not construct URLs manually.
 | Dashboard share links | [`share-links.md`](share-links.md) | `share-links-migration.sql`, `supabase/migrations/20260624163000_create_share_links.sql`, `supabase/migrations/20260624171000_add_recoverable_share_tokens.sql` |
 | Hackathon collaboration | `src/views/HackathonDetail.jsx` and `src/components/hackathons/` | `hackathon-collaboration-migration.sql`, `20260716081332_idempotent_idea_votes.sql`, `20260716083209_team_memberships_and_invites.sql`, `20260716100000_review_hardening.sql` |
 | Active events and reminders | `backend/src/routes/upcoming-rounds.js`, `backend/src/lib/reminderJobs.js`, `backend/src/lib/reminderEmail.js`, `backend/src/lib/clerkEmail.js`, `.github/workflows/dispatch-reminders.yml` | `20260716110000_rounds_drive_active_events.sql`, `20260716082400_transactional_reminder_outbox.sql`, `20260716100000_review_hardening.sql`, `20260716120000_optional_email_reminders.sql`, `20260716123000_user_notification_preferences.sql` |
+| Progress logger | `src/views/Progress.jsx`, `src/components/progress/`, `backend/src/routes/progress.js` | `20260715151132_progress_logger.sql`, `20260715154000_progress_logger_track_owner_fk.sql` |
 | Architecture & challenges | [`DOCUMENTATION.md`](DOCUMENTATION.md) | `supabase-schema.sql` |
 | Testing & CI | [`TESTING.md`](TESTING.md) | — |
 | Security | [`SECURITY.md`](SECURITY.md) | — |
@@ -193,7 +198,7 @@ cd backend && npm run dev    # :3001
 npm run dev                    # :3000
 ```
 
-Env files: `.env` (frontend), `backend/.env` (API). See README **Environment Variables**.
+Env files: `.env` (frontend), `backend/.env` (API). See README **Configuration**.
 
 Before a PR:
 
