@@ -100,7 +100,7 @@ Analysis happens **before** upload. The server stores the client-computed score;
 ### Dependencies
 
 - `mammoth` — DOCX → text
-- `pdfjs-dist` — PDF text extraction (`public/pdf.worker.min.js`)
+- `pdfjs-dist` — PDF text extraction. Next.js bundles the worker from the same installed package as the parser.
 
 ### Tests
 
