@@ -51,7 +51,7 @@ The browser uses `src/services/api.ts` for application data. Direct Supabase CRU
 
 ### Prerequisites
 
-- Node.js 20 or later
+- Node.js 24 LTS (`nvm install` from the repository root)
 - A Clerk application
 - A Supabase project
 
