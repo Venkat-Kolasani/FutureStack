@@ -176,7 +176,7 @@ export type OpportunityPage = {
 };
 
 export const opportunityService = {
-    getAll: async (): Promise<Opportunity[]> => {
+    getAll: async ({ category }: { category?: OpportunityCategory } = {}): Promise<Opportunity[]> => {
         const items: Opportunity[] = [];
         let cursor: string | null = null;
 
@@ -184,6 +184,7 @@ export const opportunityService = {
             const response: AxiosResponse<OpportunityPage> = await api.get<OpportunityPage>('/opportunities', {
                 params: {
                     limit: 100,
+                    ...(category ? { category } : {}),
                     ...(cursor ? { cursor } : {}),
                 },
             });

@@ -203,6 +203,8 @@ The limits protect a free-tier personal-productivity service from accidental loo
 
 Opportunity lists use cursor pagination rather than `OFFSET`: results are sorted by `(created_at DESC, id DESC)`, a cursor encodes the last row, and the API reads `limit + 1` rows to determine `nextCursor`. That ordering stays stable while new opportunities are inserted and avoids walking an ever-larger offset. The matching composite index must be justified with a realistic `EXPLAIN (ANALYZE, BUFFERS)` benchmark before claiming a performance gain; see [ADR-002](adr/ADR-002-pagination-and-indexes.md).
 
+The Internships page sends `category=internship` on every opportunity page request while applying search, status, and campus-mode filters locally.
+
 ### Authentication and internal identity
 
 `backend/src/middleware/auth.js`:
