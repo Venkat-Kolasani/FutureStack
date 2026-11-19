@@ -8,6 +8,7 @@ describe('apiKeyVault', () => {
     it('encrypts and decrypts an API key round-trip', () => {
         const original = 'AIzaSyTestKey1234567890';
         const encrypted = encryptApiKey(original);
+        expect(Buffer.from(encrypted.api_key_auth_tag, 'base64')).toHaveLength(16);
         const decrypted = decryptApiKey(encrypted);
         expect(decrypted).toBe(original);
     });
@@ -20,11 +21,11 @@ describe('apiKeyVault', () => {
         expect(keyHint('AIzaSyTestKey7890')).toBe('…7890');
     });
 
-    it('tryDecryptApiKey reports failure on corrupt ciphertext without throwing', () => {
+    it('tryDecryptApiKey reports failure on a short tag without throwing', () => {
         const encrypted = encryptApiKey('AIzaSyTestKey1234567890');
         const tampered = {
             ...encrypted,
-            api_key_auth_tag: Buffer.from('bad-auth-tag!!').toString('base64'),
+            api_key_auth_tag: Buffer.alloc(12).toString('base64'),
         };
         expect(tryDecryptApiKey(tampered)).toEqual({ key: null, failed: true });
     });
