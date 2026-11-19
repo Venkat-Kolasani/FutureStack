@@ -15,7 +15,9 @@ export function MarketingDoc({ children }: { children: React.ReactNode }) {
             <Link href="/">Open app</Link>
           </div>
         </nav>
-        {children}
+        <main id="main-content" tabIndex={-1}>
+          {children}
+        </main>
         <footer className="foot">
           <p>
             © FutureTracker · <Link href="/about">About</Link> · <Link href="/privacy">Privacy</Link> ·{' '}
