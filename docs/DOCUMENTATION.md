@@ -417,7 +417,7 @@ The preparation workspace is intentionally separate from the interview timeline.
 
 ### Documents and ATS guidance
 
-For PDF/DOCX documents, `atsScorer.js` extracts text in the browser using `pdfjs-dist` and `mammoth`, then applies transparent heuristics for sections, content density, contact information, and ATS-friendly length. The result is stored alongside the document.
+For PDF/DOCX documents, `atsScorer.ts` extracts text in the browser using `pdfjs-dist` and `mammoth`, then applies transparent heuristics for sections, content density, contact information, and ATS-friendly length. The result is stored alongside the document.
 
 This is intentionally labelled as guidance, not an official ATS score. A transparent rule-based score is fast, free, works offline from the API after the file is available, and gives deterministic feedback. It does not claim to reproduce a recruiter's or vendor ATS's ranking algorithm.
 
@@ -513,7 +513,7 @@ The public endpoint returns only the snapshot after token/passcode checks. This 
 
 ### Tests that exist
 
-The repository includes frontend tests for route/render behavior and pure helpers such as date, opportunity, and ATS scoring utilities. The Chrome extension has parser tests for LinkedIn, Greenhouse, Lever, JSON-LD, and Open Graph fallbacks, plus a production build. Backend tests cover health, opportunities, analytics, documents, interview prep, rounds, share links, validation middleware, round synchronization, AI key vault behavior, resume-agent logic, and GitHub enrichment.
+The repository includes frontend tests for route/render behavior and pure helpers such as date, opportunity, and ATS scoring utilities. The Chrome extension has parser tests for LinkedIn, Greenhouse, Lever, JSON-LD, and Open Graph fallbacks, plus a production build. Backend tests cover health, opportunities, analytics, documents, interview prep, rounds, share links, hackathon collaboration, progress logging, notifications and notification preferences, the internal job dispatcher, auth, validation middleware, round synchronization, reminder jobs and email delivery, AI key vault behavior, resume-agent logic, and GitHub enrichment.
 
 Before a release or PR, the standard checks are:
 

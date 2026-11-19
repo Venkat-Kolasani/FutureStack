@@ -19,9 +19,10 @@ cd backend && npm test && cd ..
 npm run check:architecture
 ```
 
-Set these env vars for local builds if they are not already in `.env`:
+Set these env vars for local builds if they are not already in `.env`. `CI=true` is required with placeholder keys: without it, `src/lib/clerk.ts` treats `next build` as a production deployment and fails on `/about` with "Clerk is not configured for a production deployment".
 
 ```bash
+export CI=true
 export NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_ci_placeholder
 export CLERK_SECRET_KEY=sk_test_ci_placeholder
 export NEXT_PUBLIC_API_URL=http://localhost:3001/api/v1
@@ -35,13 +36,13 @@ export NEXT_PUBLIC_API_URL=http://localhost:3001/api/v1
 | `src/components/*` or `src/views/*` | `npm run test:ci` + manual smoke steps below |
 | `backend/src/routes/*` or `backend/src/middleware/*` | `cd backend && npm test` — **add or update tests** in `backend/tests/` |
 | Reminder email (`backend/src/lib/reminderEmail.js`, `clerkEmail.js`, auth email backfill) | `cd backend && npm test -- reminderEmail clerkEmail auth` |
-| `backend/src/lib/validation.js` | `cd backend && npm test -- validation` |
+| `backend/src/validation/*` or `backend/src/middleware/validate.js` | `cd backend && npm test -- validation` |
 | `docs/*-migration.sql` or `supabase/migrations/*` | Manual: run migration on a dev Supabase project; document steps in the PR |
 | Dashboard share links (`share_links`, `/share/:token`, `shareLinkService`) | `cd backend && npm test -- share-links`, `npm run test:ci`, `npm run build`, manual flow in [`docs/share-links.md`](share-links.md#manual-verification) |
 | Interview rounds (`backend/src/routes/opportunity-rounds.js`, `src/components/rounds/*`) | `cd backend && npm test -- rounds`, manual flow in [`docs/interview-rounds.md`](interview-rounds.md#testing) |
 | Interview prep (`backend/src/routes/interview-prep.js`, `src/components/interview-prep/*`) | `cd backend && npm test -- interview-prep`, manual flow in [`docs/interview-prep.md`](interview-prep.md#testing) |
 | Progress logger (`backend/src/routes/progress.js`, `src/views/Progress.jsx`) | `cd backend && npm test -- progress`, `npm run test:ci -- --testPathPattern=Progress.test` |
-| ATS scorer (`src/utils/atsScorer.js`, `DocumentUpload.jsx`) | `npm test -- atsScorer`, upload PDF/DOCX on `/documents` |
+| ATS scorer (`src/utils/atsScorer.ts`, `DocumentUpload.jsx`) | `npm test -- atsScorer`, upload PDF/DOCX on `/documents` |
 | Chrome extension (`extensions/**`) | `cd extensions && npm ci && npm test && npm run build`; follow the extension manual flow below |
 
 ### Backend route changes require tests
@@ -168,6 +169,7 @@ GitHub Actions workflow [`.github/workflows/ci.yml`](../.github/workflows/ci.yml
 | **frontend** | `npm ci`, `npm run build`, `npm run test:ci` |
 | **backend** | `cd backend && npm ci && npm test` |
 | **architecture** | `npm run check:architecture` |
+| **seo** | `npm ci`, `npm run test:seo` |
 | **extension** | `cd extensions && npm ci && npm test && npm run build` |
 | **audit** | Root and backend `npm audit --audit-level=high` (informational; does not block merge) |
 
