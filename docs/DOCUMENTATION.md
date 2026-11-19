@@ -454,7 +454,7 @@ The free implementation deliberately separates *durable work* from *best-effort 
 
 ### Optional Resend email delivery
 
-An **in-app notification** here means a row persisted in `user_notifications`, shown to the signed-in user on the website's bell-icon **Notifications** page. It is not a browser push notification and it does not require the browser to be open when the reminder is generated. The page loads the user's own notification rows, lets them mark a row read, and contains the email preference toggle.
+An **in-app notification** here means a row persisted in `user_notifications`, shown to the signed-in user on the website's bell-icon **Notifications** page. It is not a browser push notification and it does not require the browser to be open when the reminder is generated. The page loads the user's own notification rows, lets them mark a row read, and contains the email preference toggle. Loaded notifications remain visible if fetching the email preference fails.
 
 The email channel follows [ADR-007](adr/ADR-007-optional-email-reminders.md) and [ADR-008](adr/ADR-008-user-controlled-email-reminders.md). It runs **after** the idempotent website notification is written and only when two independent conditions are true: the deployment has `REMINDER_EMAILS_ENABLED=true`, `RESEND_API_KEY`, and `REMINDER_EMAIL_FROM`; and that user has selected **Email deadline reminders**. The preference is default-off to avoid assuming consent, but it is the user's choice—not an administrator-controlled product choice.
 

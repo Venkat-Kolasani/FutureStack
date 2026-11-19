@@ -51,6 +51,24 @@ describe('Notifications page', () => {
     expect(screen.getByRole('button', { name: 'Mark read' })).toBeInTheDocument();
   });
 
+  it('shows in-app notifications when loading email preferences fails', async () => {
+    const error = new Error('Email preferences unavailable');
+    notificationPreferenceService.get.mockRejectedValueOnce(error);
+    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+    try {
+      renderPage();
+
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith('Unable to load notification settings. Please try again.');
+      });
+      expect(await screen.findByText('Deadline tomorrow')).toBeInTheDocument();
+      expect(screen.queryByText('No notifications yet')).not.toBeInTheDocument();
+    } finally {
+      consoleError.mockRestore();
+    }
+  });
+
   it('saves the user-selected email preference', async () => {
     notificationPreferenceService.update.mockResolvedValue({
       deadlineEmailEnabled: true,
