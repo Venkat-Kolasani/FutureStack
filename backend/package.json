@@ -35,7 +35,7 @@
         "multer": "^2.0.2",
         "ollama-ai-provider": "^1.2.0",
         "pdf-parse": "^2.4.5",
-        "zod": "^4.4.3"
+        "zod": "^4.6.7"
     },
     "devDependencies": {
         "jest": "^29.7.0",
