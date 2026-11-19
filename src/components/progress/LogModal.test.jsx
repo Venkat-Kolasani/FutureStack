@@ -66,4 +66,50 @@ describe('LogModal', () => {
       mood: null,
     }));
   });
+
+  it('starts a blank entry instead of copying notes when an edit switches tracks', () => {
+    const devTrack = { id: 'track-2', name: 'Dev', templateType: 'dev' };
+    const existingLog = {
+      id: 'log-1',
+      trackId: 'track-1',
+      logDate: '2026-08-21',
+      didLog: true,
+      whatDidYouDo: 'Two graph problems',
+      whatDidYouLearn: 'BFS layers',
+      metadata: { problems: '2' },
+      mood: 'moderate',
+    };
+    const onSave = jest.fn().mockResolvedValue(undefined);
+    render(
+      <LogModal
+        isOpen
+        onClose={jest.fn()}
+        track={track}
+        tracks={[track, devTrack]}
+        date="2026-08-21"
+        existingLog={existingLog}
+        onSave={onSave}
+      />
+    );
+
+    const notes = () => screen.getByPlaceholderText('3 graph problems, including a timed medium');
+    expect(screen.getByText('Edit DSA')).toBeInTheDocument();
+    expect(notes()).toHaveValue('Two graph problems');
+
+    fireEvent.change(screen.getByRole('combobox', { name: 'Track' }), { target: { value: 'track-2' } });
+
+    expect(notes()).toHaveValue('');
+    expect(screen.getByText('Log Dev')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Visited-set belongs on the node, not the edge')).toHaveValue('');
+    expect(screen.getByRole('button', { name: 'Moderate' })).not.toHaveClass('bg-blue-600');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save log' }));
+    expect(onSave).not.toHaveBeenCalled();
+
+    fireEvent.change(screen.getByRole('combobox', { name: 'Track' }), { target: { value: 'track-1' } });
+
+    expect(screen.getByText('Edit DSA')).toBeInTheDocument();
+    expect(notes()).toHaveValue('Two graph problems');
+    expect(screen.getByPlaceholderText('3')).toHaveValue(2);
+  });
 });
