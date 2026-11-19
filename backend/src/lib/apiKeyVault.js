@@ -9,6 +9,7 @@ const crypto = require('crypto');
 
 const ALGORITHM = 'aes-256-gcm';
 const IV_BYTES = 12;
+const AUTH_TAG_LENGTH = 16;
 
 function getEncryptionKey() {
     const secret = process.env.AI_KEY_ENCRYPTION_KEY
@@ -23,7 +24,7 @@ function getEncryptionKey() {
 function encryptApiKey(apiKey) {
     const key = getEncryptionKey();
     const iv = crypto.randomBytes(IV_BYTES);
-    const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
+    const cipher = crypto.createCipheriv(ALGORITHM, key, iv, { authTagLength: AUTH_TAG_LENGTH });
     const ciphertext = Buffer.concat([cipher.update(apiKey, 'utf8'), cipher.final()]);
     const authTag = cipher.getAuthTag();
 
@@ -43,7 +44,8 @@ function decryptApiKey(row) {
     const decipher = crypto.createDecipheriv(
         ALGORITHM,
         key,
-        Buffer.from(row.api_key_iv, 'base64')
+        Buffer.from(row.api_key_iv, 'base64'),
+        { authTagLength: AUTH_TAG_LENGTH }
     );
     decipher.setAuthTag(Buffer.from(row.api_key_auth_tag, 'base64'));
     return Buffer.concat([

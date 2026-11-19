@@ -2,6 +2,7 @@ const crypto = require('crypto');
 
 const TOKEN_BYTES = 32;
 const TOKEN_IV_BYTES = 12;
+const TOKEN_AUTH_TAG_LENGTH = 16;
 const PASSCODE_SALT_BYTES = 16;
 const PASSCODE_ITERATIONS = 120000;
 const PASSCODE_KEY_LENGTH = 32;
@@ -47,7 +48,9 @@ function encryptShareToken(token) {
     }
 
     const iv = crypto.randomBytes(TOKEN_IV_BYTES);
-    const cipher = crypto.createCipheriv(TOKEN_ENCRYPTION_ALGORITHM, key, iv);
+    const cipher = crypto.createCipheriv(TOKEN_ENCRYPTION_ALGORITHM, key, iv, {
+        authTagLength: TOKEN_AUTH_TAG_LENGTH,
+    });
     const ciphertext = Buffer.concat([cipher.update(token, 'utf8'), cipher.final()]);
     const authTag = cipher.getAuthTag();
 
@@ -72,7 +75,8 @@ function decryptShareToken(share) {
         const decipher = crypto.createDecipheriv(
             TOKEN_ENCRYPTION_ALGORITHM,
             key,
-            Buffer.from(share.token_iv, 'base64')
+            Buffer.from(share.token_iv, 'base64'),
+            { authTagLength: TOKEN_AUTH_TAG_LENGTH }
         );
         decipher.setAuthTag(Buffer.from(share.token_auth_tag, 'base64'));
         return Buffer.concat([
