@@ -41,6 +41,19 @@
 .marketing-root .nav-links { display: flex; flex-wrap: wrap; gap: 0.9rem; font-size: 0.95rem; }
 .marketing-root .nav-links a { color: var(--muted); text-decoration: none; }
 .marketing-root .nav-links a:hover { color: var(--fg); }
+.marketing-root #main-content:focus-visible {
+  position: relative;
+  outline: none;
+}
+.marketing-root #main-content:focus-visible::before {
+  content: "";
+  position: absolute;
+  inset-block-start: 0.125rem;
+  inset-inline-start: -0.75rem;
+  block-size: 1.5rem;
+  border-inline-start: 3px solid currentColor;
+  border-radius: 0.125rem;
+}
 .marketing-root .eyebrow { color: var(--accent); font-size: 0.8rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
 .marketing-root h1 { font-family: var(--font-fraunces), Georgia, serif; font-size: clamp(2rem, 5vw, 2.75rem); line-height: 1.15; margin: 0.4rem 0 1rem; }
 .marketing-root h2 { font-family: var(--font-fraunces), Georgia, serif; font-size: 1.45rem; margin: 2.25rem 0 0.75rem; }
