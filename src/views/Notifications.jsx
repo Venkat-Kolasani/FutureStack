@@ -16,21 +16,28 @@ const Notifications = () => {
   const [isSavingPreference, setIsSavingPreference] = useState(false);
 
   const loadNotifications = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const [notificationItems, preference] = await Promise.all([
-        notificationService.list({ limit: 50 }),
-        notificationPreferenceService.get(),
-      ]);
-      setNotifications(notificationItems);
+    setIsLoading(true);
+    const [notificationItems, emailPreference] = await Promise.allSettled([
+      notificationService.list({ limit: 50 }),
+      notificationPreferenceService.get(),
+    ]);
+
+    if (notificationItems.status === 'fulfilled') {
+      setNotifications(notificationItems.value);
+    } else {
+      console.error('Unable to load notifications:', notificationItems.reason);
+      toast.error('Unable to load notifications. Please try again.');
+    }
+
+    if (emailPreference.status === 'fulfilled') {
+      const preference = emailPreference.value;
       setDeadlineEmailEnabled(preference.deadlineEmailEnabled);
       setEmailDeliveryAvailable(preference.emailDeliveryAvailable);
-    } catch (error) {
-      console.error('Unable to load notification settings:', error);
+    } else {
+      console.error('Unable to load notification settings:', emailPreference.reason);
       toast.error('Unable to load notification settings. Please try again.');
-    } finally {
-      setIsLoading(false);
     }
+    setIsLoading(false);
   }, []);
 
   useEffect(() => {
