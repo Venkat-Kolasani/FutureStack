@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
  * InternshipList - Page showing internship-type opportunities
  *
  * Features:
- * - Loads all opportunities from API and filters by category === 'internship'
+ * - Loads only internship opportunities from the API
  * - Client-side search and status filtering
  * - OpportunityDetailModal for viewing full details
  * - Delete confirmation modal
@@ -57,14 +57,10 @@ const InternshipList = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery, statusFilter, campusModeFilter, opportunities, applyCampusModeFilter]);
 
-  /**
-   * Fetch all opportunities and filter for internships only
-   */
   const fetchOpportunities = async () => {
     try {
       setLoading(true);
-      const response = await opportunityService.getAll();
-      const internships = response.filter(opp => opp.category === 'internship');
+      const internships = await opportunityService.getAll({ category: 'internship' });
       setOpportunities(internships);
     } catch (error) {
       console.error('Error fetching opportunities:', error);
