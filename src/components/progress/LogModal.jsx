@@ -28,6 +28,18 @@ const LogModal = ({
   const [mood, setMood] = useState('');
   const [metadata, setMetadata] = useState(emptyMetadata(selectedTrack?.templateType));
   const [error, setError] = useState('');
+  const editingLog = existingLog && existingLog.trackId === selectedTrack?.id ? existingLog : null;
+
+  const loadEntry = (log, templateType) => {
+    setDidLog(log ? log.didLog : true);
+    setWhatDidYouDo(log?.whatDidYouDo || '');
+    setWhatDidYouLearn(log?.whatDidYouLearn || '');
+    setMood(log?.mood || '');
+    setMetadata({
+      ...emptyMetadata(templateType),
+      ...(log?.metadata || {}),
+    });
+  };
 
   useEffect(() => {
     if (!isOpen) return;
@@ -35,21 +47,14 @@ const LogModal = ({
     const nextTrack = selectableTracks.find((item) => item.id === nextTrackId) || track;
     setTrackId(nextTrackId);
     setLogDate(existingLog?.logDate || date || formatLocalDate(new Date()));
-    setDidLog(existingLog ? existingLog.didLog : true);
-    setWhatDidYouDo(existingLog?.whatDidYouDo || '');
-    setWhatDidYouLearn(existingLog?.whatDidYouLearn || '');
-    setMood(existingLog?.mood || '');
-    setMetadata({
-      ...emptyMetadata(nextTrack?.templateType),
-      ...(existingLog?.metadata || {}),
-    });
+    loadEntry(existingLog, nextTrack?.templateType);
     setError('');
   }, [isOpen, track, date, existingLog]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const title = useMemo(() => {
     if (!selectedTrack) return 'Log prep';
-    return existingLog ? `Edit ${selectedTrack.name}` : `Log ${selectedTrack.name}`;
-  }, [existingLog, selectedTrack]);
+    return editingLog ? `Edit ${selectedTrack.name}` : `Log ${selectedTrack.name}`;
+  }, [editingLog, selectedTrack]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -87,7 +92,7 @@ const LogModal = ({
                 const nextId = event.target.value;
                 const nextTrack = selectableTracks.find((item) => item.id === nextId);
                 setTrackId(nextId);
-                setMetadata(emptyMetadata(nextTrack?.templateType));
+                loadEntry(nextId === existingLog?.trackId ? existingLog : null, nextTrack?.templateType);
               }}
             >
               {selectableTracks.map((item) => (
