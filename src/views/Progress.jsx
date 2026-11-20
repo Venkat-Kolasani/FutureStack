@@ -26,6 +26,8 @@ const weekdayLabel = (dateKey) => {
   return new Date(year, month - 1, day).toLocaleDateString('en-US', { weekday: 'long' });
 };
 
+const isActiveTrack = (track) => track.isActive !== false;
+
 const Progress = () => {
   const todayKey = formatLocalDate(new Date());
   const [tracks, setTracks] = useState([]);
@@ -42,7 +44,7 @@ const Progress = () => {
   const [existingLog, setExistingLog] = useState(null);
   const dayLogsRequestId = useRef(0);
 
-  const activeTracks = useMemo(() => tracks.filter((track) => track.isActive !== false), [tracks]);
+  const activeTracks = useMemo(() => tracks.filter(isActiveTrack), [tracks]);
 
   const loadBoard = useCallback(async () => {
     const [nextTracks, nextHeatmap] = await Promise.all([
@@ -53,7 +55,7 @@ const Progress = () => {
     setHeatmap(nextHeatmap);
 
     const logEntries = await Promise.all(
-      nextTracks.map(async (track) => {
+      nextTracks.filter(isActiveTrack).map(async (track) => {
         const logs = await progressService.listLogsByTrack(track.id);
         return [track.id, logs];
       })

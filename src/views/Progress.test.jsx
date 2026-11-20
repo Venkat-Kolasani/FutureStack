@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import Progress from './Progress';
+import { toast } from 'react-toastify';
 import { progressService } from '../services/api';
 
 jest.mock('../services/api', () => ({
@@ -79,6 +80,43 @@ describe('Progress page', () => {
     expect(screen.getByText('prep days in the last year')).toBeInTheDocument();
     fireEvent.click(screen.getAllByRole('button', { name: 'Log today' })[0]);
     expect(await screen.findByText('What did you do?')).toBeInTheDocument();
+  });
+
+  it('fetches track histories only for active tracks', async () => {
+    progressService.listTracks.mockResolvedValue([
+      track,
+      { ...track, id: 'track-2', name: 'Old system design', isActive: false },
+      { id: 'track-3', name: 'Mock interviews', templateType: 'custom' },
+    ]);
+
+    renderPage();
+
+    expect(await screen.findByRole('heading', { name: 'DSA' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Mock interviews' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Old system design' })).not.toBeInTheDocument();
+    expect(progressService.listLogsByTrack.mock.calls).toEqual([['track-1'], ['track-3']]);
+  });
+
+  it('skips track history requests when every track is inactive', async () => {
+    progressService.listTracks.mockResolvedValue([{ ...track, isActive: false }]);
+
+    renderPage();
+
+    await waitFor(() => expect(progressService.listLogsByDate).toHaveBeenCalled());
+    expect(progressService.listLogsByTrack).not.toHaveBeenCalled();
+  });
+
+  it('reports a failed track history request', async () => {
+    progressService.listTracks.mockResolvedValue([track]);
+    progressService.listLogsByTrack.mockRejectedValue(new Error('history unavailable'));
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith('Unable to load your prep log. Please try again.');
+    });
+    console.error.mockRestore();
   });
 
   it('ignores stale day log responses when the selected date changes quickly', async () => {
