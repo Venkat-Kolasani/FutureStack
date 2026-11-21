@@ -18,7 +18,7 @@ const DEFAULT_TIMEOUT_MS = parseInt(process.env.LLM_TIMEOUT_MS || '180000', 10);
 
 /**
  * @typedef {object} LlmOptions
- * @property {string} [provider]  gemini | ollama
+ * @property {string} [provider]  gemini | groq | anthropic | ollama
  * @property {string} [model]
  * @property {string} [apiKey]    User or server API key (Gemini)
  */
@@ -41,12 +41,26 @@ function createModel(llmOptions = {}) {
             const google = createGoogleGenerativeAI({ apiKey: geminiKey });
             return google(model);
         }
+        case 'groq': {
+            if (!apiKey) {
+                throw new Error('No Groq API key configured. Add your key in AI Settings.');
+            }
+            const { createGroq } = require('@ai-sdk/groq');
+            return createGroq({ apiKey })(model);
+        }
+        case 'anthropic': {
+            if (!apiKey) {
+                throw new Error('No Claude API key configured. Add your key in AI Settings.');
+            }
+            const { createAnthropic } = require('@ai-sdk/anthropic');
+            return createAnthropic({ apiKey })(model);
+        }
         case 'ollama': {
             const ollama = createOllama({ baseURL: `${OLLAMA_BASE_URL}/api` });
             return ollama(model);
         }
         default:
-            throw new Error(`LLM: Unknown provider "${provider}". Supported: gemini, ollama`);
+            throw new Error(`LLM: Unknown provider "${provider}". Supported: gemini, groq, anthropic, ollama`);
     }
 }
 

@@ -201,6 +201,14 @@ const TechnicalTopicsPanel = ({ topics, onCreateTopic, onUpdateTopic, onDeleteTo
                             </div>
                             <div className="flex items-center gap-1 shrink-0">
                                 <button
+                                    type="button"
+                                    onClick={() => onUpdateTopic(t.id, { is_reviewed: !t.is_reviewed })}
+                                    className="p-1.5 text-gray-400 hover:text-green-400"
+                                    title={t.is_reviewed ? 'Mark not reviewed' : 'Mark reviewed'}
+                                >
+                                    <FaCheck size={12} />
+                                </button>
+                                <button
                                     onClick={() => handleEdit(t)}
                                     disabled={isLoading}
                                     className="p-1.5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"

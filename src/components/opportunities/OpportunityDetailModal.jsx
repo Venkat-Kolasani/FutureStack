@@ -376,6 +376,7 @@ const OpportunityDetailModal = ({
                                             rejectedRoundNumber={displayOpportunity.rejected_round_number}
                                             onEditRound={handleEditRound}
                                             onDeleteRound={handleDeleteRound}
+                                            onPrepareRound={(round) => onPrep?.(displayOpportunity.id, round.round_type)}
                                             onAddRound={handleOpenAddRound}
                                             deletingRoundId={deletingRoundId}
                                         />

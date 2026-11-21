@@ -4,9 +4,9 @@ const Joi = require('joi');
 
 const saveAiSettingsSchema = Joi.object({
     provider: Joi.string()
-        .valid('gemini', 'ollama')
+        .valid('gemini', 'groq', 'anthropic', 'ollama')
         .default('gemini')
-        .messages({ 'any.only': 'Provider must be gemini or ollama' }),
+        .messages({ 'any.only': 'Provider must be gemini, groq, anthropic, or ollama' }),
 
     model: Joi.string()
         .trim()

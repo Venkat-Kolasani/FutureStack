@@ -142,6 +142,7 @@ const RoundTimeline = ({
   rejectedRoundNumber = null,
   onEditRound,
   onDeleteRound,
+  onPrepareRound,
   onAddRound,
   deletingRoundId = null,
 }) => {
@@ -284,8 +285,17 @@ const RoundTimeline = ({
                   </p>
                 )}
 
-                {(onEditRound || onDeleteRound) && (
+                {(onEditRound || onDeleteRound || onPrepareRound) && (
                   <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-white/5 pt-3">
+                    {onPrepareRound && round.result === 'pending' && (
+                      <button
+                        type="button"
+                        onClick={() => onPrepareRound(round)}
+                        className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium text-violet-300 hover:bg-violet-500/10"
+                      >
+                        Prepare
+                      </button>
+                    )}
                     {onEditRound && (
                       <button
                         type="button"

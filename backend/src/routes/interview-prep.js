@@ -61,6 +61,13 @@ async function verifyInternshipOwnership(opportunityId, userId) {
   return { valid: true, data };
 }
 
+const { registerInterviewPrepSession } = require('./interview-prep-session');
+registerInterviewPrepSession(router, {
+  verifyInternshipOwnership,
+  getPrepForOpportunity,
+  logAudit,
+});
+
 /**
  * Helper: Get prep record for an opportunity
  */
@@ -291,7 +298,7 @@ router.post(
   async (req, res) => {
     try {
       const { opportunityId } = req.params;
-      const { question, answer, is_prepared } = req.body;
+      const { question, answer, is_prepared, is_exam, focus } = req.body;
 
       const { prep } = await getPrepForOpportunity(
         opportunityId,
@@ -310,6 +317,8 @@ router.post(
           question,
           answer: answer || null,
           is_prepared: is_prepared || false,
+          is_exam: is_exam || false,
+          focus: focus || null,
         })
         .select()
         .single();
@@ -340,7 +349,7 @@ router.put(
   async (req, res) => {
     try {
       const { opportunityId, questionId } = req.params;
-      const { question, answer, is_prepared } = req.body;
+      const { question, answer, is_prepared, is_exam, focus } = req.body;
 
       const { prep } = await getPrepForOpportunity(
         opportunityId,
@@ -354,6 +363,8 @@ router.put(
       if (question !== undefined) updateData.question = question;
       if (answer !== undefined) updateData.answer = answer;
       if (is_prepared !== undefined) updateData.is_prepared = is_prepared;
+      if (is_exam !== undefined) updateData.is_exam = is_exam;
+      if (focus !== undefined) updateData.focus = focus;
 
       const { data, error } = await supabase
         .from("interview_questions")
@@ -435,7 +446,7 @@ router.post(
   async (req, res) => {
     try {
       const { opportunityId } = req.params;
-      const { topic, priority, is_reviewed } = req.body;
+      const { topic, priority, is_reviewed, focus } = req.body;
 
       const { prep } = await getPrepForOpportunity(
         opportunityId,
@@ -454,6 +465,7 @@ router.post(
           topic,
           priority: priority || "medium",
           is_reviewed: is_reviewed || false,
+          focus: focus || null,
         })
         .select()
         .single();
@@ -484,7 +496,7 @@ router.put(
   async (req, res) => {
     try {
       const { opportunityId, topicId } = req.params;
-      const { topic, priority, is_reviewed } = req.body;
+      const { topic, priority, is_reviewed, focus } = req.body;
 
       const { prep } = await getPrepForOpportunity(
         opportunityId,
@@ -498,6 +510,7 @@ router.put(
       if (topic !== undefined) updateData.topic = topic;
       if (priority !== undefined) updateData.priority = priority;
       if (is_reviewed !== undefined) updateData.is_reviewed = is_reviewed;
+      if (focus !== undefined) updateData.focus = focus;
 
       const { data, error } = await supabase
         .from("technical_topics")
@@ -577,7 +590,7 @@ router.post(
   async (req, res) => {
     try {
       const { opportunityId } = req.params;
-      const { question, situation, task, action, result } = req.body;
+      const { question, situation, task, action, result, focus } = req.body;
 
       const { prep } = await getPrepForOpportunity(
         opportunityId,
@@ -598,6 +611,7 @@ router.post(
           task: task || null,
           action: action || null,
           result: result || null,
+          focus: focus || null,
         })
         .select()
         .single();
@@ -628,7 +642,7 @@ router.put(
   async (req, res) => {
     try {
       const { opportunityId, behavioralId } = req.params;
-      const { question, situation, task, action, result } = req.body;
+      const { question, situation, task, action, result, focus } = req.body;
 
       const { prep } = await getPrepForOpportunity(
         opportunityId,
@@ -644,6 +658,7 @@ router.put(
       if (task !== undefined) updateData.task = task;
       if (action !== undefined) updateData.action = action;
       if (result !== undefined) updateData.result = result;
+      if (focus !== undefined) updateData.focus = focus;
 
       const { data, error } = await supabase
         .from("behavioral_prep")

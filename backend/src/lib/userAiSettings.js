@@ -16,34 +16,51 @@ const KEY_REFRESH_MESSAGE =
  * @param {string} userId - Internal users.id UUID
  * @returns {Promise<{ configured: boolean, provider?: string, model?: string, keyHint?: string, needsKeyRefresh?: boolean, message?: string }>}
  */
-async function getUserAiSettingsSummary(userId) {
-    const { data, error } = await supabase
-        .from('user_ai_settings')
-        .select('provider, model, api_key_ciphertext, api_key_iv, api_key_auth_tag')
-        .eq('user_id', userId)
-        .maybeSingle();
-
-    if (error) throw error;
-    if (!data) {
-        return { configured: false };
-    }
-
-    const { key: apiKey, failed } = tryDecryptApiKey(data);
+function summarizeRow(row) {
+    const { key: apiKey, failed } = tryDecryptApiKey(row);
     if (failed) {
         return {
             configured: false,
             needsKeyRefresh: true,
-            provider: data.provider,
-            model: data.model,
+            provider: row.provider,
+            model: row.model,
+            keyHint: null,
             message: KEY_REFRESH_MESSAGE,
         };
     }
-
     return {
         configured: Boolean(apiKey),
-        provider: data.provider,
-        model: data.model,
+        needsKeyRefresh: false,
+        provider: row.provider,
+        model: row.model,
         keyHint: apiKey ? keyHint(apiKey) : null,
+    };
+}
+
+async function getUserAiSettingsSummary(userId) {
+    const { data, error } = await supabase
+        .from('user_ai_settings')
+        .select('provider, model, api_key_ciphertext, api_key_iv, api_key_auth_tag')
+        .eq('user_id', userId);
+
+    if (error) throw error;
+    const providers = (data || []).map(summarizeRow);
+    if (providers.length === 0) {
+        return { configured: false, providers: [] };
+    }
+
+    const usable = providers.find((row) => row.provider === 'gemini' && row.configured)
+        || providers.find((row) => row.configured);
+    const refresh = providers.find((row) => row.needsKeyRefresh);
+
+    return {
+        configured: Boolean(usable),
+        provider: usable?.provider || refresh?.provider,
+        model: usable?.model || refresh?.model,
+        keyHint: usable?.keyHint || null,
+        needsKeyRefresh: !usable && Boolean(refresh),
+        message: !usable && refresh ? refresh.message : undefined,
+        providers,
     };
 }
 
@@ -53,11 +70,12 @@ async function getUserAiSettingsSummary(userId) {
  * @param {string} userId
  * @returns {Promise<{ apiKey: string } | { failed: true } | null>}
  */
-async function getUserDecryptedApiKey(userId) {
+async function getUserDecryptedApiKey(userId, provider = 'gemini') {
     const { data, error } = await supabase
         .from('user_ai_settings')
-        .select('api_key_ciphertext, api_key_iv, api_key_auth_tag')
+        .select('provider, model, api_key_ciphertext, api_key_iv, api_key_auth_tag')
         .eq('user_id', userId)
+        .eq('provider', provider)
         .maybeSingle();
 
     if (error) throw error;
@@ -66,7 +84,7 @@ async function getUserDecryptedApiKey(userId) {
     const { key: apiKey, failed } = tryDecryptApiKey(data);
     if (failed) return { failed: true };
     if (!apiKey) return null;
-    return { apiKey };
+    return { apiKey, provider: data.provider, model: data.model };
 }
 
 /**
@@ -81,6 +99,7 @@ async function resolveUserLlmOptions(userId) {
         .from('user_ai_settings')
         .select('provider, model, api_key_ciphertext, api_key_iv, api_key_auth_tag')
         .eq('user_id', userId)
+        .eq('provider', 'gemini')
         .maybeSingle();
 
     if (error) throw error;

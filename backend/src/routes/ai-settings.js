@@ -12,10 +12,12 @@ const express = require('express');
 const { supabase } = require('../lib/supabase');
 const { validate } = require('../middleware/validate');
 const { saveAiSettingsSchema } = require('../validation/ai-settings-schemas');
-const { encryptApiKey, keyHint } = require('../lib/apiKeyVault');
+const { encryptApiKey } = require('../lib/apiKeyVault');
 const { getUserAiSettingsSummary, getUserDecryptedApiKey } = require('../lib/userAiSettings');
 const { mapDbError } = require('../lib/dbSetup');
-const { sanitizeApiKey, verifyGeminiApiKey } = require('../lib/geminiKeyValidation');
+const { sanitizeApiKey } = require('../lib/geminiKeyValidation');
+const { verifyProviderKey } = require('../lib/providerKeyValidation');
+const { defaultModelFor, isAllowedModel } = require('../lib/providerModels');
 
 const router = express.Router();
 
@@ -43,73 +45,79 @@ router.put('/', validate(saveAiSettingsSchema), async (req, res) => {
 
     try {
         if (!trimmedKey) {
-            const summary = await getUserAiSettingsSummary(userId);
-            if (summary.needsKeyRefresh) {
-                return res.status(400).json({
-                    error: 'API Key Required',
-                    code: 'KEY_DECRYPT_FAILED',
-                    needsKeyRefresh: true,
-                    message: summary.message,
-                });
+            if (provider === 'ollama') {
+                const modelToSave = model || defaultModelFor('ollama');
+                const encrypted = encryptApiKey('local');
+                const { error } = await supabase
+                    .from('user_ai_settings')
+                    .upsert({
+                        user_id: userId,
+                        provider,
+                        model: modelToSave,
+                        ...encrypted,
+                        updated_at: new Date().toISOString(),
+                    }, { onConflict: 'user_id,provider' });
+                if (error) throw error;
+                return res.json(await getUserAiSettingsSummary(userId));
             }
-            if (!summary.configured) {
+
+            const summary = await getUserAiSettingsSummary(userId);
+            const existing = (summary.providers || []).find((row) => row.provider === provider);
+            if (!existing?.configured) {
                 return res.status(400).json({
                     error: 'API Key Required',
-                    message: 'Enter your Gemini API key to get started.',
+                    code: existing?.needsKeyRefresh ? 'KEY_DECRYPT_FAILED' : 'API_KEY_REQUIRED',
+                    needsKeyRefresh: Boolean(existing?.needsKeyRefresh),
+                    message: existing?.needsKeyRefresh
+                        ? existing.message
+                        : 'Enter an API key for this provider.',
                 });
             }
 
-            if (provider === 'gemini') {
-                const stored = await getUserDecryptedApiKey(userId);
+            if (provider !== 'ollama') {
+                const stored = await getUserDecryptedApiKey(userId, provider);
                 if (!stored || stored.failed) {
                     return res.status(400).json({
                         error: 'API Key Required',
-                        code: stored?.failed ? 'KEY_DECRYPT_FAILED' : 'API Key Required',
+                        code: stored?.failed ? 'KEY_DECRYPT_FAILED' : 'API_KEY_REQUIRED',
                         needsKeyRefresh: Boolean(stored?.failed),
-                        message: stored?.failed
-                            ? summary.message
-                            : 'Enter your Gemini API key to get started.',
+                        message: 'Enter an API key for this provider.',
                     });
                 }
-                const verification = await verifyGeminiApiKey(stored.apiKey, model, {
-                    strictPreferredModel: true,
-                });
+                const verification = await verifyProviderKey(provider, stored.apiKey, model);
                 if (!verification.ok) {
                     return res.status(400).json({
                         error: verification.code || 'Invalid Model',
                         code: verification.code || 'LLM_MODEL_ERROR',
                         message: verification.message
-                            || `Your saved API key cannot use model "${model}". Choose another model or update your key.`,
+                            || `Your saved API key cannot use model "${model}".`,
                         needsApiKey: verification.code === 'LLM_AUTH_ERROR',
                     });
                 }
+            } else if (!isAllowedModel(provider, model)) {
+                return res.status(400).json({
+                    error: 'Invalid Model',
+                    code: 'LLM_MODEL_ERROR',
+                    message: 'Enter a local model name.',
+                });
             }
 
-            const { data, error } = await supabase
+            const { error } = await supabase
                 .from('user_ai_settings')
                 .update({
-                    provider,
                     model,
                     updated_at: new Date().toISOString(),
                 })
                 .eq('user_id', userId)
-                .select('provider, model')
-                .single();
+                .eq('provider', provider);
 
             if (error) throw error;
-
-            return res.json({
-                configured: true,
-                provider: data.provider,
-                model: data.model,
-                keyHint: summary.keyHint,
-                message: 'AI settings updated.',
-            });
+            return res.json(await getUserAiSettingsSummary(userId));
         }
 
-        let savedModel = model;
-        if (provider === 'gemini') {
-            const verification = await verifyGeminiApiKey(trimmedKey, model);
+        const modelToSave = model || defaultModelFor(provider);
+        if (provider !== 'ollama') {
+            const verification = await verifyProviderKey(provider, trimmedKey, modelToSave);
             if (!verification.ok) {
                 return res.status(400).json({
                     error: verification.code || 'Invalid API Key',
@@ -118,30 +126,25 @@ router.put('/', validate(saveAiSettingsSchema), async (req, res) => {
                     needsApiKey: true,
                 });
             }
-            savedModel = verification.model;
         }
 
         const encrypted = encryptApiKey(trimmedKey);
 
-        const { data, error } = await supabase
+        const { error } = await supabase
             .from('user_ai_settings')
             .upsert({
                 user_id: userId,
                 provider,
-                model: savedModel,
+                model: modelToSave,
                 ...encrypted,
                 updated_at: new Date().toISOString(),
-            }, { onConflict: 'user_id' })
-            .select('provider, model')
-            .single();
+            }, { onConflict: 'user_id,provider' });
 
         if (error) throw error;
 
+        const summary = await getUserAiSettingsSummary(userId);
         return res.json({
-            configured: true,
-            provider: data.provider,
-            model: data.model,
-            keyHint: keyHint(trimmedKey),
+            ...summary,
             message: 'API key saved securely. You will not need to enter it again.',
         });
     } catch (err) {
@@ -163,10 +166,12 @@ router.delete('/', async (req, res) => {
     const userId = req.auth.internalUserId;
 
     try {
-        const { error } = await supabase
-            .from('user_ai_settings')
-            .delete()
-            .eq('user_id', userId);
+        const provider = typeof req.query.provider === 'string' ? req.query.provider : '';
+        let query = supabase.from('user_ai_settings').delete().eq('user_id', userId);
+        if (provider) {
+            query = query.eq('provider', provider);
+        }
+        const { error } = await query;
 
         if (error) throw error;
 

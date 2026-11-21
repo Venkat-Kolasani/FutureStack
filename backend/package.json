@@ -19,7 +19,9 @@
     ],
     "license": "MIT",
     "dependencies": {
+        "@ai-sdk/anthropic": "^4.0.63",
         "@ai-sdk/google": "^3.0.83",
+        "@ai-sdk/groq": "^4.0.48",
         "@clerk/express": "1.7.60",
         "@supabase/supabase-js": "^2.89.0",
         "ai": "^6.0.209",

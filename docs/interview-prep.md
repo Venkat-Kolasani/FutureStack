@@ -193,7 +193,33 @@ Child panels call `interviewPrepService` mutations and update local React state 
 | **Interview rounds** | `opportunity_rounds`, `/api/v1/opportunities/:id/rounds` | Which round are you in? Cleared / pending / rejected? |
 | **Interview prep** | `interview_prep` + children, `/api/v1/interview-prep/:id` | What are you studying? What will you say? |
 
-Use both together: rounds for pipeline status on the Kanban board; prep for study materials per company.
+Use both together: rounds for pipeline status on the Kanban board; prep for the study session for the next round. A pending round's **Prepare** action opens `/internships/:id/prep?round=<type>`.
+
+### Session
+
+The page header shows the company, the current round, readiness, and one primary action. The round follows the earliest pending interview, or the `round` query when opened from the pipeline. Focus values are `oa`, `technical`, `behavioral`, `assignment`, and `general`.
+
+- **Add a starter pack** is the primary action when that round has no checklist. A second click skips questions and topics that already exist.
+- **Start practice** replaces the page body. Close returns to the same round. Answers stay hidden until reveal, then a question can be marked prepared.
+- The Session tab is a generate row: provider, API key, and Plan, Questions, STAR, or Mock exam. Generate stays disabled until that provider has a saved key. The draft is not stored until **Add selected**. Mock exam questions are flagged `is_exam` and open in practice with answers hidden.
+- The job description and notes live on Company Research. Questions, Topics, Behavioral, and Reflection stay the library for editing.
+- Generation is billed to the user's key. It does not use a server API key. Static packs still work with no key.
+
+`GET /api/v1/interview-prep/stories` returns the user's STAR rows from other internships so one story can be copied into the current prep.
+
+Reflection notes use three sections — Asked, Landed, Fix next — stored in `reflection_notes`.
+
+### Generate API
+
+| Method | Endpoint | Body |
+|--------|----------|------|
+| POST | `/:opportunityId/starter` | `{ focus }` |
+| POST | `/:opportunityId/generate` | `{ kind, focus, provider }` — returns a draft |
+| POST | `/:opportunityId/generate/accept` | selected checklist, topics, questions, or STAR rows |
+
+`kind` is `plan`, `questions`, `star`, or `exam`. `provider` is `gemini`, `groq`, `anthropic`, or `ollama`. Generate is limited to 5 requests per minute per user.
+
+Child rows store optional `focus`. Questions also store `is_exam`.
 
 Full rounds guide: [`interview-rounds.md`](interview-rounds.md).
 

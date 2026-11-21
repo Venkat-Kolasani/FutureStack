@@ -9,6 +9,7 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { FaBuilding, FaSave } from 'react-icons/fa';
+import { insertResearchHeading, RESEARCH_HEADINGS } from '../../utils/interviewPrepSession';
 
 const CompanyResearchPanel = ({ prep, onUpdate, isLoading }) => {
     const [notes, setNotes] = useState(prep?.company_research || '');
@@ -66,6 +67,27 @@ const CompanyResearchPanel = ({ prep, onUpdate, isLoading }) => {
                         <span>Saving...</span>
                     </div>
                 )}
+            </div>
+
+            <div className="flex flex-wrap gap-2 mb-3">
+                {RESEARCH_HEADINGS.map((heading) => (
+                    <button
+                        key={heading}
+                        type="button"
+                        onClick={() => {
+                            if (saveTimeout) {
+                                clearTimeout(saveTimeout);
+                                setSaveTimeout(null);
+                            }
+                            const next = insertResearchHeading(notes, heading);
+                            setNotes(next);
+                            onUpdate({ company_research: next });
+                        }}
+                        className="rounded-full border border-white/10 px-3 py-1 text-xs text-gray-400 hover:text-white"
+                    >
+                        {heading}
+                    </button>
+                ))}
             </div>
 
             <textarea

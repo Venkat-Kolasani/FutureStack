@@ -395,8 +395,9 @@ export const aiSettingsService = {
         return response.data;
     },
 
-    remove: async (): Promise<ApiRecord> => {
-        const response = await api.delete<ApiRecord>('/ai-settings');
+    remove: async (provider?: string): Promise<ApiRecord> => {
+        const query = provider ? `?provider=${encodeURIComponent(provider)}` : '';
+        const response = await api.delete<ApiRecord>(`/ai-settings${query}`);
         return response.data;
     },
 };
@@ -676,7 +677,27 @@ export const interviewPrepService = {
     deleteBehavioral: async (opportunityId: string, behavioralId: string): Promise<ApiRecord> => {
         const response = await api.delete<ApiRecord>(`/interview-prep/${opportunityId}/behavioral/${behavioralId}`);
         return response.data;
-    }
+    },
+
+    listStories: async (): Promise<ApiRecord> => {
+        const response = await api.get<ApiRecord>('/interview-prep/stories');
+        return response.data;
+    },
+
+    seedStarter: async (opportunityId: string, focus: string): Promise<ApiRecord> => {
+        const response = await api.post<ApiRecord>(`/interview-prep/${opportunityId}/starter`, { focus });
+        return response.data;
+    },
+
+    generate: async (opportunityId: string, data: ApiRecord): Promise<ApiRecord> => {
+        const response = await api.post<ApiRecord>(`/interview-prep/${opportunityId}/generate`, data, { skipErrorToast: true });
+        return response.data;
+    },
+
+    acceptGenerated: async (opportunityId: string, data: ApiRecord): Promise<ApiRecord> => {
+        const response = await api.post<ApiRecord>(`/interview-prep/${opportunityId}/generate/accept`, data);
+        return response.data;
+    },
 };
 
 export default api;

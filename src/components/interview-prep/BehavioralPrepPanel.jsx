@@ -9,7 +9,7 @@ import React, { useState } from 'react';
 import { FaUserTie, FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
 import Button from '../common/Button';
 
-const BehavioralPrepPanel = ({ behavioral, onCreateBehavioral, onUpdateBehavioral, onDeleteBehavioral, isLoading }) => {
+const BehavioralPrepPanel = ({ behavioral, stories = [], onCreateBehavioral, onUpdateBehavioral, onDeleteBehavioral, isLoading }) => {
     const [showAddForm, setShowAddForm] = useState(false);
     const [editingId, setEditingId] = useState(null);
     const [formData, setFormData] = useState({
@@ -100,6 +100,33 @@ const BehavioralPrepPanel = ({ behavioral, onCreateBehavioral, onUpdateBehaviora
                     </Button>
                 )}
             </div>
+
+            {stories.length > 0 && !showAddForm && !editingId && (
+                <label className="mb-4 block text-xs text-gray-400">
+                    Use a story from another company
+                    <select
+                        defaultValue=""
+                        onChange={(e) => {
+                            const story = stories.find((item) => item.id === e.target.value);
+                            if (!story) return;
+                            onCreateBehavioral({
+                                question: story.question,
+                                situation: story.situation || '',
+                                task: story.task || '',
+                                action: story.action || '',
+                                result: story.result || '',
+                            });
+                            e.target.value = '';
+                        }}
+                        className="mt-1 w-full bg-transparent border border-white/10 rounded-lg px-3 py-2 text-sm text-gray-200"
+                    >
+                        <option value="">Select a saved story</option>
+                        {stories.map((story) => (
+                            <option key={story.id} value={story.id}>{story.company}: {story.question}</option>
+                        ))}
+                    </select>
+                </label>
+            )}
 
             {/* STAR Method Guide */}
             <div className="mb-4 p-3 bg-blue-500/5 border border-blue-500/20 rounded-lg">
